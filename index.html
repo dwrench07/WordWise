@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WordWise — Flashcard Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo">WordWise<span>.app</span></div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('cards', this)">Cards</button>
+      <button class="tab" onclick="switchTab('quiz', this)">Quiz</button>
+      <button class="tab" onclick="switchTab('import', this)">Import/Export</button>
+    </div>
+  </div>
+
+  <!-- Word of the Day -->
+  <div id="wotdBanner"></div>
+
+  <div class="stats-bar">
+    <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total Cards</div></div>
+    <div class="stat-card"><div class="stat-num" id="statMastered">0</div><div class="stat-label">Mastered</div></div>
+    <div class="stat-card"><div class="stat-num" id="statFailed">0</div><div class="stat-label">Struggling</div></div>
+    <div class="stat-card"><div class="stat-num" id="statLiked">0</div><div class="stat-label">Liked</div></div>
+    <div class="stat-card"><div class="stat-num" id="statQuizzes">0</div><div class="stat-label">Quizzes Done</div></div>
+  </div>
+
+  <div class="section active" id="sec-cards">
+    <div class="toolbar">
+      <input type="text" id="searchInput" placeholder="Search cards, meanings, or tags..." oninput="debouncedRenderCards()">
+      <div class="filter-pills">
+        <button class="pill active" onclick="setFilter('all', this)">All</button>
+        <button class="pill" onclick="setFilter('liked', this)">❤ Liked</button>
+        <button class="pill" onclick="setFilter('new', this)">New</button>
+        <button class="pill" onclick="setFilter('learning', this)">Learning</button>
+        <button class="pill" onclick="setFilter('mastered', this)">Mastered</button>
+        <button class="pill" onclick="setFilter('struggling', this)">Struggling</button>
+      </div>
+      <button class="btn btn-primary" onclick="openAddModal()">＋ Add Card</button>
+    </div>
+    <div class="tag-filter-bar" id="tagFilterBar"></div>
+    <div class="card-list" id="cardList"></div>
+    <div id="cardLoader" style="display:none;text-align:center;padding:20px;">
+      <div class="loader-spinner"></div>
+      <div style="font-size:12px;color:var(--text3);margin-top:8px;" id="cardCountInfo"></div>
+    </div>
+  </div>
+
+  <div class="section" id="sec-quiz"><div id="quizArea"></div></div>
+
+  <div class="section" id="sec-import">
+    <h3 style="margin-bottom:6px;">Export Cards</h3>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">Copy your entire deck as JSON (includes tags, examples &amp; liked).</p>
+    <button class="btn btn-ghost" onclick="exportCards()" style="margin-bottom:30px;">📋 Copy JSON to Clipboard</button>
+    <textarea class="json-area" id="exportArea" readonly></textarea>
+
+    <h3 style="margin-top:30px;margin-bottom:6px;">Import Cards</h3>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">
+      Format: <code style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px;">[{"front":"word","back":["def1","def2"],"example":["ex1"],"tags":["tag"],"liked":true}]</code>
+    </p>
+    <textarea class="json-area" id="importArea" placeholder='[{"front":"Ephemeral","back":["Lasting a very short time","Fleeting"],"example":["Fame is ephemeral."],"tags":["GRE"]}]'></textarea>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="importCards()">Import Cards</button>
+      <button class="btn btn-ghost" onclick="loadSampleDeck()">Load Sample Deck</button>
+    </div>
+    <div id="importMsg" style="margin-top:12px;font-size:13px;"></div>
+    <h3 style="margin-top:40px;margin-bottom:6px;">Danger Zone</h3>
+    <button class="btn btn-red btn-sm" onclick="if(confirm('Delete ALL cards? This cannot be undone.')){cards=[];totalQuizzes=0;save();renderAll();}">🗑 Delete All Cards</button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3 id="modalTitle">Add New Card</h3>
+    <div class="form-row">
+      <input type="text" id="mFront" placeholder="Front (word/question)">
+    </div>
+    <div style="margin-bottom:12px;">
+      <div class="form-label">Meaning(s) <span style="color:var(--text2);font-weight:400;">— multiple definitions supported</span></div>
+      <div id="mBackList"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addBackEntry()" style="margin-top:6px;">＋ Add meaning</button>
+    </div>
+    <div style="margin-bottom:12px;">
+      <div class="form-label">Example(s) <span style="color:var(--text2);font-weight:400;">— usage in sentences</span></div>
+      <div id="mExampleList"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addExampleEntry()" style="margin-top:6px;">＋ Add example</button>
+    </div>
+    <div class="form-row">
+      <input type="text" id="mDeck" placeholder="Deck (optional, e.g. English)">
+    </div>
+    <div style="margin-bottom:12px;">
+      <div class="form-label">Tags <span style="color:var(--text2);font-weight:400;">(press Enter or comma to add)</span></div>
+      <div class="tag-input-wrap" id="tagInputWrap" onclick="document.getElementById('mTagInput').focus()">
+        <input type="text" class="tag-input-field" id="mTagInput" placeholder="Add tags...">
+      </div>
+      <div id="tagSuggestions" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCard()">Save Card</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

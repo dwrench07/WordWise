@@ -19,17 +19,17 @@ WordWise is a modern, lightweight, and powerful flashcard application designed t
 
 ## 🚀 Getting Started
 
-Since WordWise is a single-file application, there's no installation required!
+To run WordWise:
 
 1. Download or clone this repository.
-2. Open `wordwise.html` in any modern web browser.
+2. Open `index.html` in any modern web browser.
 3. Start adding cards or load the **Sample Deck** from the Import/Export tab to see it in action!
 
 ## 🛠 Technology Stack
 
 - **HTML5**: Semantic structure.
-- **CSS3**: Modern layout with Flexbox, Grid, and Vanila CSS Variables.
-- **JavaScript**: Pure Vanilla JS for all logic and interactivity.
+- **CSS3**: Modern layout in `styles.css`.
+- **JavaScript**: Core logic and interactivity in `script.js`.
 - **Google Fonts**: [Outfit](https://fonts.google.com/specimen/Outfit) and [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono).
 
 ## 📊 Statistics
