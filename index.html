@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WordWise — Flashcard Engine</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -26,6 +30,7 @@
     <div class="stat-card"><div class="stat-num" id="statMastered">0</div><div class="stat-label">Mastered</div></div>
     <div class="stat-card"><div class="stat-num" id="statFailed">0</div><div class="stat-label">Struggling</div></div>
     <div class="stat-card"><div class="stat-num" id="statLiked">0</div><div class="stat-label">Liked</div></div>
+    <div class="stat-card"><div class="stat-num" id="statRevisit">0</div><div class="stat-label">Revisit</div></div>
     <div class="stat-card"><div class="stat-num" id="statQuizzes">0</div><div class="stat-label">Quizzes Done</div></div>
   </div>
 
@@ -35,6 +40,7 @@
       <div class="filter-pills">
         <button class="pill active" onclick="setFilter('all', this)">All</button>
         <button class="pill" onclick="setFilter('liked', this)">❤ Liked</button>
+        <button class="pill" onclick="setFilter('revisit', this)">★ Revisit</button>
         <button class="pill" onclick="setFilter('new', this)">New</button>
         <button class="pill" onclick="setFilter('learning', this)">Learning</button>
         <button class="pill" onclick="setFilter('mastered', this)">Mastered</button>
@@ -54,15 +60,27 @@
 
   <div class="section" id="sec-import">
     <h3 style="margin-bottom:6px;">Export Cards</h3>
-    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">Copy your entire deck as JSON (includes tags, examples &amp; liked).</p>
-    <button class="btn btn-ghost" onclick="exportCards()" style="margin-bottom:30px;">📋 Copy JSON to Clipboard</button>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">Copy or download your entire deck as JSON.</p>
+    <div style="display:flex;gap:10px;margin-bottom:30px;">
+      <button class="btn btn-ghost" onclick="exportCards()">📋 Copy to Clipboard</button>
+      <button class="btn btn-primary" onclick="downloadJSON()">💾 Download JSON File</button>
+    </div>
     <textarea class="json-area" id="exportArea" readonly></textarea>
 
     <h3 style="margin-top:30px;margin-bottom:6px;">Import Cards</h3>
-    <p style="color:var(--text2);font-size:13px;margin-bottom:12px;">
-      Format: <code style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px;">[{"front":"word","back":["def1","def2"],"example":["ex1"],"tags":["tag"],"liked":true}]</code>
-    </p>
-    <textarea class="json-area" id="importArea" placeholder='[{"front":"Ephemeral","back":["Lasting a very short time","Fleeting"],"example":["Fame is ephemeral."],"tags":["GRE"]}]'></textarea>
+    <div style="color:var(--text2);font-size:13px;margin-bottom:12px;line-height:1.5;">
+      <b>General Format:</b> <code style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px;">[{"front":"word","back":["def1","def2"],"example":["ex1"],"deck":"deck_name","tags":["tag"],"liked":true}]</code><br>
+      <div style="margin-top:8px;"><b>For Vocabulary:</b> Put the word in <code>"front"</code> and definitions in the <code>"back"</code> array.</div>
+      <div style="margin-top:4px;"><b>For Coding/Tech:</b> Put the question in <code>"front"</code>. In the <code>"back"</code> array, write your explanation and use <code>\n</code> for line breaks. You can insert standard Markdown code blocks: <code>\n```javascript\nconsole.log('hi');\n```</code>.</div>
+      <i style="display:inline-block;margin-top:8px;">Note: The `deck` property is just a custom text label to help organize cards (e.g., "Programming" or "Spanish").</i>
+    </div>
+    <textarea class="json-area" id="importArea" placeholder='[
+  {
+    "front": "What is Python?",
+    "back": ["A high-level programming language.\n\n```python\nprint(\"Hello world!\")\n```"],
+    "tags": ["Coding", "Python"]
+  }
+]'></textarea>
     <div style="display:flex;gap:10px;">
       <button class="btn btn-primary" onclick="importCards()">Import Cards</button>
       <button class="btn btn-ghost" onclick="loadSampleDeck()">Load Sample Deck</button>
@@ -107,6 +125,7 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

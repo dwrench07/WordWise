@@ -1,0 +1,547 @@
+[
+    {
+        "front": "Given `nums = [10, 20, 30, 40, 50]`, how do you get the last two elements using slicing?",
+        "back": [
+            "For slicing to get both as a list:\n\n```python\nnums[-2:] # gives [40, 50]\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "lists",
+            "slicing"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "How do you unpack point (3, 7) into two variables?",
+        "back": [
+            "```python\nx, y = point\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "unpacking",
+            "variables"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "Sort a list of tuples (`students`) by the second element in descending order.",
+        "back": [
+            "```python\nstudents.sort(key=lambda x: x[1], reverse=True)\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "sorting",
+            "lambda",
+            "review"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "How do you create a min heap and push values 5, 2, 8?",
+        "back": [
+            "```python\nimport heapq\n\nheap = []\nheapq.heappush(heap, 5)\nheapq.heappush(heap, 2)\nheapq.heappush(heap, 8)\n\n```\n* To pop: `heapq.heappop(heap)`\n* To peek: `heap[0]`\n* For max heap, negate values: `heapq.heappush(heap, -5)`"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "heap",
+            "data-structures",
+            "review"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "Count character frequency using Counter for s = 'aabbbc'",
+        "back": [
+            "```python\nfrom collections import Counter\n\nc = Counter(s) # Counter({'b': 3, 'a': 2, 'c': 1})\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "collections",
+            "counter",
+            "review"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "Simulate a do-while loop that asks for input until user types 'quit'.",
+        "back": [
+            "```python\nwhile True:\nuser_input = input()\nif user_input == 'quit':\nbreak\n# do something with user_input\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "loops",
+            "review"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "Use `defaultdict` to group words by their first letter.",
+        "back": [
+            "```python\nfrom collections import defaultdict\n\nwords = ['apple', 'banana', 'apricot', 'cherry', 'blueberry']\noutput = defaultdict(list) # takes a TYPE, not data\n\nfor word in words:\n    output[word[0]].append(word)\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "collections",
+            "defaultdict"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "Iterate through two lists (`names`, `scores`) at the same time.",
+        "back": [
+            "```python\nfor name, score in zip(names, scores):\nprint(f'{name}: {score}')\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "iteration",
+            "zip"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "How do you check if a key exists in a dictionary `d`?",
+        "back": [
+            "```python\nif string in d:\npass\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "dictionary"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "What is wrong with modifying a list while iterating over it? How can you safely do it? (e.g., removing even numbers)",
+        "back": [
+            "The main issue is modifying a list while iterating over it causes elements to be skipped. Solutions:\n\n1. Create a new list:\n```python\nnums = [x for x in nums if x % 2 != 0]\n\n```\n\n2. Iterate over a copy:\n\n```python\nfor num in nums[:]:\n    if num % 2 == 0:\n        nums.remove(num)\n\n```\n\n3. Iterate backwards:\n\n```python\nfor i in range(len(nums) - 1, -1, -1):\n    if nums[i] % 2 == 0:\n        nums.pop(i)\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "iteration",
+            "lists"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "How do you create a set and check if an element exists?",
+        "back": [
+            "Use lowercase `set()` (Note: `{}` creates an empty dict, not a set).\n\n```python\nx = set()\nx.add(1)\nif 1 in x:\n    print('exists')\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "sets",
+            "review"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "Get both index and value when looping through a list `fruits`.",
+        "back": [
+            "```python\nfor i, fruit in enumerate(fruits):\nprint(f'{i}: {fruit}')\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "iteration",
+            "enumerate"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "Convert between string `s`, list of characters `chars`, integer string `num_str`, and integer `num`.",
+        "back": [
+            "```python\nlist(s)          # string to list\n''.join(chars)   # list to string (separator calls join!)\nint(num_str)     # string to int\nstr(num)         # int to string\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "types",
+            "conversion",
+            "review"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "What does this output?\n```python\nnums = [1, 2, 3, 4, 5]\nresult = [x * 2 for x in nums if x % 2 == 1]\n\n```",
+        "back": [
+            "`[2, 6, 10]`"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "list-comprehension"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "Use `deque` to implement a queue.",
+        "back": [
+            "`collections` is lowercase:\n\n```python\nfrom collections import deque\n\nd = deque()\nd.append(1)\nd.popleft()\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "collections",
+            "deque"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "What's the difference between `/` and `//`?\n\n```python\nprint(7 / 2)\nprint(7 // 2)\nprint(-7 // 2)\n\n```",
+        "back": [
+            "* `7 / 2` -> `3.5` (regular division)\n\n* `7 // 2` -> `3` (floor division)\n* `-7 // 2` -> `-4` (floors toward negative infinity, not toward zero!)"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "math",
+            "division",
+            "review"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "How to use `lru_cache` for memoization? (e.g., Fibonacci)",
+        "back": [
+            "```python\nfrom functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef fib(n):\nif n <= 1:\nreturn n\nreturn fib(n-1) + fib(n-2)\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "memoization",
+            "decorators"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "How do you swap two variables `x` and `y`?",
+        "back": [
+            "```python\nx, y = y, x\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "variables"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "What's the output?\n\n```python\ns = 'hello world'\nprint(s.split())\nprint(s.split('o'))\nprint('_'.join(s.split()))\n\n```",
+        "back": [
+            "`split()` splits by whitespace by default, not characters.\n\n* `s.split()` -> `['hello', 'world']`\n* `s.split('o')` -> `['hell', ' w', 'rld']`\n* `'_'.join(s.split())` -> `'hello_world'`"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "strings",
+            "methods"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "Get the maximum value and its index from a list `nums`.",
+        "back": [
+            "```python\nmax(nums)             # max value\nnums.index(max(nums)) # index of max\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "lists",
+            "math"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "What does `*` do in different contexts? (e.g., `print(*nums)`, `def func(*args)`, `a, *b, c = [1,2,3,4,5]`)",
+        "back": [
+            "1. `print(*nums)` -> Unpacks list elements: prints `1 2 3`\n2. `def func(*args):` -> Collects arbitrary positional arguments into a tuple `args`\n3. `a, *b, c = [1, 2, 3, 4, 5]` -> Unpacks list variables: `a=1`, `b=[2,3,4]`, `c=5`"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "unpacking",
+            "args"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "Check if a string `x` is a palindrome.",
+        "back": [
+            "Strings don't have a `.reverse()` method. Use slicing:\n```python\nif x == x[::-1]:\n    print('palindrome')\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "strings",
+            "slicing",
+            "review"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "What's wrong with `d = {}; d['a'] += 1`?",
+        "back": [
+            "The key `'a'` isn't initialized yet, so we cannot do `+= 1` on it (raises a KeyError).\n\nSolutions: use `defaultdict(int)`, `Counter`, or check if the key exists first."
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "dictionary",
+            "errors"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "Remove duplicates from `nums` while preserving order.",
+        "back": [
+            "```python\nresult = list(dict.fromkeys(nums))\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "lists",
+            "duplicates"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "What's the output?\n```python\nx = [1, 2, 3]\ny = x * 2\nz = [x] * 2\ny[0] = 99\nz[0][0] = 99\nprint(y)\nprint(z)\n\n```",
+        "back": [
+            "* `y = x * 2` -> `[1, 2, 3, 1, 2, 3]` (new flat list)\n\n* `z = [x] * 2` -> `[[1,2,3], [1,2,3]]` (two references to the SAME list)\n\nAfter modifications:\n\n* `y` -> `[99, 2, 3, 1, 2, 3]`\n* `z` -> `[[99, 2, 3], [99, 2, 3]]` (both nested elements changed because they point to the same object!)"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "lists",
+            "references",
+            "review"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "Create a 3x3 grid filled with zeros.",
+        "back": [
+            "```python\ngrid = [[0] * 3 for _ in range(3)]\n\n```\n*Note: Doing `[[0] * 3] * 3` is wrong because it creates references to the same inner list.*"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "lists",
+            "grid",
+            "review"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    },
+    {
+        "front": "Perform a binary search for the value `7` in a sorted list `nums = [1, 3, 5, 7, 9, 11]`.",
+        "back": [
+            "```python\nfrom bisect import bisect_left\n\nnums = [1, 3, 5, 7, 9, 11]\nidx = bisect_left(nums, 7) # returns 3\n\n```"
+        ],
+        "example": [],
+        "deck": "Python Syntax",
+        "tags": [
+            "python",
+            "binary-search",
+            "bisect"
+        ],
+        "liked": false,
+        "repetition": 0,
+        "interval": 0,
+        "efactor": 2.5,
+        "pass": 0,
+        "fail": 0,
+        "nextReview": 0
+    }
+]

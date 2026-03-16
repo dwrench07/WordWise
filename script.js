@@ -2,6 +2,7 @@ let cards = [];
 let totalQuizzes = 0;
 let currentFilter = 'all';
 let activeTags = new Set();
+let tagMatchMode = 'OR';
 let editingId = null;
 let modalTags = [];
 let expandedCards = new Set();
@@ -23,14 +24,78 @@ function tagHTML(n,s){const c=tagColor(n);return `<span class="tag" style="backg
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 function toArr(v){if(Array.isArray(v))return v.map(x=>String(x).trim()).filter(Boolean);if(typeof v==='string'&&v.trim())return[v.trim()];return[];}
 
-function load(){
-  try{const d=localStorage.getItem(STORAGE_KEY);if(d)cards=JSON.parse(d);
-  cards.forEach(c=>{if(!Array.isArray(c.tags))c.tags=[];c.back=toArr(c.back);c.example=toArr(c.example||c.examples);if(typeof c.liked==='undefined')c.liked=false;});
-  totalQuizzes=parseInt(localStorage.getItem(QUIZ_KEY)||'0');}catch(e){cards=[];}
+// MARKDOWN SETUP
+if (typeof marked !== 'undefined') {
+  marked.setOptions({
+    highlight: function(code, lang) {
+      if (typeof hljs !== 'undefined') {
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        return hljs.highlight(code, { language }).value;
+      }
+      return code;
+    },
+    breaks: true
+  });
 }
-function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(cards));localStorage.setItem(QUIZ_KEY,totalQuizzes.toString());}
+function renderMarkdown(text) {
+  if (!text) return '';
+  if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+    return DOMPurify.sanitize(marked.parse(text));
+  }
+  return esc(text);
+}
+function stripMarkdown(text) {
+  if (!text) return '';
+  return text.replace(/[#_*~`>]/g, '').replace(/\[(.*?)\]\(.*?\)/g, '$1');
+}
+
+async function load(){
+  try{
+    const d=await localforage.getItem(STORAGE_KEY);
+    if(d)cards=JSON.parse(d);
+    cards.forEach(c=>{
+      if(!Array.isArray(c.tags))c.tags=[];
+      c.back=toArr(c.back);c.example=toArr(c.example||c.examples);
+      if(typeof c.liked==='undefined')c.liked=false;
+      if(typeof c.revisit==='undefined')c.revisit=false;
+      // SRS Defaults
+      if(typeof c.repetition==='undefined')c.repetition=0;
+      if(typeof c.interval==='undefined')c.interval=0;
+      if(typeof c.efactor==='undefined')c.efactor=2.5;
+      if(typeof c.nextReview==='undefined')c.nextReview=Date.now();
+      if(typeof c.pass==='undefined')c.pass=0;
+      if(typeof c.fail==='undefined')c.fail=0;
+    });
+    const q=await localforage.getItem(QUIZ_KEY);
+    totalQuizzes=parseInt(q||'0');
+  }catch(e){cards=[];}
+}
+async function save(){await localforage.setItem(STORAGE_KEY,JSON.stringify(cards));await localforage.setItem(QUIZ_KEY,totalQuizzes.toString());}
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-function getStatus(c){if(c.pass+c.fail===0)return'new';const r=c.pass/(c.pass+c.fail);if(c.pass>=3&&r>=0.8)return'mastered';if(c.fail>c.pass)return'struggling';return'learning';}
+
+function calculateSM2(card, quality) {
+  // quality: 0 (Again), 3 (Hard), 4 (Good), 5 (Easy)
+  if (quality >= 3) {
+    if (card.repetition === 0) { card.interval = 1; } 
+    else if (card.repetition === 1) { card.interval = 6; }
+    else { card.interval = Math.round(card.interval * card.efactor); }
+    card.repetition++;
+  } else {
+    card.repetition = 0;
+    card.interval = 1;
+  }
+  card.efactor = card.efactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+  if (card.efactor < 1.3) card.efactor = 1.3;
+  // Calculate next review in milliseconds (interval * 24 hours)
+  card.nextReview = Date.now() + (card.interval * 24 * 60 * 60 * 1000);
+}
+
+function getStatus(c) {
+  if (c.repetition === 0 && c.pass === 0 && c.fail === 0) return 'new';
+  if (Date.now() >= c.nextReview) return 'due';
+  if (c.interval > 21) return 'mastered';
+  return 'learning';
+}
 function getAllTags(){const s=new Set();cards.forEach(c=>(c.tags||[]).forEach(t=>s.add(t)));return[...s].sort();}
 function firstBack(c){return(c.back&&c.back.length>0)?c.back[0]:'';}
 function allBackText(c){return(c.back||[]).join(' ');}
@@ -53,8 +118,8 @@ function renderWotd(){
   el.innerHTML=`<div class="wotd-banner">
     <div class="wotd-label">✦ Word of the Day</div>
     <div class="wotd-word">${esc(w.front)}</div>
-    <div class="wotd-meaning">${esc(fb)}</div>
-    ${ex?`<div class="wotd-example">"${esc(ex)}"</div>`:''}
+    <div class="wotd-meaning markdown-body">${renderMarkdown(fb)}</div>
+    ${ex?`<div class="wotd-example markdown-body">${renderMarkdown(ex)}</div>`:''}
     <div class="wotd-actions">
       <button class="wotd-like ${isLiked?'liked':''}" onclick="toggleLike('${w.id}');renderWotd();">${isLiked?'❤ Liked':'♡ Like'}</button>
       ${w.back.length>1?`<span style="font-size:11px;color:var(--text3);">+${w.back.length-1} more meaning${w.back.length>2?'s':''}</span>`:''}
@@ -65,6 +130,11 @@ function renderWotd(){
 function toggleLike(id){
   const c=cards.find(x=>x.id===id);
   if(c)c.liked=!c.liked;
+  save();updateStats();
+}
+function toggleRevisit(id){
+  const c=cards.find(x=>x.id===id);
+  if(c)c.revisit=!c.revisit;
   save();updateStats();
 }
 
@@ -85,6 +155,7 @@ function updateStats(){
   document.getElementById('statMastered').textContent=cards.filter(c=>getStatus(c)==='mastered').length;
   document.getElementById('statFailed').textContent=cards.filter(c=>getStatus(c)==='struggling').length;
   document.getElementById('statLiked').textContent=cards.filter(c=>c.liked).length;
+  document.getElementById('statRevisit').textContent=cards.filter(c=>c.revisit).length;
   document.getElementById('statQuizzes').textContent=totalQuizzes;
 }
 
@@ -93,22 +164,24 @@ function renderTagFilter(){
   const tags=getAllTags();const bar=document.getElementById('tagFilterBar');
   if(tags.length===0){bar.innerHTML='';return;}
   bar.innerHTML=`<span class="tag-label">Tags:</span>`+
+    `<span class="tag-mode-toggle" onclick="toggleTagMatchMode()" title="Click to toggle ANY/ALL mode">${tagMatchMode==='OR'?'Match ANY':'Match ALL'}</span>`+
     tags.map(t=>{const c=tagColor(t);return`<span class="tag-filter-pill ${activeTags.has(t)?'active':''}" style="background:${c.bg};color:${c.fg};" onclick="toggleTagFilter('${esc(t).replace(/'/g,"\\'")}')">${esc(t)}</span>`;}).join('')+
     (activeTags.size>0?`<span class="tag-filter-pill" style="background:var(--surface2);color:var(--text2);opacity:1;font-size:10px;" onclick="clearTagFilters()">✕ Clear</span>`:'');
 }
 function toggleTagFilter(t){if(activeTags.has(t))activeTags.delete(t);else activeTags.add(t);renderTagFilter();renderCards();}
 function clearTagFilters(){activeTags.clear();renderTagFilter();renderCards();}
+function toggleTagMatchMode(){tagMatchMode=tagMatchMode==='OR'?'AND':'OR';renderTagFilter();renderCards();showQuizSetup();}
 
 function toggleCard(id){toggleCardInPlace(id);}
 
 function renderMeanings(a){
   if(!a||a.length===0)return '';
-  if(a.length===1)return`<div class="card-meaning" style="white-space:pre-wrap;word-break:break-word;">${esc(a[0])}</div>`;
-  return`<div class="meaning-list">${a.map((m,i)=>`<div class="meaning-item"><span class="meaning-num">${i+1}</span><span class="meaning-text">${esc(m)}</span></div>`).join('')}</div>`;
+  if(a.length===1)return`<div class="card-meaning markdown-body" style="white-space:normal;">${renderMarkdown(a[0])}</div>`;
+  return`<div class="meaning-list">${a.map((m,i)=>`<div class="meaning-item"><span class="meaning-num">${i+1}</span><div class="meaning-text markdown-body">${renderMarkdown(m)}</div></div>`).join('')}</div>`;
 }
 function renderExamples(a){
   if(!a||a.length===0)return '';
-  return`<div class="examples-list">${a.map(e=>`<div class="card-example">${esc(e)}</div>`).join('')}</div>`;
+  return`<div class="examples-list">${a.map(e=>`<div class="card-example markdown-body">${renderMarkdown(e)}</div>`).join('')}</div>`;
 }
 
 // INFINITE SCROLL
@@ -124,8 +197,10 @@ function getFilteredCards() {
     const matchSearch = !q || c.front.toLowerCase().includes(q) || allBackText(c).toLowerCase().includes(q) || allExampleText(c).toLowerCase().includes(q) || (c.tags||[]).some(t => t.toLowerCase().includes(q));
     let matchFilter = true;
     if (currentFilter === 'liked') matchFilter = !!c.liked;
+    else if (currentFilter === 'revisit') matchFilter = !!c.revisit;
     else if (currentFilter !== 'all') matchFilter = getStatus(c) === currentFilter;
-    const matchTags = activeTags.size === 0 || [...activeTags].every(t => (c.tags||[]).includes(t));
+    const matchTags = activeTags.size === 0 || 
+      (tagMatchMode === 'AND' ? [...activeTags].every(t => (c.tags||[]).includes(t)) : [...activeTags].some(t => (c.tags||[]).includes(t)));
     return matchSearch && matchFilter && matchTags;
   });
 }
@@ -134,8 +209,9 @@ function renderCardHTML(c) {
   const s = getStatus(c); const isExp = expandedCards.has(c.id);
   const tagsHtml = (c.tags||[]).map(t => tagHTML(t, true)).join('');
   const deckHtml = c.deck ? `<span class="deck-tag" style="font-size:10px;padding:2px 8px;">${esc(c.deck)}</span>` : '';
-  const fb = firstBack(c); const preview = fb.length > 80 ? fb.substring(0,80)+'…' : fb;
+  const fb = firstBack(c); const fbPlain = stripMarkdown(fb); const preview = fbPlain.length > 80 ? fbPlain.substring(0,80)+'…' : fbPlain;
   const mc = c.back.length > 1 ? `<span style="font-size:10px;color:var(--text3);font-weight:600;margin-left:4px;">${c.back.length} meanings</span>` : '';
+  const revisitBtn = `<button class="card-revisit-btn ${c.revisit?'revisit':''}" onclick="event.stopPropagation();toggleRevisit('${c.id}');patchRevisit('${c.id}');updateStats();" title="${c.revisit?'Remove from Revisit':'Mark for Revisit'}">${c.revisit?'★':'☆'}</button>`;
   const likeBtn = `<button class="card-like-btn ${c.liked?'liked':''}" onclick="event.stopPropagation();toggleLike('${c.id}');patchCard('${c.id}');renderWotd();updateStats();" title="${c.liked?'Unlike':'Like'}">${c.liked?'❤':'♡'}</button>`;
   return `<div class="card-item ${isExp?'expanded':''}" data-id="${c.id}">
     <div class="card-header" onclick="toggleCardInPlace('${c.id}')">
@@ -145,6 +221,7 @@ function renderCardHTML(c) {
         <div class="card-preview">${esc(preview)}</div>
       </div>
       <div class="card-header-right">
+        ${revisitBtn}
         ${likeBtn}
         <span class="badge badge-pass">✓${c.pass}</span>
         <span class="badge badge-fail">✗${c.fail}</span>
@@ -184,6 +261,19 @@ function patchCard(id) {
     btn.classList.toggle('liked', c.liked);
     btn.textContent = c.liked ? '❤' : '♡';
     btn.title = c.liked ? 'Unlike' : 'Like';
+  }
+}
+
+function patchRevisit(id) {
+  const c = cards.find(x => x.id === id);
+  if (!c) return;
+  const el = document.querySelector(`.card-item[data-id="${id}"]`);
+  if (!el) return;
+  const btn = el.querySelector('.card-revisit-btn');
+  if (btn) {
+    btn.classList.toggle('revisit', c.revisit);
+    btn.textContent = c.revisit ? '★' : '☆';
+    btn.title = c.revisit ? 'Remove from Revisit' : 'Mark for Revisit';
   }
 }
 
@@ -299,7 +389,7 @@ function saveCard(){
   const deck=document.getElementById('mDeck').value.trim();const pending=document.getElementById('mTagInput').value.trim();
   if(pending)addModalTag(pending);if(!front||back.length===0)return;
   if(editingId){const c=cards.find(x=>x.id===editingId);if(c){c.front=front;c.back=back;c.example=example;c.deck=deck;c.tags=[...modalTags];}}
-  else{cards.push({id:genId(),front,back,example,deck,tags:[...modalTags],liked:false,pass:0,fail:0,created:Date.now()});}
+  else{cards.push({id:genId(),front,back,example,deck,tags:[...modalTags],liked:false,revisit:false,pass:0,fail:0,created:Date.now(),repetition:0,interval:0,efactor:2.5,nextReview:Date.now()});}
   save();closeModal();renderAll();
 }
 function deleteCard(id){if(!confirm('Delete this card?'))return;cards=cards.filter(c=>c.id!==id);expandedCards.delete(id);save();renderAll();}
@@ -307,22 +397,32 @@ function deleteCard(id){if(!confirm('Delete this card?'))return;cards=cards.filt
 // QUIZ
 let quizCards=[],quizIdx=0,quizCorrect=0,quizMode='';
 let quizSelectedTags=new Set();
-function getQuizFilteredCards(){return quizSelectedTags.size===0?cards:cards.filter(c=>[...quizSelectedTags].every(t=>(c.tags||[]).includes(t)));}
+function getQuizFilteredCards(){
+  return quizSelectedTags.size===0 ? cards : cards.filter(c =>
+    tagMatchMode === 'AND' ? [...quizSelectedTags].every(t=>(c.tags||[]).includes(t)) : [...quizSelectedTags].some(t=>(c.tags||[]).includes(t))
+  );
+}
 
 function showQuizSetup(){
   const area=document.getElementById('quizArea');
   if(cards.length<2){area.innerHTML=`<div class="empty"><div class="empty-icon">🧠</div><h3>Need more cards</h3><p>Add at least 2 cards to start a quiz.</p></div>`;return;}
   const allTags=getAllTags();const pool=getQuizFilteredCards();const fc=pool.length;
   const likedCount=pool.filter(c=>c.liked).length;
+  const revisitCount=pool.filter(c=>c.revisit).length;
+  const dueCount = pool.filter(c => getStatus(c) === 'due').length;
   const countOptions=[5,10,15,20,30,50].filter(n=>n<=fc);
   if(!countOptions.includes(fc)&&fc>0)countOptions.push(fc);
   countOptions.sort((a,b)=>a-b);
   if(quizCardCount>fc)quizCardCount=fc;
 
   area.innerHTML=`<div class="quiz-setup"><h2>Start a Quiz</h2><p>Choose your quiz mode</p>
-    ${allTags.length>0?`<div class="quiz-tag-panel"><h4>🏷 Filter by Tags <span style="font-weight:400;color:var(--text2);">(select multiple)</span></h4>
+    ${allTags.length>0?`<div class="quiz-tag-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h4>🏷 Filter by Tags <span style="font-weight:400;color:var(--text2);">(select multiple)</span></h4>
+        <span class="tag-mode-toggle" onclick="toggleTagMatchMode()" title="Click to toggle ANY/ALL mode">${tagMatchMode==='OR'?'Match ANY':'Match ALL'}</span>
+      </div>
       <div class="quiz-tag-grid">${allTags.map(t=>{const c=tagColor(t);return`<span class="quiz-tag-chip ${quizSelectedTags.has(t)?'selected':''}" style="background:${c.bg};color:${c.fg};" onclick="toggleQuizTag('${esc(t).replace(/'/g,"\\'")}')">${esc(t)}</span>`;}).join('')}</div>
-      <div class="quiz-tag-count">${fc} card${fc!==1?'s':''} ${quizSelectedTags.size>0?'matched':'available'}${likedCount>0?` · ${likedCount} liked`:''}</div>
+      <div class="quiz-tag-count">${fc} card${fc!==1?'s':''} ${quizSelectedTags.size>0?'matched':'available'}${likedCount>0?` · ${likedCount} liked`:''} · ${dueCount} due</div>
       ${quizSelectedTags.size>0?`<span style="font-size:11px;color:var(--accent);cursor:pointer;margin-top:4px;display:inline-block;" onclick="quizSelectedTags.clear();showQuizSetup();">Clear all</span>`:''}</div>`:``}
     <div class="quiz-count-row">
       <span>Quiz</span>
@@ -335,8 +435,9 @@ function showQuizSetup(){
       <div class="quiz-option" onclick="startQuiz('flip')"><div class="quiz-option-icon">🔄</div><div class="quiz-option-title">Flashcard Flip</div><div class="quiz-option-desc">Classic reveal & self-grade</div></div>
       <div class="quiz-option" onclick="startQuiz('mc')"><div class="quiz-option-icon">🎯</div><div class="quiz-option-title">Multiple Choice</div><div class="quiz-option-desc">Pick the right answer</div></div>
       <div class="quiz-option" onclick="startQuiz('type')"><div class="quiz-option-icon">⌨️</div><div class="quiz-option-title">Type Answer</div><div class="quiz-option-desc">Type the meaning</div></div>
-      <div class="quiz-option" onclick="startQuiz('hard')"><div class="quiz-option-icon">💀</div><div class="quiz-option-title">Hard Mode</div><div class="quiz-option-desc">Only struggling cards</div></div>
+      <div class="quiz-option" onclick="startQuiz('due')"><div class="quiz-option-icon">⏰</div><div class="quiz-option-title">Due Cards</div><div class="quiz-option-desc">Review cards that are due (${dueCount})</div></div>
       <div class="quiz-option" onclick="startQuiz('liked')"><div class="quiz-option-icon">❤</div><div class="quiz-option-title">Liked Only</div><div class="quiz-option-desc">${likedCount} liked card${likedCount!==1?'s':''}</div></div>
+      <div class="quiz-option" onclick="startQuiz('revisit')"><div class="quiz-option-icon">★</div><div class="quiz-option-title">Manual Revisit</div><div class="quiz-option-desc">${revisitCount} marked card${revisitCount!==1?'s':''}</div></div>
     </div></div>`;
 }
 
@@ -347,8 +448,9 @@ function startQuiz(mode){
   const pool=getQuizFilteredCards();
   quizMode=mode;quizIdx=0;quizCorrect=0;
   const count=parseInt(document.getElementById('quizCountSelect')?.value||quizCardCount)||20;
-  if(mode==='hard'){quizCards=shuffle(pool.filter(c=>getStatus(c)==='struggling'));if(quizCards.length<2)quizCards=shuffle(pool);}
+  if(mode==='due'){quizCards=shuffle(pool.filter(c=>getStatus(c)==='due'));if(quizCards.length<2)quizCards=shuffle(pool);}
   else if(mode==='liked'){quizCards=shuffle(pool.filter(c=>c.liked));if(quizCards.length<2){alert('Need at least 2 liked cards.');return;}}
+  else if(mode==='revisit'){quizCards=shuffle(pool.filter(c=>c.revisit));if(quizCards.length<2){alert('Need at least 2 marked cards for revisit.');return;}}
   else{quizCards=shuffle(pool);}
   if(quizCards.length<2){alert('Need at least 2 cards matching criteria.');return;}
   quizCards=quizCards.slice(0,Math.min(count,quizCards.length));
@@ -356,10 +458,10 @@ function startQuiz(mode){
 }
 
 function quizMeaningsHTML(a){
-  if(a.length===1)return`<div style="font-size:20px;font-weight:500;color:var(--accent2);line-height:1.5;">${esc(a[0])}</div>`;
-  return`<div class="quiz-meanings">${a.map((m,i)=>`<div class="quiz-meaning-item"><span class="quiz-meaning-num">${i+1}</span><span style="color:var(--accent2);">${esc(m)}</span></div>`).join('')}</div>`;
+  if(a.length===1)return`<div class="markdown-body" style="font-size:18px;font-weight:500;color:var(--accent2);line-height:1.5;text-align:left;">${renderMarkdown(a[0])}</div>`;
+  return`<div class="quiz-meanings">${a.map((m,i)=>`<div class="quiz-meaning-item"><span class="quiz-meaning-num">${i+1}</span><div class="markdown-body" style="color:var(--accent2);width:100%">${renderMarkdown(m)}</div></div>`).join('')}</div>`;
 }
-function quizExamplesHTML(a){return a.length===0?'':a.map(e=>`<div class="quiz-example-text" style="opacity:0;transform:translateY(10px);transition:all 0.3s 0.1s;">${esc(e)}</div>`).join('');}
+function quizExamplesHTML(a){return a.length===0?'':a.map(e=>`<div class="quiz-example-text markdown-body" style="opacity:0;transform:translateY(10px);transition:all 0.3s 0.1s;">${renderMarkdown(e)}</div>`).join('');}
 
 function showQuizQuestion(){
   if(quizIdx>=quizCards.length){showResults();return;}
@@ -370,14 +472,14 @@ function showQuizQuestion(){
   const hdr=`<div class="quiz-progress"><div class="quiz-progress-bar" style="width:${pct}%"></div></div><div class="quiz-tags-display">${tagsDisp}</div><div class="quiz-counter">${quizIdx+1} / ${quizCards.length}</div><div class="quiz-word">${esc(card.front)}</div>`;
   const hint=card.deck?`<div class="quiz-hint">${esc(card.deck)}</div>`:'';
 
-  if(quizMode==='flip'){
+  if(quizMode==='flip'||quizMode==='revisit'){
     area.innerHTML=`<div class="quiz-card">${hdr}${hint||'<div class="quiz-hint">Tap to reveal</div>'}
       <div class="quiz-answer-block"><div class="quiz-answer-text" id="quizAnswer">${quizMeaningsHTML(card.back)}</div>${exBlock}</div>
       <div class="quiz-actions" id="quizActions"><button class="btn btn-ghost" onclick="revealAnswer()">👁 Reveal</button></div></div>`;
-  }else if(quizMode==='mc'||quizMode==='hard'||quizMode==='liked'){
+  }else if(quizMode==='mc'||quizMode==='due'||quizMode==='liked'){
     const choices=getMCOptions(card);
     area.innerHTML=`<div class="quiz-card">${hdr}${hint}
-      <div class="mc-options">${choices.map(ch=>`<button class="mc-btn" onclick="checkMC(this,${ch===firstBack(card)})">${esc(ch)}</button>`).join('')}</div>
+      <div class="mc-options">${choices.map(ch=>`<div class="mc-btn markdown-body" style="text-align:left;" onclick="checkMC(this,${ch===firstBack(card)})">${renderMarkdown(ch)}</div>`).join('')}</div>
       <div class="quiz-answer-block" style="margin-top:16px;">${exBlock}</div></div>`;
   }else if(quizMode==='type'){
     area.innerHTML=`<div class="quiz-card">${hdr}${hint}
@@ -397,19 +499,30 @@ function revealQuizExtras(){
   const ans=document.getElementById('quizAnswer');if(ans)ans.classList.add('show');
   document.querySelectorAll('.quiz-example-text').forEach(el=>{el.style.opacity='1';el.style.transform='translateY(0)';});
 }
-function revealAnswer(){revealQuizExtras();document.getElementById('quizActions').innerHTML=`<button class="btn btn-red" onclick="gradeQuiz(false)">✗ Didn't Know</button><button class="btn btn-green" onclick="gradeQuiz(true)">✓ Got It</button>`;}
-function checkMC(btn,ok){document.querySelectorAll('.mc-btn').forEach(b=>{b.disabled=true;b.style.pointerEvents='none';});btn.classList.add(ok?'correct':'wrong');revealQuizExtras();gradeQuiz(ok);}
+function revealAnswer(){
+  revealQuizExtras();
+  document.getElementById('quizActions').innerHTML=`
+    <button class="btn btn-red" onclick="gradeQuiz(0)">🔴 Again</button>
+    <button class="btn btn-orange" onclick="gradeQuiz(3)">🟠 Hard</button>
+    <button class="btn btn-green" onclick="gradeQuiz(4)">🟢 Good</button>
+    <button class="btn btn-blue" onclick="gradeQuiz(5)">🔵 Easy</button>
+  `;
+}
+function checkMC(btn,ok){document.querySelectorAll('.mc-btn').forEach(b=>{b.disabled=true;b.style.pointerEvents='none';});btn.classList.add(ok?'correct':'wrong');revealQuizExtras();gradeQuiz(ok?5:0);}
 function checkType(){
   const input=document.getElementById('typeInput');if(!input)return;
   const val=input.value.trim().toLowerCase();const card=quizCards[quizIdx];
   const ok=val&&card.back.some(b=>b.toLowerCase().includes(val));
   revealQuizExtras();input.disabled=true;input.style.borderColor=ok?'var(--green)':'var(--red)';
-  setTimeout(()=>gradeQuiz(ok),1200);
+  setTimeout(()=>gradeQuiz(ok?5:0),1200);
 }
-function gradeQuiz(ok){
+function gradeQuiz(quality){ // quality 0-5
   const real=cards.find(c=>c.id===quizCards[quizIdx].id);
-  if(real){if(ok){real.pass++;quizCorrect++;}else{real.fail++;}}
-  save();quizIdx++;setTimeout(showQuizQuestion,ok?400:800);
+  if(real){
+    calculateSM2(real, quality);
+    if(quality>=3)quizCorrect++;
+  }
+  save();quizIdx++;setTimeout(showQuizQuestion,quality>=3?400:800);
 }
 function showResults(){
   totalQuizzes++;save();updateStats();
@@ -422,8 +535,17 @@ function showResults(){
 
 // IMPORT/EXPORT
 function exportCards(){
-  const json=JSON.stringify(cards.map(c=>({front:c.front,back:c.back,example:c.example,deck:c.deck||'',tags:c.tags||[],liked:!!c.liked,pass:c.pass,fail:c.fail})),null,2);
+  const json=JSON.stringify(cards.map(c=>({front:c.front,back:c.back,example:c.example,deck:c.deck||'',tags:c.tags||[],liked:!!c.liked,revisit:!!c.revisit,pass:c.pass,fail:c.fail,repetition:c.repetition,interval:c.interval,efactor:c.efactor,nextReview:c.nextReview})),null,2);
   navigator.clipboard.writeText(json).then(()=>{document.getElementById('exportArea').value=json;alert('Copied!');}).catch(()=>{document.getElementById('exportArea').value=json;});
+}
+function downloadJSON(){
+  const json=JSON.stringify(cards.map(c=>({front:c.front,back:c.back,example:c.example,deck:c.deck||'',tags:c.tags||[],liked:!!c.liked,revisit:!!c.revisit,pass:c.pass,fail:c.fail,repetition:c.repetition,interval:c.interval,efactor:c.efactor,nextReview:c.nextReview})),null,2);
+  document.getElementById('exportArea').value=json;
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`wordwise_deck_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
 }
 function importCards(){
   const raw=document.getElementById('importArea').value.trim();const msg=document.getElementById('importMsg');
@@ -431,7 +553,7 @@ function importCards(){
   let count=0;arr.forEach(item=>{if(item.front&&item.back){let tags=[];
   if(Array.isArray(item.tags))tags=item.tags.map(t=>String(t).trim()).filter(Boolean);
   else if(typeof item.tags==='string')tags=item.tags.split(',').map(t=>t.trim()).filter(Boolean);
-  cards.push({id:genId(),front:String(item.front),back:toArr(item.back),example:toArr(item.example||item.examples),deck:item.deck||'',tags,liked:!!item.liked,pass:parseInt(item.pass)||0,fail:parseInt(item.fail)||0,created:Date.now()});count++;}});
+  cards.push({id:genId(),front:String(item.front),back:toArr(item.back),example:toArr(item.example||item.examples),deck:item.deck||'',tags,liked:!!item.liked,revisit:!!item.revisit,pass:parseInt(item.pass)||0,fail:parseInt(item.fail)||0,created:Date.now(),repetition:item.repetition||0,interval:item.interval||0,efactor:item.efactor||2.5,nextReview:item.nextReview||Date.now()});count++;}});
   save();renderAll();msg.innerHTML=`<span style="color:var(--green)">✓ Imported ${count} cards!</span>`;
   document.getElementById('importArea').value='';}catch(e){msg.innerHTML=`<span style="color:var(--red)">✗ Invalid JSON: ${esc(e.message)}</span>`;}
 }
@@ -440,15 +562,28 @@ function loadSampleDeck(){
     {front:"Ephemeral",back:["Lasting a very short time; transitory","Fleeting or brief in duration"],example:["The ephemeral beauty of cherry blossoms draws millions of visitors each spring.","His fame was ephemeral — forgotten within a year."],tags:["GRE","Adjective"],liked:true,deck:"Vocabulary"},
     {front:"Ubiquitous",back:["Present, appearing, or found everywhere","So common it's impossible to avoid"],example:["Smartphones have become ubiquitous in modern society."],tags:["GRE","Adjective"],deck:"Vocabulary"},
     {front:"Sycophant",back:["A person who flatters to gain advantage","An obsequious yes-man or toady"],example:["The CEO surrounded himself with sycophants who never challenged his decisions."],tags:["GRE","Noun"],liked:true,deck:"Vocabulary"},
-    {front:"Pragmatic",back:["Dealing with things sensibly and realistically","Based on practical rather than theoretical considerations"],example:["The pragmatic mayor focused on fixing potholes rather than debating ideology."],tags:["GRE","Adjective"],deck:"Vocabulary"},
-    {front:"Eloquent",back:["Fluent or persuasive in speaking or writing","Clearly expressing or indicating something"],example:["Her eloquent defense of free speech moved even her critics."],tags:["GRE","Adjective","Speaking"],deck:"Vocabulary"},
-    {front:"Cacophony",back:["A harsh, discordant mixture of sounds","Clashing combination (figurative)"],example:["The cacophony of car horns made concentration impossible."],tags:["GRE","Noun","Negative"],deck:"Vocabulary"},
-    {front:"Benevolent",back:["Well-meaning and kindly","Generous, especially by those in power"],example:["The benevolent donor funded scholarships for hundreds of students."],tags:["GRE","Adjective","Positive"],liked:true,deck:"Vocabulary"},
-    {front:"Gregarious",back:["Fond of company; sociable","(Biology) Living in flocks or communities"],example:["She forced herself to be more gregarious at networking events."],tags:["GRE","Adjective","Positive","Speaking"],deck:"Vocabulary"},
-    {front:"Enigmatic",back:["Difficult to interpret or understand; mysterious"],example:["The Mona Lisa's enigmatic smile has captivated art lovers for centuries."],tags:["GRE","Adjective"],deck:"Vocabulary"},
-    {front:"Facetious",back:["Treating serious issues with inappropriate humor","Flippant; not sarcastic"],example:["His facetious remark about the deficit did not amuse the committee."],tags:["GRE","Adjective","Negative"],deck:"Vocabulary"},
-    {front:"Ambiguous",back:["Open to more than one interpretation","Having a double meaning"],example:["The contract's ambiguous wording led to a costly legal dispute."],tags:["GRE","Adjective"],deck:"Vocabulary"},
-    {front:"Diligent",back:["Having care and conscientiousness in work","Steady, earnest, and energetic effort"],example:["Years of diligent research paid off with a groundbreaking publication."],tags:["GRE","Adjective","Positive"],deck:"Vocabulary"},
+    {
+      front: "What is a Closure in JavaScript?",
+      back: ["A closure is a function having access to the parent scope, even after the parent function has closed.\n\n```javascript\nfunction outer() {\n  let count = 0;\n  return function inner() {\n    count++;\n    console.log(count);\n  };\n}\n```"],
+      example: ["Closures are useful for creating private variables."],
+      tags: ["JavaScript", "Coding"],
+      liked: true,
+      deck: "Programming"
+    },
+    {
+      front: "HTTP Methods",
+      back: ["Common HTTP methods inside REST APIs:\n\n* **GET**: Read data\n* **POST**: Create new data\n* **PUT**: Update existing data\n* **DELETE**: Remove data"],
+      example: ["Fetching a user profile uses `GET /users/123`."],
+      tags: ["Web", "Network"],
+      deck: "Web Dev"
+    },
+    {
+      front: "Pragmatic",
+      back: ["Dealing with things sensibly and realistically","Based on practical rather than theoretical considerations"],
+      example: ["The pragmatic mayor focused on fixing potholes rather than debating ideology."],
+      tags: ["GRE","Adjective"],
+      deck:"Vocabulary"
+    }
   ];
   document.getElementById('importArea').value=JSON.stringify(sample,null,2);
   document.getElementById('importMsg').innerHTML='<span style="color:var(--accent)">Sample loaded — click Import!</span>';
@@ -459,4 +594,10 @@ function debouncedRenderCards(){clearTimeout(searchTimer);searchTimer=setTimeout
 
 function renderAll(){renderWotd();renderCards();renderTagFilter();updateStats();}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
-load();renderAll();
+
+// async initialization
+async function initApp(){
+  await load();
+  renderAll();
+}
+initApp();
