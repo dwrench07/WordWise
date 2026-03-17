@@ -50,11 +50,25 @@ function stripMarkdown(text) {
 }
 
 let saveTimer = null;
-function save() { if (saveTimer) clearTimeout(saveTimer); saveTimer = setTimeout(() => localforage.setItem('wordwise_cards', cards), 50); }
+function save(immediate = false) {
+  if (saveTimer) clearTimeout(saveTimer);
+  const performSave = async () => {
+    try {
+      await localforage.setItem(STORAGE_KEY, JSON.stringify(cards));
+      await localforage.setItem(QUIZ_KEY, totalQuizzes.toString());
+    } catch (e) { console.error("Failed to save WordWise data:", e); }
+  };
+  if (immediate) performSave();
+  else saveTimer = setTimeout(performSave, 500);
+}
+
 async function load() {
   try {
     const d = await localforage.getItem(STORAGE_KEY);
-    if (d) cards = JSON.parse(d);
+    if (d) {
+      // Handle both stringified and direct object storage for robustness
+      cards = typeof d === 'string' ? JSON.parse(d) : d;
+    }
     cards.forEach(c => {
       if (!Array.isArray(c.tags)) c.tags = [];
       c.back = toArr(c.back); c.example = toArr(c.example || c.examples);
@@ -71,9 +85,11 @@ async function load() {
     });
     const q = await localforage.getItem(QUIZ_KEY);
     totalQuizzes = parseInt(q || '0');
-  } catch (e) { cards = []; }
+  } catch (e) {
+    console.error("Failed to load WordWise data:", e);
+    cards = [];
+  }
 }
-async function save() { await localforage.setItem(STORAGE_KEY, JSON.stringify(cards)); await localforage.setItem(QUIZ_KEY, totalQuizzes.toString()); }
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
 function calculateSM2(card, quality) {
@@ -133,12 +149,12 @@ function renderWotd() {
 function toggleLike(id) {
   const c = cards.find(x => x.id === id);
   if (c) c.liked = !c.liked;
-  save(); updateStats();
+  save(true); updateStats();
 }
 function toggleRevisit(id) {
   const c = cards.find(x => x.id === id);
   if (c) c.revisit = !c.revisit;
-  save(); updateStats();
+  save(true); updateStats();
 }
 
 // TABS
@@ -400,9 +416,9 @@ function saveCard() {
   if (pending) addModalTag(pending); if (!front || back.length === 0) return;
   if (editingId) { const c = cards.find(x => x.id === editingId); if (c) { c.front = front; c.back = back; c.example = example; c.deck = deck; c.tags = [...modalTags]; c.note = note; } }
   else { cards.push({ id: genId(), front, back, example, deck, note, tags: [...modalTags], liked: false, revisit: false, pass: 0, fail: 0, created: Date.now(), repetition: 0, interval: 0, efactor: 2.5, nextReview: Date.now() }); }
-  save(); closeModal(); renderAll();
+  save(true); closeModal(); renderAll();
 }
-function deleteCard(id) { if (!confirm('Delete this card?')) return; cards = cards.filter(c => c.id !== id); expandedCards.delete(id); save(); renderAll(); }
+function deleteCard(id) { if (!confirm('Delete this card?')) return; cards = cards.filter(c => c.id !== id); expandedCards.delete(id); save(true); renderAll(); }
 
 // QUIZ
 let quizCards = [], quizIdx = 0, quizCorrect = 0, quizMode = '';
@@ -552,10 +568,10 @@ function gradeQuiz(quality) { // quality 0-5
     calculateSM2(real, quality);
     if (quality >= 3) quizCorrect++;
   }
-  save(); quizIdx++; setTimeout(showQuizQuestion, quality >= 3 ? 400 : 800);
+  save(true); quizIdx++; setTimeout(showQuizQuestion, quality >= 3 ? 400 : 800);
 }
 function showResults() {
-  totalQuizzes++; save(); updateStats();
+  totalQuizzes++; save(true); updateStats();
   const pct = quizCards.length ? Math.round(quizCorrect / quizCards.length * 100) : 0;
   const tagInfo = quizSelectedTags.size > 0 ? `<div style="margin-bottom:12px;">${[...quizSelectedTags].map(t => tagHTML(t)).join(' ')}</div>` : '';
   document.getElementById('quizArea').innerHTML = `<div class="results"><h2>Quiz Complete!</h2>${tagInfo}<div class="score">${pct}%</div>
@@ -589,7 +605,7 @@ function importCards() {
         cards.push({ id: genId(), front: String(item.front), back: toArr(item.back), example: toArr(item.example || item.examples), deck: item.deck || '', note: item.note || '', tags, liked: !!item.liked, revisit: !!item.revisit, pass: parseInt(item.pass) || 0, fail: parseInt(item.fail) || 0, created: Date.now(), repetition: item.repetition || 0, interval: item.interval || 0, efactor: item.efactor || 2.5, nextReview: item.nextReview || Date.now() }); count++;
       }
     });
-    save(); renderAll(); msg.innerHTML = `<span style="color:var(--green)">✓ Imported ${count} cards!</span>`;
+    save(true); renderAll(); msg.innerHTML = `<span style="color:var(--green)">✓ Imported ${count} cards!</span>`;
     document.getElementById('importArea').value = '';
   } catch (e) { msg.innerHTML = `<span style="color:var(--red)">✗ Invalid JSON: ${esc(e.message)}</span>`; }
 }
