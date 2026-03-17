@@ -605,3 +605,21 @@ body::before {
 .markdown-body table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 14px; }
 .markdown-body th, .markdown-body td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
 .markdown-body th { background: var(--surface2); font-weight: 700; }
+
+/* Notes */
+.card-note-block {
+  background: var(--bg3); border-left: 3px solid var(--accent);
+  padding: 10px 14px; margin-top: 8px; font-size: 13px; color: var(--text2);
+  border-radius: 4px; line-height: 1.5; font-style: italic; white-space: pre-wrap;
+}
+.quiz-note-section {
+  margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border);
+  text-align: left; width: 100%;
+}
+.quiz-note-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); padding: 12px; font-family: 'Outfit', sans-serif;
+  font-size: 14px; resize: vertical; margin-top: 8px; outline: none; transition: border-color 0.2s;
+}
+.quiz-note-input:focus { border-color: var(--accent); }
+
