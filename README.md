@@ -43,4 +43,17 @@ WordWise provides a quick overview of your progress:
 
 ---
 
+## 🚀 Future Roadmap
+
+We are constantly looking to improve WordWise. Here are some of the high-impact features planned for future updates:
+
+- [ ] **Cloze Deletions**: Support for "fill-in-the-blank" style cards (e.g., `The {{c1::capital}} of France is {{c2::Paris}}`) for more effective contextual learning.
+- [ ] **Image Occlusion**: The ability to upload images and "hide" specific parts to test anatomical, geographic, or technical diagrams.
+- [ ] **Advanced Leech Management**: Automated detection of "leech" cards (cards that are consistently failed) with suggestions to re-word or break them down.
+- [ ] **Cloud Sync & Remote Backups**: Integration with GitHub, Google Drive, or a dedicated backend to ensure your data is safe even if browser cache is cleared.
+- [ ] **Predictive Mastery Stats**: Advanced data visualizations showing "Memory Decay" curves and predicted mastery dates for your collection.
+- [ ] **Audio Support**: Integration with Text-to-Speech (TTS) or local audio uploads for language learners to master pronunciation.
+
+---
+
 Built with ❤️ for learners everywhere.

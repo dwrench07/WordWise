@@ -202,26 +202,44 @@ async function load() {
 }
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
-function calculateSM2(card, quality) {
-  // quality: 0 (Again), 3 (Hard), 4 (Good), 5 (Easy)
-  if (quality >= 3) {
-    if (card.repetition === 0) { card.interval = 1; }
-    else if (card.repetition === 1) { card.interval = 6; }
-    else { card.interval = Math.round(card.interval * card.efactor); }
-    card.repetition++;
-  } else {
-    card.repetition = 0;
-    card.interval = 1;
+const fsrs_engine = window.fsrs_api ? window.fsrs_api.fsrs() : null;
+
+function calculateFSRSRating(quality) {
+  if (!window.fsrs_api) return 3; // Fallback
+  if (quality === 0) return window.fsrs_api.Rating.Again;
+  if (quality === 3) return window.fsrs_api.Rating.Hard;
+  if (quality === 4) return window.fsrs_api.Rating.Good;
+  if (quality === 5) return window.fsrs_api.Rating.Easy;
+  return window.fsrs_api.Rating.Good;
+}
+
+function calculateFSRS(card, quality) {
+  if (!window.fsrs_api) return; // Wait for load
+  
+  if (!card.fsrs) {
+    card.fsrs = window.fsrs_api.createEmptyCard(new Date(card.created || Date.now()));
+    // Fallback migration: If card had previous repetitions, emulate stability
+    if (card.interval && card.interval > 0) {
+      card.fsrs.stability = card.interval;
+      card.fsrs.reps = card.repetition || 0;
+      card.fsrs.difficulty = 5;
+      card.fsrs.state = window.fsrs_api.State.Review;
+    }
   }
-  card.efactor = card.efactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-  if (card.efactor < 1.3) card.efactor = 1.3;
-  // Calculate next review in milliseconds (interval * 24 hours)
-  card.nextReview = Date.now() + (card.interval * 24 * 60 * 60 * 1000);
+
+  const rating = calculateFSRSRating(quality);
+  const scheduling = fsrs_engine.repeat(card.fsrs, new Date());
+  card.fsrs = scheduling[rating].card;
+
+  card.nextReview = new Date(card.fsrs.due).getTime();
+  card.interval = card.fsrs.scheduled_days || 0;
+  card.repetition = card.fsrs.reps || 0;
 }
 
 function getStatus(c) {
-  if (c.repetition === 0 && c.pass === 0 && c.fail === 0) return 'new';
+  if (c.repetition === 0 && (!c.fsrs || c.fsrs.state === 0)) return 'new';
   if (Date.now() >= c.nextReview) return 'due';
+  if (c.fsrs && c.fsrs.stability > 21) return 'mastered';
   if (c.interval > 21) return 'mastered';
   return 'learning';
 }
@@ -270,11 +288,20 @@ function toggleRevisit(id) {
 }
 
 // TABS
+let lastCardsScroll = 0;
 function switchTab(name, el) {
+  const currentTab = document.querySelector('.tab.active');
+  const currentName = currentTab ? currentTab.textContent.toLowerCase() : '';
+  if (currentName === 'cards') lastCardsScroll = window.scrollY;
+
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('sec-' + name).classList.add('active');
+
+  if (name === 'cards') {
+    window.scrollTo({ top: lastCardsScroll, behavior: 'instant' });
+  }
   if (name === 'quiz') {
     showQuizSetup();
     setTimeout(() => {
@@ -806,7 +833,7 @@ function gradeQuiz(quality) { // quality 0-5
   }
 
   if (real) {
-    calculateSM2(real, quality);
+    calculateFSRS(real, quality);
     let baseXP = quality >= 3 ? 5 : 1;
     let earnedXP = baseXP;
 
