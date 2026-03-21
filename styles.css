@@ -15,6 +15,30 @@
   --purple: #7c3aed;
   --cyan: #0891b2;
   --radius: 12px;
+  --tag-bg-l: 50%;
+  --tag-bg-a: 0.15;
+  --tag-fg-l: 35%;
+}
+
+[data-theme="dark"] {
+  --bg: #0f111a;
+  --surface: #1a1d2e;
+  --surface2: #24283b;
+  --border: #292e42;
+  --border2: #3b4261;
+  --text: #c0caf5;
+  --text2: #9aa5ce;
+  --text3: #565f89;
+  --accent: #ff9e64;
+  --accent2: #e0af68;
+  --green: #9ece6a;
+  --red: #f7768e;
+  --blue: #7aa2f7;
+  --purple: #bb9af7;
+  --cyan: #7dcfff;
+  --tag-bg-l: 25%;
+  --tag-bg-a: 0.3;
+  --tag-fg-l: 80%;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
@@ -118,6 +142,9 @@ body::before {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-radius: 0 0 16px 16px;
+}
+[data-theme="dark"] .header {
+  background: rgba(15, 17, 26, 0.7);
 }
 .logo {
   font-size: 28px; font-weight: 900; letter-spacing: -1px;
@@ -629,6 +656,99 @@ body::before {
   .empty { padding: 40px 16px; }
   .empty-icon { font-size: 36px; }
   .empty h3 { font-size: 16px; }
+}
+
+/* User Progress (Sidebar) */
+.user-progress-card {
+  background: var(--surface2); border-radius: 10px; padding: 12px;
+  margin-bottom: 20px; border: 1px solid var(--border);
+}
+.progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.level-badge {
+  font-size: 11px; font-weight: 700; background: var(--accent); color: #fff;
+  padding: 2px 8px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.streak-flame { font-size: 14px; display: flex; align-items: center; gap: 4px; color: var(--text2); font-weight: 600; }
+.streak-flame.active { color: #f97316; }
+.streak-freeze { font-size: 14px; display: flex; align-items: center; gap: 4px; color: var(--text2); font-weight: 600; margin-left:8px; }
+.streak-freeze.active { color: #38bdf8; }
+.xp-bar-bg { width: 100%; height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-bottom: 6px; border: 1px solid var(--border); }
+.xp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.3s ease; }
+.xp-text { font-size: 10px; color: var(--text3); font-family: 'JetBrains Mono', monospace; text-align: right; }
+
+/* Daily Missions & Sunk Cost */
+.quest-list { display: flex; flex-direction: column; gap: 10px; margin-top:16px; border-top: 1px solid var(--border); padding-top:12px; }
+.quest-header { font-size: 13px; font-weight: 700; color: var(--text); display:flex; justify-content:space-between; align-items:center; }
+.quest-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px; position: relative; overflow: hidden; }
+.quest-title { font-size: 11px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+.quest-bar-bg { width: 100%; height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; }
+.quest-bar-fill { height: 100%; background: var(--blue); transition: width 0.3s; }
+.quest-claim-btn { 
+  position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(5, 150, 105, 0.9); 
+  color: #fff; font-size: 12px; font-weight: 700; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.quest-item.completed .quest-claim-btn { opacity: 1; pointer-events: all; }
+.sunk-cost-tracker {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3);
+  text-align: center; margin-top: 16px; padding: 8px; border: 1px dashed var(--border2);
+  border-radius: 6px; background: var(--surface);
+}
+
+/* Toast Notifications */
+#toastContainer {
+  position: fixed; bottom: 20px; right: 20px; z-index: 1000;
+  display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+}
+.toast {
+  background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent);
+  padding: 12px 20px; border-radius: 8px; color: var(--text); font-weight: 600; font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px;
+  animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  pointer-events: all;
+}
+.toast.toast-crit { border-left-color: var(--purple); background: linear-gradient(to right, var(--surface), var(--surface2)); }
+.toast.toast-quest { border-left-color: var(--green); }
+.toast.fade-out { animation: fadeOutRight 0.3s ease forwards; }
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes fadeOutRight {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+
+/* Heatmap */
+.heatmap-wrapper {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; margin-bottom: 30px; overflow-x: auto;
+}
+.heatmap-header { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+.heatmap-grid {
+  display: flex; gap: 4px;
+}
+.heatmap-col { display: flex; flex-direction: column; gap: 4px; }
+.heatmap-day {
+  width: 12px; height: 12px; border-radius: 3px; background: var(--surface2);
+  transition: transform 0.1s; border: 1px solid rgba(0,0,0,0.05);
+}
+[data-theme="dark"] .heatmap-day { border-color: rgba(255,255,255,0.05); }
+.heatmap-day:hover { transform: scale(1.2); z-index: 10; cursor: pointer; }
+.heatmap-day.lvl-1 { background: rgba(5, 150, 105, 0.3); }
+.heatmap-day.lvl-2 { background: rgba(5, 150, 105, 0.6); }
+.heatmap-day.lvl-3 { background: rgba(5, 150, 105, 0.85); }
+.heatmap-day.lvl-4 { background: rgba(5, 150, 105, 1); }
+[data-theme="dark"] .heatmap-day.lvl-1 { background: rgba(158, 206, 106, 0.3); }
+[data-theme="dark"] .heatmap-day.lvl-2 { background: rgba(158, 206, 106, 0.6); }
+[data-theme="dark"] .heatmap-day.lvl-3 { background: rgba(158, 206, 106, 0.85); }
+[data-theme="dark"] .heatmap-day.lvl-4 { background: rgba(158, 206, 106, 1); }
+.heatmap-tooltip {
+  position: absolute; background: var(--text); color: var(--bg); padding: 4px 8px;
+  border-radius: 4px; font-size: 11px; z-index: 100; pointer-events: none;
+  font-family: 'JetBrains Mono', monospace; opacity: 0; transition: opacity 0.2s;
+  transform: translate(-50%, -100%); margin-top: -8px;
 }
 
 /* Infinite scroll loader */

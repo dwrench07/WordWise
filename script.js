@@ -17,18 +17,27 @@ let saveTimer = null;
 let isAutoPlaying = false;
 let autoPlayInterval = 5; // seconds
 let autoPlayTimer = null;
+let userXP = 0;
+let userStreak = 0;
+let userFreezes = 0;
+let lastStudyDate = '';
+let studyHistory = {};
+let currentTheme = 'light';
+let totalStudySeconds = 0;
+let currentCardStartTime = 0;
+let dailyQuests = [];
+let questDate = '';
 const STORAGE_KEY = 'wordwise_cards_v5';
 const QUIZ_KEY = 'wordwise_quizzes_v5';
 
-const TAG_COLORS = [
-  { bg: 'rgba(232,93,38,0.12)', fg: '#c44b1a' }, { bg: 'rgba(124,58,237,0.1)', fg: '#6528c7' },
-  { bg: 'rgba(5,150,105,0.1)', fg: '#047857' }, { bg: 'rgba(14,116,144,0.1)', fg: '#0b5e73' },
-  { bg: 'rgba(212,136,10,0.1)', fg: '#a16b08' }, { bg: 'rgba(220,47,85,0.1)', fg: '#b8234a' },
-  { bg: 'rgba(8,145,178,0.1)', fg: '#076e87' }, { bg: 'rgba(219,39,119,0.1)', fg: '#a11d64' },
-  { bg: 'rgba(109,40,217,0.1)', fg: '#5b21b6' }, { bg: 'rgba(6,148,162,0.1)', fg: '#047481' },
-];
-
-function tagColor(n) { let h = 0; for (let i = 0; i < n.length; i++)h = n.charCodeAt(i) + ((h << 5) - h); return TAG_COLORS[Math.abs(h) % TAG_COLORS.length]; }
+function tagColor(name) {
+  const hash = Array.from(name).reduce((h, c) => c.charCodeAt(0) + ((h << 5) - h), 0);
+  const h = Math.abs(hash) % 360;
+  return { 
+    bg: `hsla(${h}, 70%, var(--tag-bg-l), var(--tag-bg-a))`, 
+    fg: `hsl(${h}, 80%, var(--tag-fg-l))` 
+  };
+}
 function tagHTML(n, s) { const c = tagColor(n); return `<span class="tag" style="background:${c.bg};color:${c.fg};${s ? 'font-size:9px;padding:1px 6px;' : ''}">${esc(n)}</span>`; }
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function toArr(v) { if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean); if (typeof v === 'string' && v.trim()) return [v.trim()]; return []; }
@@ -66,6 +75,15 @@ function save(immediate = false) {
       await localforage.setItem(QUIZ_KEY, totalQuizzes.toString());
       await localforage.setItem('wordwise_folders_v5', JSON.stringify(folders));
       await localforage.setItem('wordwise_folderSort_v5', folderSortMode);
+      await localforage.setItem('wordwise_xp', userXP.toString());
+      await localforage.setItem('wordwise_streak', userStreak.toString());
+      await localforage.setItem('wordwise_freezes', userFreezes.toString());
+      await localforage.setItem('wordwise_lsd', lastStudyDate);
+      await localforage.setItem('wordwise_hist', JSON.stringify(studyHistory));
+      await localforage.setItem('wordwise_theme', currentTheme);
+      await localforage.setItem('wordwise_tss', totalStudySeconds.toString());
+      await localforage.setItem('wordwise_quests', JSON.stringify(dailyQuests));
+      await localforage.setItem('wordwise_questdate', questDate);
     } catch (e) { console.error("Failed to save WordWise data:", e); }
   };
   if (immediate) performSave();
@@ -100,6 +118,22 @@ async function load() {
     });
     const q = await localforage.getItem(QUIZ_KEY);
     totalQuizzes = parseInt(q || '0');
+
+    const xp = await localforage.getItem('wordwise_xp'); if (xp) userXP = parseInt(xp);
+    const streak = await localforage.getItem('wordwise_streak'); if (streak) userStreak = parseInt(streak);
+    const freezes = await localforage.getItem('wordwise_freezes'); if (freezes) userFreezes = parseInt(freezes);
+    const lsd = await localforage.getItem('wordwise_lsd'); if (lsd) lastStudyDate = lsd;
+    const hist = await localforage.getItem('wordwise_hist'); if (hist) studyHistory = typeof hist === 'string' ? JSON.parse(hist) : hist;
+    
+    const tss = await localforage.getItem('wordwise_tss'); if (tss) totalStudySeconds = parseInt(tss);
+    const dq = await localforage.getItem('wordwise_quests'); if (dq) dailyQuests = typeof dq === 'string' ? JSON.parse(dq) : dq;
+    const qd = await localforage.getItem('wordwise_questdate'); if (qd) questDate = qd;
+
+    const th = await localforage.getItem('wordwise_theme'); 
+    if (th) { currentTheme = th; if (currentTheme === 'dark') document.documentElement.dataset.theme = 'dark'; updateThemeBtn(); }
+    
+    generateDailyQuests(); // ensures missing quests are hydrated based on date
+    updateGamificationUI();
   } catch (e) {
     console.error("Failed to load WordWise data:", e);
     cards = [];
@@ -597,6 +631,8 @@ function showQuizQuestion() {
     setTimeout(() => document.getElementById('typeInput')?.focus(), 100);
   }
   
+  currentCardStartTime = Date.now();
+
   if (isAutoPlaying) {
     autoPlayTimer = setTimeout(() => {
       revealAnswer();
@@ -677,9 +713,33 @@ function checkType() {
 }
 function gradeQuiz(quality) { // quality 0-5
   const real = cards.find(c => c.id === quizCards[quizIdx].id);
+
+  if (currentCardStartTime > 0) {
+    const elapsedSecs = Math.floor((Date.now() - currentCardStartTime) / 1000);
+    totalStudySeconds += Math.min(elapsedSecs, 60); // Cap at 60s max per card
+    currentCardStartTime = 0;
+    updateSunkCostUI();
+  }
+
   if (real) {
     calculateSM2(real, quality);
-    if (quality >= 3) quizCorrect++;
+    let baseXP = quality >= 3 ? 5 : 1;
+    let earnedXP = baseXP;
+    
+    // Critical Hit logic (10% chance)
+    if (Math.random() < 0.10) { 
+      earnedXP *= 3;
+      showToast(`✨ CRITICAL HIT! +${earnedXP} XP`, 'toast-crit');
+    }
+
+    if (quality >= 3) {
+      quizCorrect++;
+      updateQuests('cards_reviewed', 1);
+      if (quality >= 4) updateQuests('easy_grades', 1);
+    }
+    grantXP(earnedXP);
+    updateQuests('earn_xp', earnedXP);
+    recordHeatmapActivity();
   }
   save(true); quizIdx++; setTimeout(showQuizQuestion, quality >= 3 ? 400 : 800);
 }
@@ -872,6 +932,215 @@ function importMarkdownData(mdString, filename) {
   });
 
   save(true); renderAll(); alert(`Imported ${count} cards from Markdown into "${folderName}".`);
+}
+
+// Gamification & Theme Logic
+function toggleTheme() {
+  currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+  if (currentTheme === 'dark') document.documentElement.dataset.theme = 'dark';
+  else delete document.documentElement.dataset.theme;
+  updateThemeBtn();
+  save();
+}
+function updateThemeBtn() {
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = currentTheme === 'light' ? '🌙' : '☀️';
+}
+function grantXP(amount) {
+  userXP += amount;
+  updateGamificationUI();
+  save();
+}
+function recordHeatmapActivity() {
+  const today = new Date().toISOString().slice(0,10);
+  if (!studyHistory[today]) studyHistory[today] = 0;
+  studyHistory[today]++;
+  
+  if (lastStudyDate !== today) {
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().slice(0,10);
+    if (lastStudyDate === yesterdayStr) {
+      userStreak++;
+      if (userStreak > 0 && userStreak % 7 === 0) {
+        if (userFreezes < 2) {
+          userFreezes++;
+          showToast('❄️ Streak Freeze Earned!', 'toast-quest');
+        }
+      }
+    } else if (lastStudyDate) {
+      const lastDate = new Date(lastStudyDate);
+      const currDate = new Date(today);
+      const diffDays = Math.floor((currDate - lastDate) / (1000 * 60 * 60 * 24));
+      const gap = diffDays - 1; // days missed
+      if (gap > 0 && userFreezes >= gap) {
+        userFreezes -= gap;
+        userStreak++;
+        showToast(`Used ${gap} Freeze(s) to save your streak!`, 'toast-quest');
+      } else {
+        userStreak = 1;
+        showToast('Streak lost!', 'toast-crit');
+      }
+    } else {
+      userStreak = 1;
+    }
+    lastStudyDate = today;
+    generateDailyQuests();
+  }
+  updateGamificationUI();
+  save();
+}
+function updateGamificationUI() {
+  const level = Math.floor(Math.sqrt(userXP / 50)) + 1;
+  const currentLevelXP = 50 * Math.pow(level - 1, 2);
+  const nextLevelXP = 50 * Math.pow(level, 2);
+  const progressPct = Math.max(0, Math.min(100, ((userXP - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100));
+
+  const lb = document.getElementById('levelBadge'); if(lb) lb.textContent = 'Lvl ' + level;
+  const xt = document.getElementById('xpText'); if(xt) xt.textContent = userXP;
+  const xn = document.getElementById('xpNextText'); if(xn) xn.textContent = nextLevelXP;
+  const xf = document.getElementById('xpBarFill'); if(xf) xf.style.width = progressPct + '%';
+  const sf = document.getElementById('streakFlame');
+  const sc = document.getElementById('streakCount');
+  const fz = document.getElementById('streakFreeze');
+  const fc = document.getElementById('freezeCount');
+  if (sc) sc.textContent = userStreak;
+  if (fc) fc.textContent = userFreezes;
+  if (sf) {
+    const today = new Date().toISOString().slice(0,10);
+    if (lastStudyDate === today && userStreak > 0) sf.classList.add('active');
+    else sf.classList.remove('active');
+  }
+  if (fz) {
+    if (userFreezes > 0) fz.classList.add('active');
+    else fz.classList.remove('active');
+  }
+  renderHeatmap();
+  renderQuestsUI();
+  updateSunkCostUI();
+}
+function renderHeatmap() {
+  const c = document.getElementById('heatmapContainer'); if(!c) return;
+  const days = [];
+  for(let i=59; i>=0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0,10));
+  }
+  let html = `<div class="heatmap-wrapper"><div class="heatmap-header">Study Activity</div><div class="heatmap-grid" style="position:relative;">`;
+  
+  for(let col=0; col<Math.ceil(60/7); col++) {
+    html += `<div class="heatmap-col">`;
+    for(let row=0; row<7; row++) {
+      const idx = col*7 + row;
+      if (idx < 60) {
+        const dateStr = days[idx];
+        const count = studyHistory[dateStr] || 0;
+        let lvl = 0;
+        if(count > 0) lvl=1; if(count > 10) lvl=2; if(count > 25) lvl=3; if(count > 50) lvl=4;
+        html += `<div class="heatmap-day lvl-${lvl}" onmouseenter="showHeatmapTooltip(event, '${dateStr}', ${count})" onmouseleave="hideHeatmapTooltip()"></div>`;
+      }
+    }
+    html += `</div>`;
+  }
+  html += `</div></div>`;
+  c.innerHTML = html;
+}
+window.showHeatmapTooltip = function(e, date, count) {
+  let tip = document.getElementById('heatmapTooltip');
+  if(!tip) {
+    tip = document.createElement('div'); tip.id = 'heatmapTooltip'; tip.className = 'heatmap-tooltip';
+    document.body.appendChild(tip);
+  }
+  tip.textContent = `${count} cards on ${date}`;
+  tip.style.opacity = '1'; tip.style.left = e.pageX + 'px'; tip.style.top = e.pageY + 'px';
+}
+window.hideHeatmapTooltip = function() {
+  const tip = document.getElementById('heatmapTooltip'); if(tip) tip.style.opacity = '0';
+}
+
+// Notifications, Quests & Sunk Cost
+function showToast(message, typeClass = '') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast ${typeClass}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('fade-out');
+    toast.addEventListener('animationend', () => toast.remove());
+  }, 3000);
+}
+
+function generateDailyQuests() {
+  const today = new Date().toISOString().slice(0,10);
+  if (questDate === today && dailyQuests && dailyQuests.length > 0) return;
+  
+  questDate = today;
+  dailyQuests = [
+    { id: 'q1', title: 'Review 20 cards', type: 'cards_reviewed', target: 20, current: 0, reward: 50 },
+    { id: 'q2', title: 'Earn 100 XP', type: 'earn_xp', target: 100, current: 0, reward: 100 },
+    { id: 'q3', title: 'Grade 5 Easy cards', type: 'easy_grades', target: 5, current: 0, reward: 75 }
+  ];
+  save(true);
+  renderQuestsUI();
+}
+
+function updateQuests(type, amount) {
+  let updated = false;
+  if (!dailyQuests) return;
+  dailyQuests.forEach(q => {
+    if (q.type === type && q.current < q.target && !q.claimed) {
+      q.current += amount;
+      if (q.current > q.target) q.current = q.target;
+      updated = true;
+    }
+  });
+  if (updated) { save(true); renderQuestsUI(); }
+}
+
+function claimQuest(id) {
+  const q = dailyQuests.find(q => q.id === id);
+  if (q && q.current >= q.target && !q.claimed) {
+    q.claimed = true;
+    grantXP(q.reward);
+    showToast(`Quest Complete! +${q.reward} XP`, 'toast-quest');
+    save(true);
+    renderQuestsUI();
+  }
+}
+
+function renderQuestsUI() {
+  const container = document.getElementById('questList');
+  if(!container) return;
+  if(!dailyQuests || dailyQuests.length === 0) generateDailyQuests();
+  
+  let html = `<div class="quest-header">Daily Missions</div>`;
+  dailyQuests.forEach(q => {
+    const pct = Math.max(0, Math.min(100, (q.current / q.target) * 100));
+    const completed = q.current >= q.target;
+    html += `
+      <div class="quest-item ${completed && !q.claimed ? 'completed' : ''}" style="${q.claimed ? 'opacity:0.5;filter:grayscale(1);' : ''}">
+        <div class="quest-title">${q.title} <span style="float:right;">${q.current}/${q.target}</span></div>
+        <div class="quest-bar-bg"><div class="quest-bar-fill" style="width:${pct}%"></div></div>
+        <button class="quest-claim-btn" onclick="claimQuest('${q.id}')">${q.claimed ? 'CLAIMED' : 'CLAIM REWARD'}</button>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+function updateSunkCostUI() {
+  const el = document.getElementById('sunkCostTracker');
+  if (!el) return;
+  if (totalStudySeconds === 0) { el.style.display = 'none'; return; }
+  
+  const h = Math.floor(totalStudySeconds / 3600);
+  const m = Math.floor((totalStudySeconds % 3600) / 60);
+  let text = '⚡ Time Invested: ';
+  if (h > 0) text += `${h}h `;
+  text += `${m}m`;
+  el.textContent = text;
+  el.style.display = 'block';
 }
 
 function loadSampleDeck() {

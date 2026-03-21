@@ -23,6 +23,21 @@
       <div class="sidebar-actions">
         <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;" onclick="openAddFolderModal(null)">＋ New Folder</button>
       </div>
+      <div class="user-progress-card">
+        <div class="progress-header">
+          <div class="level-badge" id="levelBadge">Lvl 1</div>
+          <div style="display:flex;">
+            <div class="streak-flame" id="streakFlame" title="Study Streak">🔥 <span id="streakCount">0</span></div>
+            <div class="streak-freeze" id="streakFreeze" title="Streak Freezes (Protects streak if you miss a day)">❄️ <span id="freezeCount">0</span></div>
+          </div>
+        </div>
+        <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div></div>
+        <div class="xp-text"><span id="xpText">0</span> / <span id="xpNextText">50</span> XP</div>
+        <div class="quest-list" id="questList">
+          <!-- Quests injected here -->
+        </div>
+      </div>
+      <div id="sunkCostTracker" class="sunk-cost-tracker" style="display:none;"></div>
       <div class="sidebar-section-title" id="folderRootTarget" ondragover="folderDragOver(event)" ondragleave="folderDragLeave(event)" ondrop="folderDrop(event, null)">
         <span>Folders</span>
         <button class="sort-btn" id="folderSortBtn" onclick="toggleFolderSort()" title="Sort Folders">⇅ Name</button>
@@ -38,7 +53,8 @@
         <button class="mobile-menu-btn" onclick="document.getElementById('appSidebar').classList.add('open')">☰</button>
         <div class="logo mobile-logo">WordWise</div>
       </div>
-      <div class="header-right">
+      <div class="header-right" style="display:flex;align-items:center;gap:16px;">
+        <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="themeToggleBtn" style="padding:4px;border-radius:50%;font-size:16px;width:34px;height:34px;justify-content:center;border-color:var(--border);">🌙</button>
         <div class="tabs">
           <button class="tab active" onclick="switchTab('cards', this)">Cards</button>
           <button class="tab" onclick="switchTab('quiz', this)">Quiz</button>
@@ -58,6 +74,8 @@
     <div class="stat-card"><div class="stat-num" id="statRevisit">0</div><div class="stat-label">Revisit</div></div>
     <div class="stat-card"><div class="stat-num" id="statQuizzes">0</div><div class="stat-label">Quizzes Done</div></div>
   </div>
+  
+  <div id="heatmapContainer"></div>
 
   <div class="section active" id="sec-cards">
     <div class="toolbar">
@@ -191,6 +209,8 @@
     </div>
   </div>
 </div>
+
+<div id="toastContainer"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 <script src="script.js"></script>
