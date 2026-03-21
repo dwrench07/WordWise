@@ -14,6 +14,9 @@ let expandedCards = new Set();
 let quizCardCount = 20;
 let currentDeckFilter = 'all';
 let saveTimer = null;
+let isAutoPlaying = false;
+let autoPlayInterval = 5; // seconds
+let autoPlayTimer = null;
 const STORAGE_KEY = 'wordwise_cards_v5';
 const QUIZ_KEY = 'wordwise_quizzes_v5';
 
@@ -246,7 +249,7 @@ function getFilteredCards() {
     else if (currentFilter !== 'all') matchFilter = getStatus(c) === currentFilter;
     const matchTags = activeTags.size === 0 ||
       (tagMatchMode === 'AND' ? [...activeTags].every(t => (c.tags || []).includes(t)) : [...activeTags].some(t => (c.tags || []).includes(t)));
-      
+
     let matchFolder = true;
     if (selectedFolders.size > 0) {
       if (!c.folderId) {
@@ -256,7 +259,7 @@ function getFilteredCards() {
         matchFolder = anc.some(id => selectedFolders.has(id));
       }
     }
-    
+
     return matchSearch && matchFilter && matchTags && matchFolder;
   });
 }
@@ -466,6 +469,21 @@ function deleteCard(id) { if (!confirm('Delete this card?')) return; cards = car
 // QUIZ
 let quizCards = [], quizIdx = 0, quizCorrect = 0, quizMode = '';
 let quizSelectedTags = new Set();
+
+function filterQuizTags(query) {
+  const q = query.toLowerCase();
+  const allTags = getAllTags();
+  const filtered = allTags.filter(t => t.toLowerCase().includes(q));
+  
+  const grid = document.getElementById('quizTagGrid');
+  if (grid) {
+    grid.innerHTML = filtered.map(t => { 
+      const c = tagColor(t); 
+      return `<span class="quiz-tag-chip ${quizSelectedTags.has(t) ? 'selected' : ''}" style="background:${c.bg};color:${c.fg};" onclick="toggleQuizTag('${esc(t).replace(/'/g, "\\'")}')">${esc(t)}</span>`; 
+    }).join('');
+  }
+}
+
 function getQuizFilteredCards() {
   let pool = cards;
   if (selectedFolders.size > 0) {
@@ -496,9 +514,12 @@ function showQuizSetup() {
     ${allTags.length > 0 ? `<div class="quiz-tag-panel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <h4>🏷 Filter by Tags <span style="font-weight:400;color:var(--text2);">(select multiple)</span></h4>
-        <span class="tag-mode-toggle" onclick="toggleTagMatchMode()" title="Click to toggle ANY/ALL mode">${tagMatchMode === 'OR' ? 'Match ANY' : 'Match ALL'}</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="text" id="quizTagSearch" placeholder="Search tags..." oninput="filterQuizTags(this.value)" class="quiz-tag-search-input">
+          <span class="tag-mode-toggle" onclick="toggleTagMatchMode()" title="Click to toggle ANY/ALL mode">${tagMatchMode === 'OR' ? 'Match ANY' : 'Match ALL'}</span>
+        </div>
       </div>
-      <div class="quiz-tag-grid">${allTags.map(t => { const c = tagColor(t); return `<span class="quiz-tag-chip ${quizSelectedTags.has(t) ? 'selected' : ''}" style="background:${c.bg};color:${c.fg};" onclick="toggleQuizTag('${esc(t).replace(/'/g, "\\'")}')">${esc(t)}</span>`; }).join('')}</div>
+      <div class="quiz-tag-grid" id="quizTagGrid">${allTags.map(t => { const c = tagColor(t); return `<span class="quiz-tag-chip ${quizSelectedTags.has(t) ? 'selected' : ''}" style="background:${c.bg};color:${c.fg};" onclick="toggleQuizTag('${esc(t).replace(/'/g, "\\'")}')">${esc(t)}</span>`; }).join('')}</div>
       <div class="quiz-tag-count">${fc} card${fc !== 1 ? 's' : ''} ${quizSelectedTags.size > 0 ? 'matched' : 'available'}${likedCount > 0 ? ` · ${likedCount} liked` : ''} · ${dueCount} due</div>
       ${quizSelectedTags.size > 0 ? `<span style="font-size:11px;color:var(--accent);cursor:pointer;margin-top:4px;display:inline-block;" onclick="quizSelectedTags.clear();showQuizSetup();">Clear all</span>` : ''}</div>` : ``}
     <div class="quiz-count-row">
@@ -524,6 +545,7 @@ function shuffle(a) { const r = [...a]; for (let i = r.length - 1; i > 0; i--) {
 function startQuiz(mode) {
   const pool = getQuizFilteredCards();
   quizMode = mode; quizIdx = 0; quizCorrect = 0;
+  isAutoPlaying = false; stopAutoPlayTimer();
   const count = parseInt(document.getElementById('quizCountSelect')?.value || quizCardCount) || 20;
   if (mode === 'due') { quizCards = shuffle(pool.filter(c => getStatus(c) === 'due')); if (quizCards.length < 2) quizCards = shuffle(pool); }
   else if (mode === 'liked') { quizCards = shuffle(pool.filter(c => c.liked)); if (quizCards.length < 2) { alert('Need at least 2 liked cards.'); return; } }
@@ -549,21 +571,61 @@ function showQuizQuestion() {
   const hdr = `<div class="quiz-progress"><div class="quiz-progress-bar" style="width:${pct}%"></div></div><div class="quiz-tags-display">${tagsDisp}</div><div class="quiz-counter">${quizIdx + 1} / ${quizCards.length}</div><div class="quiz-word">${esc(card.front)}</div>`;
   const hint = card.deck ? `<div class="quiz-hint">${esc(card.deck)}</div>` : '';
 
-  if (quizMode === 'flip' || quizMode === 'revisit') {
-    area.innerHTML = `<div class="quiz-card">${hdr}${hint || '<div class="quiz-hint">Tap to reveal</div>'}
+  const autoPlayBar = `<div class="auto-play-bar">
+    <button class="btn btn-ghost btn-sm" onclick="prevAutoCard()" ${quizIdx === 0 ? 'disabled' : ''}>⏮ Prev</button>
+    <button class="btn ${isAutoPlaying ? 'btn-red' : 'btn-ghost'} btn-sm" onclick="toggleAutoPlay()">${isAutoPlaying ? '⏸ Pause' : '▶ Auto Play'}</button>
+    <div style="display:flex;align-items:center;gap:4px;">
+      <input type="number" id="autoPlayIntervalInput" value="${autoPlayInterval}" min="1" max="60" style="width:40px;padding:4px;" onchange="autoPlayInterval=parseInt(this.value)"> <span style="font-size:12px;color:var(--text2)">sec</span>
+    </div>
+  </div>`;
+
+  if (quizMode === 'flip' || quizMode === 'revisit' || quizMode === 'due' || quizMode === 'liked') {
+    area.innerHTML = `${autoPlayBar}<div class="quiz-card">${hdr}${hint || '<div class="quiz-hint">Tap to reveal</div>'}
       <div class="quiz-answer-block"><div class="quiz-answer-text" id="quizAnswer">${quizMeaningsHTML(card.back)}</div>${exBlock}</div>
-      <div class="quiz-actions" id="quizActions"><button class="btn btn-ghost" onclick="revealAnswer()">👁 Reveal</button></div></div>`;
-  } else if (quizMode === 'mc' || quizMode === 'due' || quizMode === 'liked') {
+      <div class="quiz-actions" id="quizActions"><button class="btn btn-ghost" onclick="revealAnswer()">👁 Reveal</button></div></div>
+      <div class="keyboard-hints">Keyboard: [Space] Reveal, [1] Again, [2] Hard, [3] Good, [4] Easy</div>`;
+  } else if (quizMode === 'mc') {
     const choices = getMCOptions(card);
     area.innerHTML = `<div class="quiz-card">${hdr}${hint}
       <div class="mc-options">${choices.map(ch => `<div class="mc-btn markdown-body" style="text-align:left;" onclick="checkMC(this,${ch === firstBack(card)})">${renderMarkdown(ch)}</div>`).join('')}</div>
       <div class="quiz-answer-block" style="margin-top:16px;"><div id="quizAnswer" style="display:none;"></div>${exBlock}</div></div>`;
   } else if (quizMode === 'type') {
-    area.innerHTML = `<div class="quiz-card">${hdr}${hint}
+    area.innerHTML = `${autoPlayBar}<div class="quiz-card">${hdr}${hint}
       <input class="type-input" id="typeInput" placeholder="Type the answer..." onkeydown="if(event.key==='Enter')checkType()">
       <div class="quiz-answer-block"><div class="quiz-answer-text" id="quizAnswer">${quizMeaningsHTML(card.back)}</div>${exBlock}</div>
-      <div class="quiz-actions"><button class="btn btn-primary" onclick="checkType()">Check</button></div></div>`;
+      <div class="quiz-actions" id="quizActions"><button class="btn btn-primary" onclick="checkType()">Check</button></div></div>`;
     setTimeout(() => document.getElementById('typeInput')?.focus(), 100);
+  }
+  
+  if (isAutoPlaying) {
+    autoPlayTimer = setTimeout(() => {
+      revealAnswer();
+      autoPlayTimer = setTimeout(() => {
+        gradeQuiz(4); // Default to Good (or just neutral moving on)
+      }, autoPlayInterval * 1000);
+    }, 1500); // 1.5 seconds to read the question before auto-revealing
+  }
+}
+
+function prevAutoCard() {
+  if (quizIdx > 0) {
+    stopAutoPlayTimer();
+    // Don't modify actual card SM2 if going backwards, just navigation
+    quizIdx--;
+    showQuizQuestion();
+  }
+}
+
+function toggleAutoPlay() {
+  isAutoPlaying = !isAutoPlaying;
+  stopAutoPlayTimer();
+  showQuizQuestion(); // re-render to update UI and start timer if needed
+}
+
+function stopAutoPlayTimer() {
+  if (autoPlayTimer) {
+    clearTimeout(autoPlayTimer);
+    autoPlayTimer = null;
   }
 }
 
@@ -621,8 +683,44 @@ function gradeQuiz(quality) { // quality 0-5
   }
   save(true); quizIdx++; setTimeout(showQuizQuestion, quality >= 3 ? 400 : 800);
 }
+
+// Global Keyboard Shortcuts for Quiz
+document.addEventListener('keydown', function(e) {
+  // Only apply if in quiz tab, not typing in an input/textarea (except typeInput where we handle Enter), and not in a modal
+  const activeSection = document.querySelector('.section.active');
+  if (!activeSection || activeSection.id !== 'sec-quiz') return;
+  if (document.getElementById('modal').classList.contains('show') || document.getElementById('folderModal').classList.contains('show')) return;
+  const tag = e.target.tagName.toLowerCase();
+  
+  // if typing in type-mode input, let it be (handled locally) or quiz interval
+  if ((tag === 'input' && e.target.id !== 'typeInput') || tag === 'textarea') return;
+
+  const acts = document.getElementById('quizActions');
+  if (!acts) return;
+
+  // Space to reveal
+  if (e.code === 'Space') {
+    if (tag !== 'input' && tag !== 'textarea') {
+      e.preventDefault(); // prevent scrolling
+    }
+    const revealBtn = acts.querySelector('.btn-ghost[onclick="revealAnswer()"]');
+    if (revealBtn) {
+      revealAnswer();
+    }
+  }
+
+  // Keys 1-4 for grading
+  if (acts.querySelectorAll('.btn').length >= 4 && !acts.querySelector('.btn-ghost[onclick="revealAnswer()"]')) {
+    if (e.key === '1') gradeQuiz(0); // Again
+    if (e.key === '2') gradeQuiz(3); // Hard
+    if (e.key === '3') gradeQuiz(4); // Good
+    if (e.key === '4') gradeQuiz(5); // Easy
+  }
+});
+
 function showResults() {
-  totalQuizzes++; save(true); updateStats();
+  stopAutoPlayTimer();
+  isAutoPlaying = false;
   const pct = quizCards.length ? Math.round(quizCorrect / quizCards.length * 100) : 0;
   const tagInfo = quizSelectedTags.size > 0 ? `<div style="margin-bottom:12px;">${[...quizSelectedTags].map(t => tagHTML(t)).join(' ')}</div>` : '';
   document.getElementById('quizArea').innerHTML = `<div class="results"><h2>Quiz Complete!</h2>${tagInfo}<div class="score">${pct}%</div>
@@ -676,22 +774,22 @@ function exportFolder(id) {
 function importData(e) {
   const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = function(event) {
+  reader.onload = function (event) {
     try {
       const result = event.target.result;
       if (file.name.endsWith('.md')) {
-         importMarkdownData(result, file.name);
+        importMarkdownData(result, file.name);
       } else {
-         const imported = JSON.parse(result);
-         if (imported.type === 'wordwise_folder_export') {
-           importFolderData(imported);
-         } else if (Array.isArray(imported)) {
-           importJsonCards(imported, file.name);
-         } else {
-           alert("Unrecognized format.");
-         }
+        const imported = JSON.parse(result);
+        if (imported.type === 'wordwise_folder_export') {
+          importFolderData(imported);
+        } else if (Array.isArray(imported)) {
+          importJsonCards(imported, file.name);
+        } else {
+          alert("Unrecognized format.");
+        }
       }
-    } catch(err) { alert("Import failed."); }
+    } catch (err) { alert("Import failed."); }
     e.target.value = '';
   };
   reader.readAsText(file);
@@ -720,7 +818,7 @@ function importFolderData(data) {
   });
   data.folders.forEach(f => {
     if (f.parentId && idMap[f.parentId]) f.parentId = idMap[f.parentId];
-    else f.parentId = null; 
+    else f.parentId = null;
     folders.push(f);
   });
   let count = 0;
@@ -739,40 +837,40 @@ function importMarkdownData(mdString, filename) {
   const folderName = filename.replace(/\.[^/.]+$/, "");
   const folderId = genId();
   folders.push({ id: folderId, name: folderName, parentId: null, expanded: true, created: Date.now() });
-  
+
   const lines = mdString.split('\n');
   let currentCard = null;
   let count = 0;
-  
+
   lines.forEach(line => {
     if (line.match(/^#{2,3}\s+(.*)/)) {
       if (currentCard && currentCard.front && currentCard.back.length > 0) {
-         cards.push(currentCard); count++;
+        cards.push(currentCard); count++;
       }
       currentCard = {
-         id: genId(), front: line.replace(/^#{2,3}\s+/, '').trim(),
-         back: [], example: [], tags: [], folderId: folderId,
-         liked: false, revisit: false, pass: 0, fail: 0, created: Date.now(), repetition:0, interval:0, efactor:2.5, nextReview:Date.now()
+        id: genId(), front: line.replace(/^#{2,3}\s+/, '').trim(),
+        back: [], example: [], tags: [], folderId: folderId,
+        liked: false, revisit: false, pass: 0, fail: 0, created: Date.now(), repetition: 0, interval: 0, efactor: 2.5, nextReview: Date.now()
       };
     } else if (currentCard) {
       if (line.trim().startsWith('Tags:')) {
-         currentCard.tags = line.replace('Tags:', '').split(',').map(t=>t.trim()).filter(Boolean);
+        currentCard.tags = line.replace('Tags:', '').split(',').map(t => t.trim()).filter(Boolean);
       } else if (line.trim() !== '') {
-         currentCard.back.push(line);
+        currentCard.back.push(line);
       }
     }
   });
   if (currentCard && currentCard.front && currentCard.back.length > 0) {
     cards.push(currentCard); count++;
   }
-  
+
   let recentlyAdded = cards.slice(-count);
   recentlyAdded.forEach(c => {
     if (c.back.length > 0) {
       c.back = [c.back.join('\n')];
     }
   });
-  
+
   save(true); renderAll(); alert(`Imported ${count} cards from Markdown into "${folderName}".`);
 }
 
@@ -812,8 +910,8 @@ let searchTimer = null;
 function debouncedRenderCards() { clearTimeout(searchTimer); searchTimer = setTimeout(renderCards, 150); }
 
 /* --- FOLDERS SYSTEM (Phase 2 Logic) --- */
-function getRootFolders() { return folders.filter(f => !f.parentId).sort((a,b) => folderSortMode === 'name' ? a.name.localeCompare(b.name) : b.created - a.created); }
-function getChildFolders(parentId) { return folders.filter(f => f.parentId === parentId).sort((a,b) => folderSortMode === 'name' ? a.name.localeCompare(b.name) : b.created - a.created); }
+function getRootFolders() { return folders.filter(f => !f.parentId).sort((a, b) => folderSortMode === 'name' ? a.name.localeCompare(b.name) : b.created - a.created); }
+function getChildFolders(parentId) { return folders.filter(f => f.parentId === parentId).sort((a, b) => folderSortMode === 'name' ? a.name.localeCompare(b.name) : b.created - a.created); }
 
 function getFolderAncestors(id) {
   let ancestors = [];
@@ -841,17 +939,17 @@ function buildFolderHTML(f, level = 0) {
   const children = getChildFolders(f.id);
   const hasChildren = children.length > 0;
   const isExpanded = f.expanded;
-  
+
   const isExplicit = selectedFolders.has(f.id);
   const isImplicit = getFolderAncestors(f.id).some(a => selectedFolders.has(a));
   const isSelected = isExplicit || isImplicit;
-  
+
   const toggleIcon = hasChildren ? `<div class="folder-toggle ${isExpanded ? 'expanded' : ''}" onclick="event.stopPropagation();toggleFolderExpansion('${f.id}')">▶</div>` : `<div class="folder-toggle hidden">▶</div>`;
   const iconHtml = f.icon ? `<div class="folder-icon">${esc(f.icon)}</div>` : `<div class="folder-icon">📁</div>`;
-  
+
   const validFolderIds = new Set([f.id, ...getAllDescendants(f.id)]);
   const count = cards.filter(c => validFolderIds.has(c.folderId)).length;
-  
+
   const actionsHtml = `
     <div class="folder-actions">
       <span onclick="event.stopPropagation();exportFolder('${f.id}')" title="Export">⬇️</span>
@@ -885,7 +983,7 @@ function renderFolders() {
   if (!tree) return;
   const sortBtn = document.getElementById('folderSortBtn');
   if (sortBtn) sortBtn.innerText = folderSortMode === 'name' ? '⇅ Name' : '⇅ Date';
-  
+
   if (folders.length === 0) {
     tree.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">No folders yet.<br>Click + New Folder</div>`;
     return;
@@ -896,10 +994,10 @@ function renderFolders() {
 function renderFolderOptions(selectEl, selectedId) {
   const buildOptions = (parentId, level, prefix = '') => {
     let opts = '';
-    const children = folders.filter(f => f.parentId === parentId).sort((a,b) => a.name.localeCompare(b.name));
+    const children = folders.filter(f => f.parentId === parentId).sort((a, b) => a.name.localeCompare(b.name));
     for (let f of children) {
       const sel = f.id === selectedId ? 'selected' : '';
-      opts += `<option value="${f.id}" ${sel}>${esc(prefix + (f.icon?f.icon+' ':'') + f.name)}</option>`;
+      opts += `<option value="${f.id}" ${sel}>${esc(prefix + (f.icon ? f.icon + ' ' : '') + f.name)}</option>`;
       opts += buildOptions(f.id, level + 1, prefix + '\u00A0\u00A0\u00A0\u00A0');
     }
     return opts;
@@ -970,10 +1068,10 @@ function toggleFolderExpansion(id) {
 }
 function toggleFolderSelection(id, e) {
   if (e && e.stopPropagation) e.stopPropagation();
-  
+
   const isDirect = selectedFolders.has(id);
   const isImplicit = getFolderAncestors(id).some(a => selectedFolders.has(a));
-  
+
   if (isDirect || isImplicit) {
     // Deselect
     selectedFolders.delete(id);
@@ -994,7 +1092,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal
 function migrateDecksToFolders() {
   let changed = false;
   let unorderedId = null;
-  
+
   cards.forEach(c => {
     // 1. Migrate legacy deck string if present
     if (c.deck !== undefined) {
@@ -1014,7 +1112,7 @@ function migrateDecksToFolders() {
       delete c.deck;
       changed = true;
     }
-    
+
     // 2. Put any card without a folder into "Unordered"
     if (!c.folderId) {
       if (!unorderedId) {
@@ -1034,8 +1132,8 @@ function migrateDecksToFolders() {
 }
 
 /* --- DRAG AND DROP --- */
-function cardDragStart(e, id) { e.dataTransfer.setData('text/plain', JSON.stringify({type: 'card', id})); }
-function folderDragStart(e, id) { e.dataTransfer.setData('text/plain', JSON.stringify({type: 'folder', id})); }
+function cardDragStart(e, id) { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'card', id })); }
+function folderDragStart(e, id) { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'folder', id })); }
 function folderDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
 function folderDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
 function folderDrop(e, targetFolderId) {
@@ -1058,7 +1156,7 @@ function folderDrop(e, targetFolderId) {
         if (f) { f.parentId = targetFolderId; save(true); renderFolders(); }
       }
     }
-  } catch(err) { console.error("Drop error", err); }
+  } catch (err) { console.error("Drop error", err); }
 }
 
 // async initialization
