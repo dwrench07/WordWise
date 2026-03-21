@@ -101,10 +101,13 @@
 
     <h3 style="margin-top:30px;margin-bottom:6px;">Import Cards</h3>
     <div style="color:var(--text2);font-size:13px;margin-bottom:12px;line-height:1.5;">
-      <b>General Format:</b> <code style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px;">[{"front":"word","back":["def1","def2"],"example":["ex1"],"deck":"deck_name","tags":["tag"],"liked":true}]</code><br>
-      <div style="margin-top:8px;"><b>For Vocabulary:</b> Put the word in <code>"front"</code> and definitions in the <code>"back"</code> array.</div>
-      <div style="margin-top:4px;"><b>For Coding/Tech:</b> Put the question in <code>"front"</code>. In the <code>"back"</code> array, write your explanation and use <code>\n</code> for line breaks. You can insert standard Markdown code blocks: <code>\n```javascript\nconsole.log('hi');\n```</code>.</div>
-      <i style="display:inline-block;margin-top:8px;">Note: The `deck` property is just a custom text label to help organize cards (e.g., "Programming" or "Spanish").</i>
+      <b>JSON Format:</b> <code style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px;">[{"front":"q","back":["a1"],"folder":"Name","tags":["tag"]}]</code><br>
+      <div style="margin-top:8px;"><b>1. Vocabulary:</b> Put the word in <code>"front"</code> and definitions in the <code>"back"</code> array.</div>
+      <div style="margin-top:4px;"><b>2. Coding/Tech:</b> Put the question in <code>"front"</code>. In the <code>"back"</code> array, use <code>\n</code> for line breaks and standard Markdown code blocks like <code>\n```javascript\n...```</code>.</div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--surface3);">
+        <b>3. Folders:</b> Use <code>"folder"</code> or <code>"deck"</code> in JSON to auto-create and organize your sidebar hierarchy.
+      </div>
+      <div style="margin-top:4px;"><b>4. Markdown Files:</b> Upload <code>.md</code> files—<code>## Headers</code> become card fronts and everything underneath becomes the back.</div>
     </div>
     <textarea class="json-area" id="importArea" placeholder='[
   {
