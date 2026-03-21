@@ -33,14 +33,63 @@ const QUIZ_KEY = 'wordwise_quizzes_v5';
 function tagColor(name) {
   const hash = Array.from(name).reduce((h, c) => c.charCodeAt(0) + ((h << 5) - h), 0);
   const h = Math.abs(hash) % 360;
-  return { 
-    bg: `hsla(${h}, 70%, var(--tag-bg-l), var(--tag-bg-a))`, 
-    fg: `hsl(${h}, 80%, var(--tag-fg-l))` 
+  return {
+    bg: `hsla(${h}, 70%, var(--tag-bg-l), var(--tag-bg-a))`,
+    fg: `hsl(${h}, 80%, var(--tag-fg-l))`
   };
 }
 function tagHTML(n, s) { const c = tagColor(n); return `<span class="tag" style="background:${c.bg};color:${c.fg};${s ? 'font-size:9px;padding:1px 6px;' : ''}">${esc(n)}</span>`; }
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function toArr(v) { if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean); if (typeof v === 'string' && v.trim()) return [v.trim()]; return []; }
+
+// Insights & Mantras
+const LEARNING_MANTRAS = [
+  "Active recall is 3x more powerful than rereading.",
+  "Mistakes are the evidence of progress.",
+  "Sleep is the final stage of studying.",
+  "Consistency beats intensity. Show up every day.",
+  "Your brain is a muscle; resistance means it's growing.",
+  "What you find hard today will be easy tomorrow.",
+  "Deep work creates deep memory."
+];
+const FUN_FACTS = [
+  "The word 'Alphabet' actually comes from the first two Greek letters: Alpha and Beta.",
+  "An 'ambigram' is a word that looks the same upside down (like 'SWIMS').",
+  "The dot over the letter 'i' and 'j' is actually called a 'tittle'.",
+  "The word 'set' has the most definitions in the English language (over 430!).",
+  "A 'pangram' is a sentence that contains every letter of the alphabet.",
+  "The shortest complete sentence in English is 'I am.'"
+];
+function renderDailyInsight() {
+  const el = document.getElementById('insightBanner'); if (!el) return;
+  const today = new Date().toISOString().slice(0, 10);
+  let seed = 0; for (let i = 0; i < today.length; i++)seed = today.charCodeAt(i) + ((seed << 5) - seed);
+
+  let html = '';
+
+  // 2. Always show an Insight (Mantra or Fact)
+  const isMantra = Math.abs(seed) % 2 === 0;
+  if (isMantra) {
+    const quote = LEARNING_MANTRAS[Math.abs(seed) % LEARNING_MANTRAS.length];
+    html += `
+      <div class="discovery-section mantra">
+        <div class="discovery-label">💡 Learning Mantra</div>
+        <div class="discovery-content"><i>"${quote}"</i></div>
+      </div>
+    `;
+  } else {
+    const fact = FUN_FACTS[Math.abs(seed) % FUN_FACTS.length];
+    html += `
+      <div class="discovery-section fact">
+        <div class="discovery-label">👀 Did You Know?</div>
+        <div class="discovery-content">${fact}</div>
+      </div>
+    `;
+  }
+
+  el.innerHTML = `<div class="daily-discovery">${html}</div>`;
+}
+
 
 // MARKDOWN SETUP
 if (typeof marked !== 'undefined') {
@@ -94,12 +143,24 @@ async function load() {
   try {
     const d = await localforage.getItem(STORAGE_KEY);
     if (d) {
-      // Handle both stringified and direct object storage for robustness
       cards = typeof d === 'string' ? JSON.parse(d) : d;
+    } else {
+      // Recovery/Migration from v4 if v5 is empty
+      const v4 = await localforage.getItem('wordwise_cards_v4');
+      if (v4) {
+        cards = typeof v4 === 'string' ? JSON.parse(v4) : v4;
+        console.log("Migrated data from v4 to v5");
+        save(true);
+      }
     }
     const f = await localforage.getItem('wordwise_folders_v5');
-    if (f) folders = typeof f === 'string' ? JSON.parse(f) : f;
-    const fs = await localforage.getItem('wordwise_folderSort_v5');
+    if (f) {
+      folders = typeof f === 'string' ? JSON.parse(f) : f;
+    } else {
+      const v4f = await localforage.getItem('wordwise_folders_v4');
+      if (v4f) folders = typeof v4f === 'string' ? JSON.parse(v4f) : v4f;
+    }
+    const fs = await localforage.getItem('wordwise_folderSort_v5') || await localforage.getItem('wordwise_folderSort_v4');
     if (fs) folderSortMode = fs;
 
     cards.forEach(c => {
@@ -124,14 +185,14 @@ async function load() {
     const freezes = await localforage.getItem('wordwise_freezes'); if (freezes) userFreezes = parseInt(freezes);
     const lsd = await localforage.getItem('wordwise_lsd'); if (lsd) lastStudyDate = lsd;
     const hist = await localforage.getItem('wordwise_hist'); if (hist) studyHistory = typeof hist === 'string' ? JSON.parse(hist) : hist;
-    
+
     const tss = await localforage.getItem('wordwise_tss'); if (tss) totalStudySeconds = parseInt(tss);
     const dq = await localforage.getItem('wordwise_quests'); if (dq) dailyQuests = typeof dq === 'string' ? JSON.parse(dq) : dq;
     const qd = await localforage.getItem('wordwise_questdate'); if (qd) questDate = qd;
 
-    const th = await localforage.getItem('wordwise_theme'); 
+    const th = await localforage.getItem('wordwise_theme');
     if (th) { currentTheme = th; if (currentTheme === 'dark') document.documentElement.dataset.theme = 'dark'; updateThemeBtn(); }
-    
+
     generateDailyQuests(); // ensures missing quests are hydrated based on date
     updateGamificationUI();
   } catch (e) {
@@ -173,26 +234,28 @@ function allExampleText(c) { return (c.example || []).join(' '); }
 function getWotd() {
   if (cards.length === 0) return null;
   const today = new Date().toISOString().slice(0, 10);
-  let seed = 0; for (let i = 0; i < today.length; i++)seed = today.charCodeAt(i) + ((seed << 5) - seed);
+  let seed = 0; for (let i = 0; i < today.length; i++) seed = today.charCodeAt(i) + ((seed << 5) - seed);
   return cards[Math.abs(seed) % cards.length];
 }
 function renderWotd() {
-  const el = document.getElementById('wotdBanner');
+  const el = document.getElementById('wotdBanner'); if (!el) return;
   const w = getWotd();
   if (!w) { el.innerHTML = ''; return; }
   const fb = firstBack(w);
   const ex = (w.example && w.example.length > 0) ? w.example[0] : '';
   const isLiked = w.liked;
-  el.innerHTML = `<div class="wotd-banner">
-    <div class="wotd-label">✦ Word of the Day</div>
-    <div class="wotd-word">${esc(w.front)}</div>
-    <div class="wotd-meaning markdown-body">${renderMarkdown(fb)}</div>
-    ${ex ? `<div class="wotd-example markdown-body">${renderMarkdown(ex)}</div>` : ''}
-    <div class="wotd-actions">
-      <button class="wotd-like ${isLiked ? 'liked' : ''}" onclick="toggleLike('${w.id}');renderWotd();">${isLiked ? '❤ Liked' : '♡ Like'}</button>
-      ${w.back.length > 1 ? `<span style="font-size:11px;color:var(--text3);">+${w.back.length - 1} more meaning${w.back.length > 2 ? 's' : ''}</span>` : ''}
+  el.innerHTML = `
+    <div class="wotd-banner">
+      <div class="wotd-label">✦ Word of the Day</div>
+      <div class="wotd-word markdown-body">${renderMarkdown(w.front)}</div>
+      <div class="wotd-meaning markdown-body">${renderMarkdown(fb)}</div>
+      ${ex ? `<div class="wotd-example markdown-body">${renderMarkdown(ex)}</div>` : ''}
+      <div class="wotd-actions">
+        <button class="wotd-like ${isLiked ? 'liked' : ''}" onclick="toggleLike('${w.id}');renderWotd();">${isLiked ? '❤ Liked' : '♡ Like'}</button>
+        ${w.back.length > 1 ? `<span style="font-size:11px;color:var(--text3);">+${w.back.length - 1} more meaning${w.back.length > 2 ? 's' : ''}</span>` : ''}
+      </div>
     </div>
-  </div>`;
+  `;
 }
 
 function toggleLike(id) {
@@ -212,7 +275,12 @@ function switchTab(name, el) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('sec-' + name).classList.add('active');
-  if (name === 'quiz') showQuizSetup();
+  if (name === 'quiz') {
+    showQuizSetup();
+    setTimeout(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }, 100);
+  }
   if (name === 'import') {
     document.getElementById('exportArea').value = JSON.stringify(
       cards.map(c => ({ front: c.front, back: c.back, example: c.example, deck: c.deck || '', tags: c.tags || [], liked: !!c.liked, pass: c.pass, fail: c.fail })), null, 2);
@@ -508,12 +576,12 @@ function filterQuizTags(query) {
   const q = query.toLowerCase();
   const allTags = getAllTags();
   const filtered = allTags.filter(t => t.toLowerCase().includes(q));
-  
+
   const grid = document.getElementById('quizTagGrid');
   if (grid) {
-    grid.innerHTML = filtered.map(t => { 
-      const c = tagColor(t); 
-      return `<span class="quiz-tag-chip ${quizSelectedTags.has(t) ? 'selected' : ''}" style="background:${c.bg};color:${c.fg};" onclick="toggleQuizTag('${esc(t).replace(/'/g, "\\'")}')">${esc(t)}</span>`; 
+    grid.innerHTML = filtered.map(t => {
+      const c = tagColor(t);
+      return `<span class="quiz-tag-chip ${quizSelectedTags.has(t) ? 'selected' : ''}" style="background:${c.bg};color:${c.fg};" onclick="toggleQuizTag('${esc(t).replace(/'/g, "\\'")}')">${esc(t)}</span>`;
     }).join('');
   }
 }
@@ -597,6 +665,22 @@ function quizMeaningsHTML(a) {
 function quizExamplesHTML(a) { return a.length === 0 ? '' : a.map(e => `<div class="quiz-example-text markdown-body" style="opacity:0;transform:translateY(10px);transition:all 0.3s 0.1s;">${renderMarkdown(e)}</div>`).join(''); }
 
 function showQuizQuestion() {
+  clearTimeout(autoPlayTimer);
+  const qa = document.getElementById('quizArea');
+
+  if (quizIdx === 0 && !document.querySelector('.focus-overlay')) {
+    qa.innerHTML = `
+      <div class="focus-overlay" id="focusOverlay">
+        <div class="focus-circle"></div>
+        <div class="focus-text">Take a deep breath...</div>
+      </div>
+    `;
+    setTimeout(() => {
+      showQuizQuestion();
+    }, 3000);
+    return;
+  }
+
   if (quizIdx >= quizCards.length) { showResults(); return; }
   const card = quizCards[quizIdx]; const pct = ((quizIdx) / quizCards.length * 100).toFixed(0);
   const area = document.getElementById('quizArea');
@@ -630,7 +714,7 @@ function showQuizQuestion() {
       <div class="quiz-actions" id="quizActions"><button class="btn btn-primary" onclick="checkType()">Check</button></div></div>`;
     setTimeout(() => document.getElementById('typeInput')?.focus(), 100);
   }
-  
+
   currentCardStartTime = Date.now();
 
   if (isAutoPlaying) {
@@ -725,9 +809,9 @@ function gradeQuiz(quality) { // quality 0-5
     calculateSM2(real, quality);
     let baseXP = quality >= 3 ? 5 : 1;
     let earnedXP = baseXP;
-    
+
     // Critical Hit logic (10% chance)
-    if (Math.random() < 0.10) { 
+    if (Math.random() < 0.10) {
       earnedXP *= 3;
       showToast(`✨ CRITICAL HIT! +${earnedXP} XP`, 'toast-crit');
     }
@@ -745,13 +829,13 @@ function gradeQuiz(quality) { // quality 0-5
 }
 
 // Global Keyboard Shortcuts for Quiz
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
   // Only apply if in quiz tab, not typing in an input/textarea (except typeInput where we handle Enter), and not in a modal
   const activeSection = document.querySelector('.section.active');
   if (!activeSection || activeSection.id !== 'sec-quiz') return;
   if (document.getElementById('modal').classList.contains('show') || document.getElementById('folderModal').classList.contains('show')) return;
   const tag = e.target.tagName.toLowerCase();
-  
+
   // if typing in type-mode input, let it be (handled locally) or quiz interval
   if ((tag === 'input' && e.target.id !== 'typeInput') || tag === 'textarea') return;
 
@@ -952,13 +1036,13 @@ function grantXP(amount) {
   save();
 }
 function recordHeatmapActivity() {
-  const today = new Date().toISOString().slice(0,10);
+  const today = new Date().toISOString().slice(0, 10);
   if (!studyHistory[today]) studyHistory[today] = 0;
   studyHistory[today]++;
-  
+
   if (lastStudyDate !== today) {
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().slice(0,10);
+    const yesterdayStr = yesterday.toISOString().slice(0, 10);
     if (lastStudyDate === yesterdayStr) {
       userStreak++;
       if (userStreak > 0 && userStreak % 7 === 0) {
@@ -995,10 +1079,17 @@ function updateGamificationUI() {
   const nextLevelXP = 50 * Math.pow(level, 2);
   const progressPct = Math.max(0, Math.min(100, ((userXP - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100));
 
-  const lb = document.getElementById('levelBadge'); if(lb) lb.textContent = 'Lvl ' + level;
-  const xt = document.getElementById('xpText'); if(xt) xt.textContent = userXP;
-  const xn = document.getElementById('xpNextText'); if(xn) xn.textContent = nextLevelXP;
-  const xf = document.getElementById('xpBarFill'); if(xf) xf.style.width = progressPct + '%';
+  let title = "Novice";
+  if (level >= 30) title = "Grandmaster";
+  else if (level >= 20) title = "Master of Arcane";
+  else if (level >= 10) title = "Scholar";
+  else if (level >= 5) title = "Adept";
+  else if (level >= 2) title = "Apprentice";
+
+  const lb = document.getElementById('levelBadge'); if (lb) lb.textContent = `Lvl ${level} ${title}`;
+  const xt = document.getElementById('xpText'); if (xt) xt.textContent = userXP;
+  const xn = document.getElementById('xpNextText'); if (xn) xn.textContent = nextLevelXP;
+  const xf = document.getElementById('xpBarFill'); if (xf) xf.style.width = progressPct + '%';
   const sf = document.getElementById('streakFlame');
   const sc = document.getElementById('streakCount');
   const fz = document.getElementById('streakFreeze');
@@ -1006,7 +1097,7 @@ function updateGamificationUI() {
   if (sc) sc.textContent = userStreak;
   if (fc) fc.textContent = userFreezes;
   if (sf) {
-    const today = new Date().toISOString().slice(0,10);
+    const today = new Date().toISOString().slice(0, 10);
     if (lastStudyDate === today && userStreak > 0) sf.classList.add('active');
     else sf.classList.remove('active');
   }
@@ -1019,23 +1110,23 @@ function updateGamificationUI() {
   updateSunkCostUI();
 }
 function renderHeatmap() {
-  const c = document.getElementById('heatmapContainer'); if(!c) return;
+  const c = document.getElementById('heatmapContainer'); if (!c) return;
   const days = [];
-  for(let i=59; i>=0; i--) {
+  for (let i = 59; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
-    days.push(d.toISOString().slice(0,10));
+    days.push(d.toISOString().slice(0, 10));
   }
   let html = `<div class="heatmap-wrapper"><div class="heatmap-header">Study Activity</div><div class="heatmap-grid" style="position:relative;">`;
-  
-  for(let col=0; col<Math.ceil(60/7); col++) {
+
+  for (let col = 0; col < Math.ceil(60 / 7); col++) {
     html += `<div class="heatmap-col">`;
-    for(let row=0; row<7; row++) {
-      const idx = col*7 + row;
+    for (let row = 0; row < 7; row++) {
+      const idx = col * 7 + row;
       if (idx < 60) {
         const dateStr = days[idx];
         const count = studyHistory[dateStr] || 0;
         let lvl = 0;
-        if(count > 0) lvl=1; if(count > 10) lvl=2; if(count > 25) lvl=3; if(count > 50) lvl=4;
+        if (count > 0) lvl = 1; if (count > 10) lvl = 2; if (count > 25) lvl = 3; if (count > 50) lvl = 4;
         html += `<div class="heatmap-day lvl-${lvl}" onmouseenter="showHeatmapTooltip(event, '${dateStr}', ${count})" onmouseleave="hideHeatmapTooltip()"></div>`;
       }
     }
@@ -1044,17 +1135,17 @@ function renderHeatmap() {
   html += `</div></div>`;
   c.innerHTML = html;
 }
-window.showHeatmapTooltip = function(e, date, count) {
+window.showHeatmapTooltip = function (e, date, count) {
   let tip = document.getElementById('heatmapTooltip');
-  if(!tip) {
+  if (!tip) {
     tip = document.createElement('div'); tip.id = 'heatmapTooltip'; tip.className = 'heatmap-tooltip';
     document.body.appendChild(tip);
   }
   tip.textContent = `${count} cards on ${date}`;
   tip.style.opacity = '1'; tip.style.left = e.pageX + 'px'; tip.style.top = e.pageY + 'px';
 }
-window.hideHeatmapTooltip = function() {
-  const tip = document.getElementById('heatmapTooltip'); if(tip) tip.style.opacity = '0';
+window.hideHeatmapTooltip = function () {
+  const tip = document.getElementById('heatmapTooltip'); if (tip) tip.style.opacity = '0';
 }
 
 // Notifications, Quests & Sunk Cost
@@ -1072,9 +1163,9 @@ function showToast(message, typeClass = '') {
 }
 
 function generateDailyQuests() {
-  const today = new Date().toISOString().slice(0,10);
+  const today = new Date().toISOString().slice(0, 10);
   if (questDate === today && dailyQuests && dailyQuests.length > 0) return;
-  
+
   questDate = today;
   dailyQuests = [
     { id: 'q1', title: 'Review 20 cards', type: 'cards_reviewed', target: 20, current: 0, reward: 50 },
@@ -1111,9 +1202,9 @@ function claimQuest(id) {
 
 function renderQuestsUI() {
   const container = document.getElementById('questList');
-  if(!container) return;
-  if(!dailyQuests || dailyQuests.length === 0) generateDailyQuests();
-  
+  if (!container) return;
+  if (!dailyQuests || dailyQuests.length === 0) generateDailyQuests();
+
   let html = `<div class="quest-header">Daily Missions</div>`;
   dailyQuests.forEach(q => {
     const pct = Math.max(0, Math.min(100, (q.current / q.target) * 100));
@@ -1133,7 +1224,7 @@ function updateSunkCostUI() {
   const el = document.getElementById('sunkCostTracker');
   if (!el) return;
   if (totalStudySeconds === 0) { el.style.display = 'none'; return; }
-  
+
   const h = Math.floor(totalStudySeconds / 3600);
   const m = Math.floor((totalStudySeconds % 3600) / 60);
   let text = '⚡ Time Invested: ';
@@ -1355,7 +1446,7 @@ function toggleFolderSelection(id, e) {
   renderAll(); // updates folders, cards list, and stats
 }
 
-function renderAll() { renderFolders(); renderWotd(); renderCards(); renderTagFilter(); updateStats(); }
+function renderAll() { renderFolders(); renderWotd(); renderDailyInsight(); renderCards(); renderTagFilter(); updateStats(); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeFolderModal(); } });
 
 function migrateDecksToFolders() {

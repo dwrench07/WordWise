@@ -700,6 +700,45 @@ body::before {
   position: fixed; bottom: 20px; right: 20px; z-index: 1000;
   display: flex; flex-direction: column; gap: 10px; pointer-events: none;
 }
+.daily-discovery {
+  display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;
+}
+.discovery-section {
+  flex: 1; min-width: 0; background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+  border: 1px solid var(--border); border-left: 4px solid var(--accent);
+  border-radius: var(--radius); padding: 16px 20px; position: relative; overflow: hidden;
+}
+.discovery-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.discovery-title {
+  font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 6px;
+  font-family: 'Outfit', sans-serif;
+}
+.discovery-title p { margin: 0; }
+.discovery-content {
+  font-size: 14px; color: var(--text2); line-height: 1.5;
+}
+.discovery-section.mantra .discovery-content, .discovery-section.fact .discovery-content {
+  font-size: 15px; font-style: italic; color: var(--text);
+}
+.discovery-section.wotd { border-left-color: var(--purple); }
+.discovery-section.wotd .discovery-label { color: var(--purple); }
+.discovery-section.fact { border-left-color: var(--green); }
+.discovery-section.fact .discovery-label { color: var(--green); }
+
+.discovery-section::after {
+  content: ''; position: absolute; top: -50%; right: -10%; width: 120px; height: 120px;
+  background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+  opacity: 0.08; pointer-events: none;
+}
+.discovery-section.wotd::after { background: radial-gradient(circle, var(--purple) 0%, transparent 70%); }
+.discovery-section.fact::after { background: radial-gradient(circle, var(--green) 0%, transparent 70%); }
+
+@media (max-width: 768px) {
+  .daily-discovery { flex-direction: column; }
+}
 .toast {
   background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent);
   padding: 12px 20px; border-radius: 8px; color: var(--text); font-weight: 600; font-size: 14px;
@@ -723,9 +762,9 @@ body::before {
 /* Heatmap */
 .heatmap-wrapper {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 20px; margin-bottom: 30px; overflow-x: auto;
+  padding: 16px; margin-top: 20px; overflow-x: auto;
 }
-.heatmap-header { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+.heatmap-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--text); display:flex; justify-content:space-between;}
 .heatmap-grid {
   display: flex; gap: 4px;
 }
