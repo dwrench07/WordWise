@@ -1,0 +1,4043 @@
+[
+    {
+        "front": "Given `nums = [10, 20, 30, 40, 50]`, how do you get the last two elements using slicing?",
+        "back": [
+            "For slicing to get both as a list:\n\n```python\nnums[-2:] # gives [40, 50]\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "lists",
+            "slicing"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you unpack point (3, 7) into two variables?",
+        "back": [
+            "```python\nx, y = point\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "unpacking",
+            "variables"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Sort a list of tuples (`students`) by the second element in descending order.",
+        "back": [
+            "```python\nstudents.sort(key=lambda x: x[1], reverse=True)\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "sorting",
+            "lambda",
+            "review"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you create a min heap and push values 5, 2, 8?",
+        "back": [
+            "```python\nimport heapq\n\nheap = []\nheapq.heappush(heap, 5)\nheapq.heappush(heap, 2)\nheapq.heappush(heap, 8)\n\n```\n* To pop: `heapq.heappop(heap)`\n* To peek: `heap[0]`\n* For max heap, negate values: `heapq.heappush(heap, -5)`"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "heap",
+            "data-structures",
+            "review"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Count character frequency using Counter for s = 'aabbbc'",
+        "back": [
+            "```python\nfrom collections import Counter\n\nc = Counter(s) # Counter({'b': 3, 'a': 2, 'c': 1})\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "collections",
+            "counter",
+            "review"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Simulate a do-while loop that asks for input until user types 'quit'.",
+        "back": [
+            "```python\nwhile True:\nuser_input = input()\nif user_input == 'quit':\nbreak\n# do something with user_input\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "loops",
+            "review"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Use `defaultdict` to group words by their first letter.",
+        "back": [
+            "```python\nfrom collections import defaultdict\n\nwords = ['apple', 'banana', 'apricot', 'cherry', 'blueberry']\noutput = defaultdict(list) # takes a TYPE, not data\n\nfor word in words:\n    output[word[0]].append(word)\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "collections",
+            "defaultdict"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Iterate through two lists (`names`, `scores`) at the same time.",
+        "back": [
+            "```python\nfor name, score in zip(names, scores):\nprint(f'{name}: {score}')\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "iteration",
+            "zip"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you check if a key exists in a dictionary `d`?",
+        "back": [
+            "```python\nif string in d:\npass\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "dictionary"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "What is wrong with modifying a list while iterating over it? How can you safely do it? (e.g., removing even numbers)",
+        "back": [
+            "The main issue is modifying a list while iterating over it causes elements to be skipped. Solutions:\n\n1. Create a new list:\n```python\nnums = [x for x in nums if x % 2 != 0]\n\n```\n\n2. Iterate over a copy:\n\n```python\nfor num in nums[:]:\n    if num % 2 == 0:\n        nums.remove(num)\n\n```\n\n3. Iterate backwards:\n\n```python\nfor i in range(len(nums) - 1, -1, -1):\n    if nums[i] % 2 == 0:\n        nums.pop(i)\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "iteration",
+            "lists"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you create a set and check if an element exists?",
+        "back": [
+            "Use lowercase `set()` (Note: `{}` creates an empty dict, not a set).\n\n```python\nx = set()\nx.add(1)\nif 1 in x:\n    print('exists')\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "sets",
+            "review"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Get both index and value when looping through a list `fruits`.",
+        "back": [
+            "```python\nfor i, fruit in enumerate(fruits):\nprint(f'{i}: {fruit}')\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "iteration",
+            "enumerate"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Convert between string `s`, list of characters `chars`, integer string `num_str`, and integer `num`.",
+        "back": [
+            "```python\nlist(s)          # string to list\n''.join(chars)   # list to string (separator calls join!)\nint(num_str)     # string to int\nstr(num)         # int to string\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "types",
+            "conversion",
+            "review"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "What does this output?\n```python\nnums = [1, 2, 3, 4, 5]\nresult = [x * 2 for x in nums if x % 2 == 1]\n\n```",
+        "back": [
+            "`[2, 6, 10]`"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "list-comprehension"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Use `deque` to implement a queue.",
+        "back": [
+            "`collections` is lowercase:\n\n```python\nfrom collections import deque\n\nd = deque()\nd.append(1)\nd.popleft()\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "collections",
+            "deque"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "What's the difference between `/` and `//`?\n\n```python\nprint(7 / 2)\nprint(7 // 2)\nprint(-7 // 2)\n\n```",
+        "back": [
+            "* `7 / 2` -> `3.5` (regular division)\n\n* `7 // 2` -> `3` (floor division)\n* `-7 // 2` -> `-4` (floors toward negative infinity, not toward zero!)"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "math",
+            "division",
+            "review"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How to use `lru_cache` for memoization? (e.g., Fibonacci)",
+        "back": [
+            "```python\nfrom functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef fib(n):\nif n <= 1:\nreturn n\nreturn fib(n-1) + fib(n-2)\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "memoization",
+            "decorators"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you swap two variables `x` and `y`?",
+        "back": [
+            "```python\nx, y = y, x\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "variables"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "What's the output?\n\n```python\ns = 'hello world'\nprint(s.split())\nprint(s.split('o'))\nprint('_'.join(s.split()))\n\n```",
+        "back": [
+            "`split()` splits by whitespace by default, not characters.\n\n* `s.split()` -> `['hello', 'world']`\n* `s.split('o')` -> `['hell', ' w', 'rld']`\n* `'_'.join(s.split())` -> `'hello_world'`"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "strings",
+            "methods"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Get the maximum value and its index from a list `nums`.",
+        "back": [
+            "```python\nmax(nums)             # max value\nnums.index(max(nums)) # index of max\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "lists",
+            "math"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "What does `*` do in different contexts? (e.g., `print(*nums)`, `def func(*args)`, `a, *b, c = [1,2,3,4,5]`)",
+        "back": [
+            "1. `print(*nums)` -> Unpacks list elements: prints `1 2 3`\n2. `def func(*args):` -> Collects arbitrary positional arguments into a tuple `args`\n3. `a, *b, c = [1, 2, 3, 4, 5]` -> Unpacks list variables: `a=1`, `b=[2,3,4]`, `c=5`"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "unpacking",
+            "args"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Check if a string `x` is a palindrome.",
+        "back": [
+            "Strings don't have a `.reverse()` method. Use slicing:\n```python\nif x == x[::-1]:\n    print('palindrome')\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "strings",
+            "slicing",
+            "review"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "What's wrong with `d = {}; d['a'] += 1`?",
+        "back": [
+            "The key `'a'` isn't initialized yet, so we cannot do `+= 1` on it (raises a KeyError).\n\nSolutions: use `defaultdict(int)`, `Counter`, or check if the key exists first."
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "dictionary",
+            "errors"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Remove duplicates from `nums` while preserving order.",
+        "back": [
+            "```python\nresult = list(dict.fromkeys(nums))\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "lists",
+            "duplicates"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "What's the output?\n```python\nx = [1, 2, 3]\ny = x * 2\nz = [x] * 2\ny[0] = 99\nz[0][0] = 99\nprint(y)\nprint(z)\n\n```",
+        "back": [
+            "* `y = x * 2` -> `[1, 2, 3, 1, 2, 3]` (new flat list)\n\n* `z = [x] * 2` -> `[[1,2,3], [1,2,3]]` (two references to the SAME list)\n\nAfter modifications:\n\n* `y` -> `[99, 2, 3, 1, 2, 3]`\n* `z` -> `[[99, 2, 3], [99, 2, 3]]` (both nested elements changed because they point to the same object!)"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "lists",
+            "references",
+            "review"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Create a 3x3 grid filled with zeros.",
+        "back": [
+            "```python\ngrid = [[0] * 3 for _ in range(3)]\n\n```\n*Note: Doing `[[0] * 3] * 3` is wrong because it creates references to the same inner list.*"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "lists",
+            "grid",
+            "review"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Perform a binary search for the value `7` in a sorted list `nums = [1, 3, 5, 7, 9, 11]`.",
+        "back": [
+            "```python\nfrom bisect import bisect_left\n\nnums = [1, 3, 5, 7, 9, 11]\nidx = bisect_left(nums, 7) # returns 3\n\n```"
+        ],
+        "example": [],
+        "deck": "",
+        "tags": [
+            "python",
+            "binary-search",
+            "bisect"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Two Sum (#1) — How to solve in O(n)?",
+        "back": [
+            "Use a hash map to store {value: index} as you iterate.\nFor each num, check if (target - num) exists in the map.\nIf yes, return both indices. If no, add current num to map.",
+            "Key insight: You only need ONE pass. Don't build the full map first — check and insert in the same loop."
+        ],
+        "example": [
+            "```python\ndef twoSum(nums, target):\n    seen = {}\n    for i, num in enumerate(nums):\n        diff = target - num\n        if diff in seen:\n            return [seen[diff], i]\n        seen[num] = i\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "hash_map",
+            "one_pass",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Best Time to Buy and Sell Stock (#121) — Key trick?",
+        "back": [
+            "Track the minimum price so far and max profit so far in one pass.\nAt each price: update min_price first, then check if (price - min_price) beats current max_profit.",
+            "Trick: Order matters — update min THEN calculate profit. This ensures you're always buying before selling."
+        ],
+        "example": [
+            "```python\ndef maxProfit(prices):\n    min_price = float('inf')\n    max_profit = 0\n    for price in prices:\n        min_price = min(min_price, price)\n        max_profit = max(max_profit, price - min_price)\n    return max_profit\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "greedy",
+            "one_pass",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Contains Duplicate (#217) — Two approaches?",
+        "back": [
+            "Approach 1: Set — iterate and check if num already in set. O(n) time, O(n) space.\nApproach 2: Sort — sort array, check adjacent elements. O(n log n) time, O(1) space.",
+            "Tip: In interviews, mention both and explain the tradeoff. Default to the set approach."
+        ],
+        "example": [
+            "```python\ndef containsDuplicate(nums):\n    return len(nums) != len(set(nums))\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "hash_set",
+            "sorting",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Product of Array Except Self (#238) — How without division?",
+        "back": [
+            "Use prefix and suffix products.\nprefix[i] = product of everything BEFORE i.\nsuffix[i] = product of everything AFTER i.\nresult[i] = prefix[i] * suffix[i].",
+            "O(1) space optimization: Build prefix into result array, then do a reverse pass with a running suffix variable.",
+            "Trick: Initialize prefix and suffix starting values as 1 (identity for multiplication)."
+        ],
+        "example": [
+            "```python\ndef productExceptSelf(nums):\n    n = len(nums)\n    result = [1] * n\n    prefix = 1\n    for i in range(n):\n        result[i] = prefix\n        prefix *= nums[i]\n    suffix = 1\n    for i in range(n - 1, -1, -1):\n        result[i] *= suffix\n        suffix *= nums[i]\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "prefix_suffix",
+            "no_division",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Maximum Subarray (#53) — Kadane's Algorithm explained?",
+        "back": [
+            "At each element, ask: 'Extend previous subarray or restart here?'\ndp[i] = max(nums[i], dp[i-1] + nums[i])\nTrack the global max throughout.",
+            "Trick: If running sum goes negative, restart. A negative prefix can never help a future subarray.",
+            "Alternative: Prefix sum approach — max subarray = max difference between any later prefix sum and earlier prefix sum (same as stock buy/sell on prefix sums)."
+        ],
+        "example": [
+            "```python\ndef maxSubArray(nums):\n    curr_sum = max_sum = nums[0]\n    for num in nums[1:]:\n        curr_sum = max(num, curr_sum + num)\n        max_sum = max(max_sum, curr_sum)\n    return max_sum\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "kadanes",
+            "dp",
+            "greedy",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Maximum Product Subarray (#152) — Why track min AND max?",
+        "back": [
+            "A negative number can flip the smallest product into the largest.\nTrack both curr_min and curr_max at each step.\nAt each num: new candidates are num, curr_max*num, curr_min*num.",
+            "Trick: If you see a negative, min and max swap roles. That's the entire insight."
+        ],
+        "example": [
+            "```python\ndef maxProduct(nums):\n    curr_min = curr_max = result = nums[0]\n    for num in nums[1:]:\n        candidates = (num, curr_max * num, curr_min * num)\n        curr_max = max(candidates)\n        curr_min = min(candidates)\n        result = max(result, curr_max)\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "track_min_max",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Search in Rotated Sorted Array (#33) — Binary search trick?",
+        "back": [
+            "One half is ALWAYS sorted. Determine which half is sorted, then check if target falls in that sorted range.\nIf yes, search that half. If no, search the other half.",
+            "Trick: Compare nums[mid] with nums[left] to determine which half is sorted.\nIf nums[left] <= nums[mid] → left half is sorted.\nElse → right half is sorted."
+        ],
+        "example": [
+            "```python\ndef search(nums, target):\n    l, r = 0, len(nums) - 1\n    while l <= r:\n        mid = (l + r) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[l] <= nums[mid]:\n            if nums[l] <= target < nums[mid]:\n                r = mid - 1\n            else:\n                l = mid + 1\n        else:\n            if nums[mid] < target <= nums[r]:\n                l = mid + 1\n            else:\n                r = mid - 1\n    return -1\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "binary_search",
+            "rotated",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Find Minimum in Rotated Sorted Array (#153) — Key insight?",
+        "back": [
+            "Binary search. Compare nums[mid] with nums[right].\nIf nums[mid] > nums[right] → min is in right half.\nIf nums[mid] <= nums[right] → min is in left half (including mid).",
+            "Trick: Compare with RIGHT, not left. And use r = mid (not mid-1) to avoid skipping the answer."
+        ],
+        "example": [
+            "```python\ndef findMin(nums):\n    l, r = 0, len(nums) - 1\n    while l < r:\n        mid = (l + r) // 2\n        if nums[mid] > nums[r]:\n            l = mid + 1\n        else:\n            r = mid\n    return nums[l]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "binary_search",
+            "rotated",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "3Sum (#15) — How to handle duplicates?",
+        "back": [
+            "Sort the array. Fix one number, use two pointers for the rest.\nSkip duplicates: if nums[i] == nums[i-1], skip. Also skip duplicate left/right pointers after finding a triplet.",
+            "Trick: Sort first makes duplicate skipping trivial. Also, if nums[i] > 0, break early — no three positive numbers sum to 0."
+        ],
+        "example": [
+            "```python\ndef threeSum(nums):\n    nums.sort()\n    result = []\n    for i in range(len(nums) - 2):\n        if i > 0 and nums[i] == nums[i-1]:\n            continue\n        l, r = i + 1, len(nums) - 1\n        while l < r:\n            total = nums[i] + nums[l] + nums[r]\n            if total < 0:\n                l += 1\n            elif total > 0:\n                r -= 1\n            else:\n                result.append([nums[i], nums[l], nums[r]])\n                while l < r and nums[l] == nums[l+1]: l += 1\n                while l < r and nums[r] == nums[r-1]: r -= 1\n                l += 1; r -= 1\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "two_pointers",
+            "sorting",
+            "duplicates",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Container With Most Water (#11) — Why move the shorter pointer?",
+        "back": [
+            "Area = min(left, right) * width. Width always shrinks as pointers move inward.\nThe shorter line is the bottleneck. It can NEVER do better with any other partner because width only decreases.\nSo discard it and move that pointer inward hoping for a taller line.",
+            "Trick: Don't overthink — always move the pointer at the shorter line. If equal, move either."
+        ],
+        "example": [
+            "```python\ndef maxArea(height):\n    l, r = 0, len(height) - 1\n    max_water = 0\n    while l < r:\n        max_water = max(max_water, min(height[l], height[r]) * (r - l))\n        if height[l] < height[r]:\n            l += 1\n        else:\n            r -= 1\n    return max_water\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "two_pointers",
+            "greedy",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Valid Anagram (#242) — Fastest approach?",
+        "back": [
+            "Use a frequency counter (hash map or array of 26).\nCount chars in string1, decrement for string2. All counts should be 0.",
+            "Python shortcut: Counter(s) == Counter(t)\nFollow-up: If Unicode, use a hash map instead of fixed array."
+        ],
+        "example": [
+            "```python\nfrom collections import Counter\ndef isAnagram(s, t):\n    return Counter(s) == Counter(t)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "hash_map",
+            "frequency",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Group Anagrams (#49) — What's the hash key?",
+        "back": [
+            "Sort each word → use sorted string as dictionary key.\nAll anagrams produce the same sorted string.",
+            "Alternative key: tuple of 26 character counts — avoids O(k log k) sorting per word.\nTrick: ''.join(sorted(word)) is the simplest key in Python."
+        ],
+        "example": [
+            "```python\nfrom collections import defaultdict\ndef groupAnagrams(strs):\n    groups = defaultdict(list)\n    for word in strs:\n        key = ''.join(sorted(word))\n        groups[key].append(word)\n    return list(groups.values())\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "hash_map",
+            "sorting",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Valid Parentheses (#20) — Why a stack?",
+        "back": [
+            "Opening brackets push onto stack. Closing brackets must match the most recent opening — that's LIFO = stack.\nFor each closing bracket: if stack is empty or top doesn't match → invalid.\nAt end: stack must be empty.",
+            "Trick: Use a map {')':'(', ']':'[', '}':'{'} for clean matching."
+        ],
+        "example": [
+            "```python\ndef isValid(s):\n    stack = []\n    match = {')':'(', ']':'[', '}':'{'}\n    for c in s:\n        if c in match:\n            if not stack or stack[-1] != match[c]:\n                return False\n            stack.pop()\n        else:\n            stack.append(c)\n    return not stack\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "stack",
+            "matching",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Longest Substring Without Repeating Characters (#3) — Pattern?",
+        "back": [
+            "Sliding window with a set.\nExpand right pointer. If char already in set, shrink from left until it's removed.\nTrack max window size throughout.",
+            "Optimization: Use a hash map {char: last_index} and jump left pointer directly instead of shrinking one by one."
+        ],
+        "example": [
+            "```python\ndef lengthOfLongestSubstring(s):\n    seen = {}\n    left = max_len = 0\n    for right, c in enumerate(s):\n        if c in seen and seen[c] >= left:\n            left = seen[c] + 1\n        seen[c] = right\n        max_len = max(max_len, right - left + 1)\n    return max_len\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "sliding_window",
+            "hash_map",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Longest Palindromic Substring (#5) — Expand around center?",
+        "back": [
+            "For each index, expand outward for both odd (i, i) and even (i, i+1) centers.\nHelper function: takes left, right pointers → expands while s[left] == s[right] and within bounds.\nTrack the longest palindrome found.",
+            "Trick: Return start index and length from helper, slice the string only once at the end.\nTime: O(n²), Space: O(1). Better than DP which uses O(n²) space."
+        ],
+        "example": [
+            "```python\ndef longestPalindrome(s):\n    start = end = 0\n    def expand(l, r):\n        while l >= 0 and r < len(s) and s[l] == s[r]:\n            l -= 1\n            r += 1\n        return l + 1, r - 1\n    for i in range(len(s)):\n        l1, r1 = expand(i, i)\n        l2, r2 = expand(i, i + 1)\n        if r1 - l1 > end - start:\n            start, end = l1, r1\n        if r2 - l2 > end - start:\n            start, end = l2, r2\n    return s[start:end + 1]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "expand_around_center",
+            "two_pointers",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Number of Islands (#200) — DFS approach?",
+        "back": [
+            "Outer loop: iterate every cell. When you hit '1', increment island count and DFS to mark all connected land as visited.\nDFS: mark current cell as '0' (or visited), recurse on 4 neighbors.",
+            "Trick: Modify the grid in-place (set '1' to '0') to avoid a separate visited set.\nTime: O(m×n). Each cell visited at most once by DFS."
+        ],
+        "example": [
+            "```python\ndef numIslands(grid):\n    def dfs(i, j):\n        if i < 0 or j < 0 or i >= len(grid) or j >= len(grid[0]) or grid[i][j] == '0':\n            return\n        grid[i][j] = '0'\n        dfs(i+1,j); dfs(i-1,j); dfs(i,j+1); dfs(i,j-1)\n    count = 0\n    for i in range(len(grid)):\n        for j in range(len(grid[0])):\n            if grid[i][j] == '1':\n                count += 1\n                dfs(i, j)\n    return count\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dfs",
+            "grid",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Clone Graph (#133) — Key data structure?",
+        "back": [
+            "Use a hash map: {original_node: cloned_node}.\nBFS or DFS. For each node, create its clone and store in map.\nFor each neighbor: if already cloned, connect to existing clone. If not, clone it first.",
+            "Trick: The map serves double duty — it's both your 'visited' set AND your clone lookup."
+        ],
+        "example": [
+            "```python\ndef cloneGraph(node):\n    if not node:\n        return None\n    clones = {node: Node(node.val)}\n    queue = deque([node])\n    while queue:\n        curr = queue.popleft()\n        for neighbor in curr.neighbors:\n            if neighbor not in clones:\n                clones[neighbor] = Node(neighbor.val)\n                queue.append(neighbor)\n            clones[curr].neighbors.append(clones[neighbor])\n    return clones[node]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "bfs",
+            "hash_map",
+            "cloning",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Pacific Atlantic Water Flow (#417) — Think backwards?",
+        "back": [
+            "Instead of checking where water flows FROM each cell, start from the oceans and flow UPHILL.\nBFS/DFS from all Pacific border cells → mark reachable.\nBFS/DFS from all Atlantic border cells → mark reachable.\nAnswer = cells in BOTH sets.",
+            "Trick: Reverse the flow direction. Go uphill (next cell >= current cell) instead of downhill."
+        ],
+        "example": [
+            "```python\ndef pacificAtlantic(heights):\n    if not heights: return []\n    m, n = len(heights), len(heights[0])\n    pac, atl = set(), set()\n    def dfs(r, c, visit, prev):\n        if r < 0 or c < 0 or r >= m or c >= n or (r,c) in visit or heights[r][c] < prev:\n            return\n        visit.add((r,c))\n        for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n            dfs(r+dr, c+dc, visit, heights[r][c])\n    for c in range(n):\n        dfs(0, c, pac, 0)\n        dfs(m-1, c, atl, 0)\n    for r in range(m):\n        dfs(r, 0, pac, 0)\n        dfs(r, n-1, atl, 0)\n    return list(pac & atl)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dfs",
+            "reverse_thinking",
+            "grid",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Course Schedule (#207) — Cycle detection?",
+        "back": [
+            "Build adjacency list. Detect cycle using DFS with 3 states: unvisited, in-progress, completed.\nIf you visit an in-progress node → cycle exists → return False.\nReal meaning: a cycle means circular dependency — impossible to finish all courses.",
+            "Alternative: Topological sort with BFS (Kahn's algorithm) — if you can't process all nodes, there's a cycle."
+        ],
+        "example": [
+            "```python\ndef canFinish(numCourses, prerequisites):\n    graph = defaultdict(list)\n    for a, b in prerequisites:\n        graph[b].append(a)\n    # 0=unvisited, 1=in-progress, 2=completed\n    state = [0] * numCourses\n    def dfs(node):\n        if state[node] == 1: return False\n        if state[node] == 2: return True\n        state[node] = 1\n        for nei in graph[node]:\n            if not dfs(nei): return False\n        state[node] = 2\n        return True\n    return all(dfs(i) for i in range(numCourses))\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dfs",
+            "cycle_detection",
+            "topological_sort",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Number of Connected Components (#323) — Union-Find or DFS?",
+        "back": [
+            "DFS: Build adjacency list, iterate nodes, DFS from each unvisited node = one component.\nUnion-Find: Initialize each node as its own parent. For each edge, union the two nodes. Count distinct roots at end.",
+            "Trick: Union-Find with path compression + union by rank → nearly O(1) per operation. Great for dynamic connectivity."
+        ],
+        "example": [
+            "```python\ndef countComponents(n, edges):\n    parent = list(range(n))\n    def find(x):\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]\n            x = parent[x]\n        return x\n    def union(a, b):\n        pa, pb = find(a), find(b)\n        if pa == pb: return 0\n        parent[pa] = pb\n        return 1\n    return n - sum(union(a, b) for a, b in edges)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "union_find",
+            "dfs",
+            "connectivity",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Maximum Depth of Binary Tree (#104) — One-liner insight?",
+        "back": [
+            "Recursion: depth = 1 + max(depth(left), depth(right)).\nBase case: if node is None, return 0.",
+            "Trick: This is THE template for tree recursion. 'What do my children return, and how do I combine it?' Almost every tree problem follows this shape."
+        ],
+        "example": [
+            "```python\ndef maxDepth(root):\n    if not root:\n        return 0\n    return 1 + max(maxDepth(root.left), maxDepth(root.right))\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "recursion",
+            "dfs",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Same Tree (#100) — All base cases?",
+        "back": [
+            "Both None → True (both empty).\nOne None, other not → False (structure mismatch).\nValues differ → False.\nElse → recurse on left AND right children.",
+            "Trick: Check the None cases FIRST. This pattern (both null, one null, values, recurse) repeats in many tree problems."
+        ],
+        "example": [
+            "```python\ndef isSameTree(p, q):\n    if not p and not q: return True\n    if not p or not q: return False\n    return p.val == q.val and isSameTree(p.left, q.left) and isSameTree(p.right, q.right)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "recursion",
+            "base_cases",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Invert Binary Tree (#226) — Recursive and iterative?",
+        "back": [
+            "Recursive: Swap left and right children, then recurse on both.\nIterative: BFS with queue — for each node, swap its children.",
+            "Trick: Swap FIRST, then recurse. Order matters for clarity."
+        ],
+        "example": [
+            "```python\ndef invertTree(root):\n    if not root:\n        return None\n    root.left, root.right = root.right, root.left\n    invertTree(root.left)\n    invertTree(root.right)\n    return root\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "recursion",
+            "bfs",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Subtree of Another Tree (#572) — How to reuse Same Tree?",
+        "back": [
+            "At every node in the main tree, check: is this subtree the same as the target? Use isSameTree helper.\nIf not, recurse on left and right children.",
+            "Trick: This is isSameTree called at every node. Time: O(m×n) where m and n are tree sizes."
+        ],
+        "example": [
+            "```python\ndef isSubtree(root, subRoot):\n    if not root:\n        return False\n    if isSameTree(root, subRoot):\n        return True\n    return isSubtree(root.left, subRoot) or isSubtree(root.right, subRoot)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "recursion",
+            "same_tree",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Binary Tree Level Order Traversal (#102) — Why BFS?",
+        "back": [
+            "BFS naturally processes level by level. Use a queue.\nKey: track level size at start of each level → process exactly that many nodes → all their children form the next level.",
+            "Trick: level_size = len(queue) at the start of each iteration. This separates levels cleanly."
+        ],
+        "example": [
+            "```python\ndef levelOrder(root):\n    if not root: return []\n    result, queue = [], deque([root])\n    while queue:\n        level = []\n        for _ in range(len(queue)):\n            node = queue.popleft()\n            level.append(node.val)\n            if node.left: queue.append(node.left)\n            if node.right: queue.append(node.right)\n        result.append(level)\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "bfs",
+            "queue",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Validate BST (#98) — Why not just check left < root < right?",
+        "back": [
+            "That only checks immediate children. A node deep in the left subtree could violate the BST property with an ancestor.\nPass a valid RANGE (min, max) down the recursion. Each node must fall within its allowed range.",
+            "Trick: Start with range (-inf, +inf). Going left → update max. Going right → update min."
+        ],
+        "example": [
+            "```python\ndef isValidBST(root):\n    def check(node, lo, hi):\n        if not node: return True\n        if node.val <= lo or node.val >= hi:\n            return False\n        return check(node.left, lo, node.val) and check(node.right, node.val, hi)\n    return check(root, float('-inf'), float('inf'))\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "recursion",
+            "bst",
+            "range_check",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Lowest Common Ancestor of BST (#235) — BST shortcut?",
+        "back": [
+            "Use BST ordering. If both p and q are smaller than root → go left.\nBoth larger → go right.\nOtherwise, root IS the LCA (they split here).",
+            "Trick: No need for general LCA algorithm. BST property gives you O(h) time with a simple traversal."
+        ],
+        "example": [
+            "```python\ndef lowestCommonAncestor(root, p, q):\n    while root:\n        if p.val < root.val and q.val < root.val:\n            root = root.left\n        elif p.val > root.val and q.val > root.val:\n            root = root.right\n        else:\n            return root\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "bst",
+            "traversal",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Implement Trie (#208) — Design it?",
+        "back": [
+            "Each node has a children dict (or array of 26) and an is_end flag.\nInsert: walk/create nodes for each char, mark last as is_end.\nSearch: walk nodes for each char, return is_end at last char.\nStartsWith: same as search but return True if you reach the end of prefix (no is_end check).",
+            "Trick: The difference between search and startsWith is ONE line — checking is_end."
+        ],
+        "example": [
+            "```python\nclass TrieNode:\n    def __init__(self):\n        self.children = {}\n        self.is_end = False\n\nclass Trie:\n    def __init__(self):\n        self.root = TrieNode()\n    def insert(self, word):\n        node = self.root\n        for c in word:\n            if c not in node.children:\n                node.children[c] = TrieNode()\n            node = node.children[c]\n        node.is_end = True\n    def search(self, word):\n        node = self.root\n        for c in word:\n            if c not in node.children: return False\n            node = node.children[c]\n        return node.is_end\n    def startsWith(self, prefix):\n        node = self.root\n        for c in prefix:\n            if c not in node.children: return False\n            node = node.children[c]\n        return True\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "trie",
+            "design",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Word Search (#79) — Backtracking template?",
+        "back": [
+            "DFS from each cell matching first char. At each step:\n1. Check bounds, check if char matches, check if visited.\n2. Mark cell as visited (e.g., set to '#').\n3. Recurse on 4 neighbors for next char.\n4. UNDO the visit (restore original char) — this is backtracking.",
+            "Trick: The 'undo' step is what makes it backtracking, not just DFS. Without it, you'd block valid paths."
+        ],
+        "example": [
+            "```python\ndef exist(board, word):\n    m, n = len(board), len(board[0])\n    def dfs(i, j, k):\n        if k == len(word): return True\n        if i < 0 or j < 0 or i >= m or j >= n or board[i][j] != word[k]:\n            return False\n        tmp, board[i][j] = board[i][j], '#'\n        found = any(dfs(i+d[0], j+d[1], k+1) for d in [(0,1),(0,-1),(1,0),(-1,0)])\n        board[i][j] = tmp\n        return found\n    return any(dfs(i, j, 0) for i in range(m) for j in range(n))\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "backtracking",
+            "dfs",
+            "grid",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "LRU Cache (#146) — Why two data structures?",
+        "back": [
+            "Hash map: O(1) lookup by key.\nDoubly linked list: O(1) insertion/removal to maintain access order.\nMost recently used → front. Least recently used → back.\nOn get: move node to front.\nOn put: add to front, if over capacity remove from back.",
+            "Trick: Use dummy head and tail nodes to avoid null checks on edge cases."
+        ],
+        "example": [
+            "```python\nclass LRUCache:\n    def __init__(self, capacity):\n        self.cap = capacity\n        self.cache = {}  # key -> node\n        self.head, self.tail = Node(0,0), Node(0,0)\n        self.head.next, self.tail.prev = self.tail, self.head\n    def _remove(self, node):\n        node.prev.next, node.next.prev = node.next, node.prev\n    def _add_front(self, node):\n        node.next = self.head.next\n        node.prev = self.head\n        self.head.next.prev = node\n        self.head.next = node\n    def get(self, key):\n        if key in self.cache:\n            self._remove(self.cache[key])\n            self._add_front(self.cache[key])\n            return self.cache[key].val\n        return -1\n    def put(self, key, value):\n        if key in self.cache:\n            self._remove(self.cache[key])\n        node = Node(key, value)\n        self.cache[key] = node\n        self._add_front(node)\n        if len(self.cache) > self.cap:\n            lru = self.tail.prev\n            self._remove(lru)\n            del self.cache[lru.key]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "hash_map",
+            "linked_list",
+            "design",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Merge Two Sorted Lists (#21) — Iterative approach?",
+        "back": [
+            "Use a dummy head node. Compare current nodes of both lists, append the smaller one.\nAdvance that list's pointer. After one list is exhausted, attach the remainder of the other.",
+            "Trick: Dummy node eliminates edge cases for the first element."
+        ],
+        "example": [
+            "```python\ndef mergeTwoLists(l1, l2):\n    dummy = curr = ListNode(0)\n    while l1 and l2:\n        if l1.val <= l2.val:\n            curr.next = l1\n            l1 = l1.next\n        else:\n            curr.next = l2\n            l2 = l2.next\n        curr = curr.next\n    curr.next = l1 or l2\n    return dummy.next\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "two_pointers",
+            "dummy_node",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Reverse Linked List (#206) — Iterative trick?",
+        "back": [
+            "Three pointers: prev (starts None), curr (starts head), next_node (temp).\nAt each step: save next, point curr.next to prev, advance prev and curr.",
+            "Trick: Draw the three pointers on paper. The key is saving next BEFORE you break the link."
+        ],
+        "example": [
+            "```python\ndef reverseList(head):\n    prev, curr = None, head\n    while curr:\n        next_node = curr.next\n        curr.next = prev\n        prev = curr\n        curr = next_node\n    return prev\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "pointers",
+            "iterative",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Linked List Cycle (#141) — Floyd's algorithm?",
+        "back": [
+            "Two pointers: slow (moves 1 step), fast (moves 2 steps).\nIf cycle exists, fast will eventually meet slow.\nIf fast reaches None, no cycle.",
+            "Trick: Think of a circular track — the faster runner always laps the slower one."
+        ],
+        "example": [
+            "```python\ndef hasCycle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n        if slow == fast:\n            return True\n    return False\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "fast_slow_pointers",
+            "floyd",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Merge K Sorted Lists (#23) — Optimal approach?",
+        "back": [
+            "Use a min-heap (priority queue). Push the head of each list.\nPop the smallest, add to result, push that node's next.\nTime: O(N log k) where N = total nodes, k = number of lists.",
+            "Alternative: Divide and conquer — merge pairs of lists, halving the count each round. Same time complexity."
+        ],
+        "example": [
+            "```python\nimport heapq\ndef mergeKLists(lists):\n    heap = []\n    for i, l in enumerate(lists):\n        if l:\n            heapq.heappush(heap, (l.val, i, l))\n    dummy = curr = ListNode(0)\n    while heap:\n        val, i, node = heapq.heappop(heap)\n        curr.next = node\n        curr = curr.next\n        if node.next:\n            heapq.heappush(heap, (node.next.val, i, node.next))\n    return dummy.next\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "heap",
+            "divide_conquer",
+            "hard",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Remove Nth Node From End (#19) — One pass trick?",
+        "back": [
+            "Two pointers, both start at dummy node.\nAdvance fast pointer n+1 steps ahead.\nThen move both together. When fast hits None, slow is right before the target.\nDelete by: slow.next = slow.next.next.",
+            "Trick: Use a dummy node to handle edge case of removing the head."
+        ],
+        "example": [
+            "```python\ndef removeNthFromEnd(head, n):\n    dummy = ListNode(0, head)\n    slow = fast = dummy\n    for _ in range(n + 1):\n        fast = fast.next\n    while fast:\n        slow = slow.next\n        fast = fast.next\n    slow.next = slow.next.next\n    return dummy.next\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "two_pointers",
+            "dummy_node",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Reorder List (#143) — Three-step approach?",
+        "back": [
+            "1. Find middle using slow/fast pointers.\n2. Reverse the second half.\n3. Merge/interleave the two halves.",
+            "Trick: This combines three separate linked list patterns into one problem. Practice each step independently first."
+        ],
+        "example": [
+            "```python\ndef reorderList(head):\n    # Find middle\n    slow = fast = head\n    while fast.next and fast.next.next:\n        slow = slow.next\n        fast = fast.next.next\n    # Reverse second half\n    prev, curr = None, slow.next\n    slow.next = None\n    while curr:\n        tmp = curr.next\n        curr.next = prev\n        prev = curr\n        curr = tmp\n    # Merge\n    first, second = head, prev\n    while second:\n        tmp1, tmp2 = first.next, second.next\n        first.next = second\n        second.next = tmp1\n        first, second = tmp1, tmp2\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "slow_fast",
+            "reverse",
+            "merge",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Climbing Stairs (#70) — Why is this Fibonacci?",
+        "back": [
+            "At each step, you can come from step n-1 or step n-2.\nways(n) = ways(n-1) + ways(n-2) — that's Fibonacci.\nBase cases: ways(1) = 1, ways(2) = 2.",
+            "Trick: You only need two variables, not an array. O(1) space."
+        ],
+        "example": [
+            "```python\ndef climbStairs(n):\n    a, b = 1, 2\n    for _ in range(2, n):\n        a, b = b, a + b\n    return b if n > 1 else 1\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "fibonacci",
+            "dp",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Coin Change (#322) — Bottom-up DP?",
+        "back": [
+            "dp[amount] = min coins needed for that amount.\nFor each amount from 1 to target: try every coin, dp[i] = min(dp[i], dp[i - coin] + 1).\nInitialize dp[0] = 0, everything else = infinity.",
+            "Trick: Inner loop is coins, outer loop is amounts. Return -1 if dp[target] is still infinity."
+        ],
+        "example": [
+            "```python\ndef coinChange(coins, amount):\n    dp = [float('inf')] * (amount + 1)\n    dp[0] = 0\n    for i in range(1, amount + 1):\n        for coin in coins:\n            if coin <= i:\n                dp[i] = min(dp[i], dp[i - coin] + 1)\n    return dp[amount] if dp[amount] != float('inf') else -1\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "bottom_up",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Longest Increasing Subsequence (#300) — O(n²) and O(n log n)?",
+        "back": [
+            "O(n²): dp[i] = length of LIS ending at i. For each i, check all j < i: if nums[j] < nums[i], dp[i] = max(dp[i], dp[j] + 1).\nO(n log n): Maintain a 'tails' array. Binary search for where each number fits. Length of tails = LIS length.",
+            "Trick: The tails array doesn't give you the actual LIS — just its length. The array stays sorted, which enables binary search."
+        ],
+        "example": [
+            "```python\nimport bisect\ndef lengthOfLIS(nums):\n    tails = []\n    for num in nums:\n        pos = bisect.bisect_left(tails, num)\n        if pos == len(tails):\n            tails.append(num)\n        else:\n            tails[pos] = num\n    return len(tails)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "binary_search",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Word Break (#139) — DP with set?",
+        "back": [
+            "dp[i] = True if s[:i] can be segmented using the dictionary.\nFor each position i, check all positions j < i: if dp[j] is True and s[j:i] is in the word set → dp[i] = True.",
+            "Trick: Convert wordDict to a set for O(1) lookup. You can also limit j's range by max word length."
+        ],
+        "example": [
+            "```python\ndef wordBreak(s, wordDict):\n    words = set(wordDict)\n    dp = [False] * (len(s) + 1)\n    dp[0] = True\n    for i in range(1, len(s) + 1):\n        for j in range(i):\n            if dp[j] and s[j:i] in words:\n                dp[i] = True\n                break\n    return dp[len(s)]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "string",
+            "set",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Combination Sum IV (#377) — Why outer=target, inner=nums?",
+        "back": [
+            "dp[i] = number of combinations that sum to i.\nFor each target from 1 to target: try each num, dp[i] += dp[i - num].\nOrder matters here (permutations) — that's why target is outer loop.",
+            "Trick: If order didn't matter (true combinations), you'd swap the loops — nums outer, target inner. This distinction is critical."
+        ],
+        "example": [
+            "```python\ndef combinationSum4(nums, target):\n    dp = [0] * (target + 1)\n    dp[0] = 1\n    for i in range(1, target + 1):\n        for num in nums:\n            if num <= i:\n                dp[i] += dp[i - num]\n    return dp[target]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "permutations",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "House Robber (#198) — The recurrence?",
+        "back": [
+            "At each house: rob it (skip previous) or skip it (keep previous total).\ndp[i] = max(dp[i-1], dp[i-2] + nums[i]).\nBase: dp[0] = nums[0], dp[1] = max(nums[0], nums[1]).",
+            "Trick: Only need two variables (prev1, prev2). Classic O(1) space optimization."
+        ],
+        "example": [
+            "```python\ndef rob(nums):\n    if len(nums) <= 2: return max(nums)\n    prev2, prev1 = nums[0], max(nums[0], nums[1])\n    for i in range(2, len(nums)):\n        prev2, prev1 = prev1, max(prev1, prev2 + nums[i])\n    return prev1\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "space_optimization",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "House Robber II (#213) — Circular twist?",
+        "back": [
+            "First and last houses are adjacent (circle). Can't rob both.\nRun House Robber twice: once on nums[:-1], once on nums[1:].\nAnswer = max of both runs.",
+            "Trick: Reducing circular to two linear subproblems. One includes first, excludes last. Other excludes first, includes last."
+        ],
+        "example": [
+            "```python\ndef rob(nums):\n    if len(nums) <= 2: return max(nums)\n    def rob_linear(arr):\n        prev2, prev1 = 0, 0\n        for num in arr:\n            prev2, prev1 = prev1, max(prev1, prev2 + num)\n        return prev1\n    return max(rob_linear(nums[:-1]), rob_linear(nums[1:]))\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "circular",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Decode Ways (#91) — Tricky edge cases?",
+        "back": [
+            "dp[i] = number of ways to decode s[:i].\nSingle digit (1-9): dp[i] += dp[i-1].\nTwo digits (10-26): dp[i] += dp[i-2].\nEdge case: '0' cannot be decoded alone. Leading zeros are invalid.",
+            "Trick: '0' is the trap. If s[i] == '0' and s[i-1] is not '1' or '2', return 0. Handle this explicitly."
+        ],
+        "example": [
+            "```python\ndef numDecodings(s):\n    if not s or s[0] == '0': return 0\n    prev2, prev1 = 1, 1\n    for i in range(1, len(s)):\n        curr = 0\n        if s[i] != '0':\n            curr += prev1\n        if 10 <= int(s[i-1:i+1]) <= 26:\n            curr += prev2\n        prev2, prev1 = prev1, curr\n    return prev1\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "edge_cases",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Unique Paths (#62) — Grid DP?",
+        "back": [
+            "dp[i][j] = number of paths to reach cell (i,j).\ndp[i][j] = dp[i-1][j] + dp[i][j-1] (come from above or left).\nFirst row and first column are all 1s (only one way to reach them).",
+            "Trick: Can optimize to 1D array since each row only depends on the previous row."
+        ],
+        "example": [
+            "```python\ndef uniquePaths(m, n):\n    dp = [1] * n\n    for _ in range(1, m):\n        for j in range(1, n):\n            dp[j] += dp[j-1]\n    return dp[-1]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "grid",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Jump Game (#55) — Greedy insight?",
+        "back": [
+            "Track the farthest index you can reach. Iterate left to right.\nAt each index: if i > farthest, you're stuck → return False.\nUpdate farthest = max(farthest, i + nums[i]).",
+            "Trick: Don't think about jumps. Think about REACH. Can I reach the end?"
+        ],
+        "example": [
+            "```python\ndef canJump(nums):\n    farthest = 0\n    for i in range(len(nums)):\n        if i > farthest:\n            return False\n        farthest = max(farthest, i + nums[i])\n    return True\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "greedy",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Merge Intervals (#56) — Sort first?",
+        "back": [
+            "Sort by start time. Iterate through intervals.\nIf current overlaps with last merged (current.start <= last.end), merge by extending last.end.\nElse, add current as new interval.",
+            "Trick: After sorting, you only need to compare with the LAST interval in your result. One pass."
+        ],
+        "example": [
+            "```python\ndef merge(intervals):\n    intervals.sort()\n    merged = [intervals[0]]\n    for start, end in intervals[1:]:\n        if start <= merged[-1][1]:\n            merged[-1][1] = max(merged[-1][1], end)\n        else:\n            merged.append([start, end])\n    return merged\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "sorting",
+            "greedy",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Insert Interval (#57) — Three phases?",
+        "back": [
+            "Phase 1: Add all intervals that end BEFORE new interval starts.\nPhase 2: Merge all overlapping intervals with the new one.\nPhase 3: Add all intervals that start AFTER new interval ends.",
+            "Trick: Phase 2 merging: start = min of starts, end = max of ends. Clean three-phase structure."
+        ],
+        "example": [
+            "```python\ndef insert(intervals, new):\n    result = []\n    for i, intv in enumerate(intervals):\n        if intv[1] < new[0]:\n            result.append(intv)\n        elif intv[0] > new[1]:\n            result.append(new)\n            return result + intervals[i:]\n        else:\n            new = [min(new[0], intv[0]), max(new[1], intv[1])]\n    result.append(new)\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "intervals",
+            "merge",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Non-overlapping Intervals (#435) — Greedy strategy?",
+        "back": [
+            "Sort by END time. Greedily keep intervals that end earliest.\nIf current interval starts before previous end → it overlaps → remove it (increment count).\nElse → keep it, update end.",
+            "Trick: Sort by END, not start. Earliest end = leaves most room for future intervals. Classic activity selection."
+        ],
+        "example": [
+            "```python\ndef eraseOverlapIntervals(intervals):\n    intervals.sort(key=lambda x: x[1])\n    count = 0\n    end = float('-inf')\n    for s, e in intervals:\n        if s < end:\n            count += 1\n        else:\n            end = e\n    return count\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "greedy",
+            "sorting",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Meeting Rooms (#252) — Overlap check?",
+        "back": [
+            "Sort by start time. If any interval's start < previous interval's end → overlap → can't attend all.",
+            "Trick: Simplest interval problem. Sort + one pass comparison."
+        ],
+        "example": [
+            "```python\ndef canAttendMeetings(intervals):\n    intervals.sort()\n    for i in range(1, len(intervals)):\n        if intervals[i][0] < intervals[i-1][1]:\n            return False\n    return True\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "sorting",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Meeting Rooms II (#253) — Min rooms needed?",
+        "back": [
+            "Sort start and end times separately. Two pointers.\nWalk through starts: if next start < next end → need new room. Else → reuse room (advance end pointer).",
+            "Alternative: Min-heap of end times. For each meeting: if heap top <= current start, pop (reuse room). Push current end. Heap size = rooms needed.",
+            "Trick: The two-pointer approach on sorted starts/ends is cleaner and easier to code than the heap."
+        ],
+        "example": [
+            "```python\ndef minMeetingRooms(intervals):\n    starts = sorted(i[0] for i in intervals)\n    ends = sorted(i[1] for i in intervals)\n    rooms = ep = 0\n    for sp in range(len(starts)):\n        if starts[sp] < ends[ep]:\n            rooms += 1\n        else:\n            ep += 1\n    return rooms\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "two_pointers",
+            "heap",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Reverse Bits (#190) — Bit manipulation?",
+        "back": [
+            "Loop 32 times. Each iteration: shift result left, add last bit of n (n & 1), shift n right.",
+            "Trick: Build the result bit by bit from right to left of n → left to right of result."
+        ],
+        "example": [
+            "```python\ndef reverseBits(n):\n    result = 0\n    for _ in range(32):\n        result = (result << 1) | (n & 1)\n        n >>= 1\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "bits",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Number of 1 Bits (#191) — Brian Kernighan's trick?",
+        "back": [
+            "n & (n-1) removes the lowest set bit. Count how many times until n becomes 0.",
+            "Trick: n & (n-1) is the single most useful bit trick. Memorize it."
+        ],
+        "example": [
+            "```python\ndef hammingWeight(n):\n    count = 0\n    while n:\n        n &= (n - 1)\n        count += 1\n    return count\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "bits",
+            "kernighan",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Counting Bits (#338) — DP with bits?",
+        "back": [
+            "dp[i] = dp[i >> 1] + (i & 1).\nRight shift halves the number (known subproblem), last bit adds 0 or 1.",
+            "Trick: Or use dp[i] = dp[i & (i-1)] + 1. Both work in O(n)."
+        ],
+        "example": [
+            "```python\ndef countBits(n):\n    dp = [0] * (n + 1)\n    for i in range(1, n + 1):\n        dp[i] = dp[i >> 1] + (i & 1)\n    return dp\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "bits",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Missing Number (#268) — XOR trick?",
+        "back": [
+            "XOR all numbers 0..n with all numbers in array. Duplicates cancel out, leaving the missing one.\nAlternative: Sum(0..n) - Sum(array).",
+            "Trick: a ^ a = 0 and a ^ 0 = a. XOR is its own inverse — perfect for finding the odd one out."
+        ],
+        "example": [
+            "```python\ndef missingNumber(nums):\n    result = len(nums)\n    for i, num in enumerate(nums):\n        result ^= i ^ num\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "xor",
+            "math",
+            "easy",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Sum of Two Integers (#371) — Add without + operator?",
+        "back": [
+            "XOR gives sum without carry. AND + left shift gives the carry.\nRepeat until carry is 0.",
+            "Trick: In Python, handle negative numbers with a 32-bit mask (0xFFFFFFFF) because Python integers have infinite bits."
+        ],
+        "example": [
+            "```python\ndef getSum(a, b):\n    MASK = 0xFFFFFFFF\n    MAX = 0x7FFFFFFF\n    while b & MASK:\n        carry = (a & b) << 1\n        a = a ^ b\n        b = carry\n    return a & MASK if a > MAX else a\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "xor",
+            "carry",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Top K Frequent Elements (#347) — Three approaches?",
+        "back": [
+            "1. Hash map + sort: O(n log n)\n2. Hash map + min-heap of size k: O(n log k)\n3. Bucket sort: O(n) — index = frequency, value = list of elements.",
+            "Trick: Bucket sort is the optimal one interviewers want. Create buckets[0..n], then walk backwards to get top k."
+        ],
+        "example": [
+            "```python\ndef topKFrequent(nums, k):\n    count = Counter(nums)\n    buckets = [[] for _ in range(len(nums) + 1)]\n    for num, freq in count.items():\n        buckets[freq].append(num)\n    result = []\n    for i in range(len(buckets) - 1, -1, -1):\n        result.extend(buckets[i])\n        if len(result) >= k:\n            return result[:k]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "bucket_sort",
+            "heap",
+            "hash_map",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Find Median from Data Stream (#295) — Two heaps?",
+        "back": [
+            "Max-heap for lower half, min-heap for upper half.\nBalance: sizes differ by at most 1.\nMedian: if equal size → average of both tops. If unequal → top of larger heap.",
+            "Trick: Python only has min-heap. Simulate max-heap by negating values."
+        ],
+        "example": [
+            "```python\nclass MedianFinder:\n    def __init__(self):\n        self.lo = []  # max-heap (negated)\n        self.hi = []  # min-heap\n    def addNum(self, num):\n        heapq.heappush(self.lo, -num)\n        heapq.heappush(self.hi, -heapq.heappop(self.lo))\n        if len(self.hi) > len(self.lo):\n            heapq.heappush(self.lo, -heapq.heappop(self.hi))\n    def findMedian(self):\n        if len(self.lo) > len(self.hi):\n            return -self.lo[0]\n        return (-self.lo[0] + self.hi[0]) / 2\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "two_heaps",
+            "design",
+            "hard",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Encode and Decode Strings (#271) — Delimiter trick?",
+        "back": [
+            "Encode: for each string, prepend its length + a delimiter (e.g., '5#hello').\nDecode: read the number before '#', extract that many characters, repeat.",
+            "Trick: Length prefix avoids the problem of choosing a delimiter that might appear in the strings."
+        ],
+        "example": [
+            "```python\ndef encode(strs):\n    return ''.join(f'{len(s)}#{s}' for s in strs)\n\ndef decode(s):\n    result, i = [], 0\n    while i < len(s):\n        j = s.index('#', i)\n        length = int(s[i:j])\n        result.append(s[j+1:j+1+length])\n        i = j + 1 + length\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "encoding",
+            "design",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Longest Consecutive Sequence (#128) — O(n) trick?",
+        "back": [
+            "Put all numbers in a set. For each number, only start counting if (num-1) is NOT in the set — this means num is the START of a sequence.\nThen count upward: num+1, num+2, etc.",
+            "Trick: The 'only start at sequence beginning' check makes it O(n) despite the inner while loop. Each number is visited at most twice."
+        ],
+        "example": [
+            "```python\ndef longestConsecutive(nums):\n    num_set = set(nums)\n    longest = 0\n    for num in num_set:\n        if num - 1 not in num_set:\n            length = 1\n            while num + length in num_set:\n                length += 1\n            longest = max(longest, length)\n    return longest\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "hash_set",
+            "sequence",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Alien Dictionary (#269) — Topological sort on characters?",
+        "back": [
+            "Compare adjacent words to extract ordering rules (edges).\nBuild a graph of char → char dependencies.\nTopological sort (BFS/Kahn's) gives the order.\nEdge case: if a longer word comes before its prefix (e.g., 'abc' before 'ab') → invalid.",
+            "Trick: Only compare ADJACENT words in the input. Each pair gives you at most ONE edge — the first differing character."
+        ],
+        "example": [
+            "```python\ndef alienOrder(words):\n    graph = defaultdict(set)\n    in_degree = {c: 0 for w in words for c in w}\n    for i in range(len(words) - 1):\n        w1, w2 = words[i], words[i+1]\n        if len(w1) > len(w2) and w1[:len(w2)] == w2:\n            return ''\n        for c1, c2 in zip(w1, w2):\n            if c1 != c2:\n                if c2 not in graph[c1]:\n                    graph[c1].add(c2)\n                    in_degree[c2] += 1\n                break\n    queue = deque(c for c in in_degree if in_degree[c] == 0)\n    result = []\n    while queue:\n        c = queue.popleft()\n        result.append(c)\n        for nei in graph[c]:\n            in_degree[nei] -= 1\n            if in_degree[nei] == 0:\n                queue.append(nei)\n    return ''.join(result) if len(result) == len(in_degree) else ''\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "topological_sort",
+            "bfs",
+            "hard",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Graph Valid Tree (#261) — Two conditions?",
+        "back": [
+            "A valid tree has exactly n-1 edges AND is fully connected.\nCheck edge count first. Then BFS/DFS to verify all nodes are reachable.\nAlternative: Union-Find — if any edge creates a cycle, it's not a tree.",
+            "Trick: n nodes, n-1 edges, no cycle = tree. Check all three (or: n-1 edges + connected = tree)."
+        ],
+        "example": [
+            "```python\ndef validTree(n, edges):\n    if len(edges) != n - 1:\n        return False\n    graph = defaultdict(list)\n    for a, b in edges:\n        graph[a].append(b)\n        graph[b].append(a)\n    visited = set()\n    queue = deque([0])\n    visited.add(0)\n    while queue:\n        node = queue.popleft()\n        for nei in graph[node]:\n            if nei not in visited:\n                visited.add(nei)\n                queue.append(nei)\n    return len(visited) == n\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "bfs",
+            "union_find",
+            "tree",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Kth Smallest Element in BST (#230) — Inorder trick?",
+        "back": [
+            "Inorder traversal of BST visits nodes in sorted order.\nDo inorder traversal, decrement k each time. When k reaches 0, that's your answer.",
+            "Trick: You don't need to traverse the entire tree — stop as soon as k hits 0. Use iterative inorder with a stack for easy early exit."
+        ],
+        "example": [
+            "```python\ndef kthSmallest(root, k):\n    stack = []\n    curr = root\n    while curr or stack:\n        while curr:\n            stack.append(curr)\n            curr = curr.left\n        curr = stack.pop()\n        k -= 1\n        if k == 0:\n            return curr.val\n        curr = curr.right\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "bst",
+            "inorder",
+            "stack",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Construct Binary Tree from Preorder and Inorder (#105) — Recursive insight?",
+        "back": [
+            "Preorder's first element = root. Find root in inorder → everything left = left subtree, right = right subtree.\nRecurse on both halves.\nUse a hash map for O(1) root lookup in inorder.",
+            "Trick: Preorder tells you the root. Inorder tells you the split. Together they define the tree uniquely."
+        ],
+        "example": [
+            "```python\ndef buildTree(preorder, inorder):\n    inorder_map = {val: i for i, val in enumerate(inorder)}\n    self.pre_idx = 0\n    def build(lo, hi):\n        if lo > hi: return None\n        root = TreeNode(preorder[self.pre_idx])\n        self.pre_idx += 1\n        mid = inorder_map[root.val]\n        root.left = build(lo, mid - 1)\n        root.right = build(mid + 1, hi)\n        return root\n    return build(0, len(inorder) - 1)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "recursion",
+            "divide_conquer",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Serialize and Deserialize Binary Tree (#297) — Preorder approach?",
+        "back": [
+            "Serialize: preorder traversal, use 'null' for None nodes, comma-separated.\nDeserialize: split into list, recursively build tree consuming values left to right.",
+            "Trick: Including null markers makes the serialization unambiguous — you don't need inorder."
+        ],
+        "example": [
+            "```python\nclass Codec:\n    def serialize(self, root):\n        vals = []\n        def dfs(node):\n            if not node:\n                vals.append('null')\n                return\n            vals.append(str(node.val))\n            dfs(node.left)\n            dfs(node.right)\n        dfs(root)\n        return ','.join(vals)\n    def deserialize(self, data):\n        vals = iter(data.split(','))\n        def dfs():\n            val = next(vals)\n            if val == 'null': return None\n            node = TreeNode(int(val))\n            node.left = dfs()\n            node.right = dfs()\n            return node\n        return dfs()\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "preorder",
+            "serialization",
+            "hard",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Binary Tree Maximum Path Sum (#124) — Why return one path?",
+        "back": [
+            "At each node: max path THROUGH this node = node.val + left_gain + right_gain (can be the global answer).\nBut RETURN only node.val + max(left, right) — because a path can't fork when extending upward to parent.",
+            "Trick: Global max considers forking. Return value does NOT fork. This distinction is the entire problem."
+        ],
+        "example": [
+            "```python\ndef maxPathSum(root):\n    max_sum = [float('-inf')]\n    def dfs(node):\n        if not node: return 0\n        left = max(dfs(node.left), 0)\n        right = max(dfs(node.right), 0)\n        max_sum[0] = max(max_sum[0], node.val + left + right)\n        return node.val + max(left, right)\n    dfs(root)\n    return max_sum[0]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "recursion",
+            "dfs",
+            "global_state",
+            "hard",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Word Search II (#212) — Trie + backtracking?",
+        "back": [
+            "Build a trie from all target words. DFS on the grid, walking the trie simultaneously.\nIf current trie node has is_end → found a word.\nPrune: remove found words from trie to avoid duplicates.",
+            "Trick: Without the trie, you'd search for each word separately. Trie lets you search for ALL words in one grid traversal."
+        ],
+        "example": [
+            "```python\ndef findWords(board, words):\n    trie = {}\n    for w in words:\n        node = trie\n        for c in w:\n            node = node.setdefault(c, {})\n        node['#'] = w\n    result = []\n    m, n = len(board), len(board[0])\n    def dfs(i, j, node):\n        if '#' in node:\n            result.append(node.pop('#'))\n        if i<0 or j<0 or i>=m or j>=n or board[i][j] not in node:\n            return\n        c, board[i][j] = board[i][j], '.'\n        for di, dj in [(0,1),(0,-1),(1,0),(-1,0)]:\n            dfs(i+di, j+dj, node[c])\n        board[i][j] = c\n    for i in range(m):\n        for j in range(n):\n            dfs(i, j, trie)\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "trie",
+            "backtracking",
+            "hard",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Set Matrix Zeroes (#73) — O(1) space trick?",
+        "back": [
+            "Use the first row and first column as markers.\nIf cell (i,j) is 0, mark matrix[i][0] = 0 and matrix[0][j] = 0.\nThen zero out rows/cols based on markers. Handle first row/col separately with a flag.",
+            "Trick: The matrix itself becomes your storage. No extra arrays needed."
+        ],
+        "example": [
+            "```python\ndef setZeroes(matrix):\n    m, n = len(matrix), len(matrix[0])\n    first_row = any(matrix[0][j] == 0 for j in range(n))\n    first_col = any(matrix[i][0] == 0 for i in range(m))\n    for i in range(1, m):\n        for j in range(1, n):\n            if matrix[i][j] == 0:\n                matrix[i][0] = matrix[0][j] = 0\n    for i in range(1, m):\n        for j in range(1, n):\n            if matrix[i][0] == 0 or matrix[0][j] == 0:\n                matrix[i][j] = 0\n    if first_row:\n        for j in range(n): matrix[0][j] = 0\n    if first_col:\n        for i in range(m): matrix[i][0] = 0\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "in_place",
+            "markers",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Spiral Matrix (#54) — Layer-by-layer?",
+        "back": [
+            "Maintain four boundaries: top, bottom, left, right.\nTraverse right → down → left → up. Shrink the boundary after each direction.\nStop when boundaries cross.",
+            "Trick: Check boundary conditions AFTER each direction change to handle non-square matrices."
+        ],
+        "example": [
+            "```python\ndef spiralOrder(matrix):\n    result = []\n    top, bottom, left, right = 0, len(matrix)-1, 0, len(matrix[0])-1\n    while top <= bottom and left <= right:\n        for j in range(left, right+1): result.append(matrix[top][j])\n        top += 1\n        for i in range(top, bottom+1): result.append(matrix[i][right])\n        right -= 1\n        if top <= bottom:\n            for j in range(right, left-1, -1): result.append(matrix[bottom][j])\n            bottom -= 1\n        if left <= right:\n            for i in range(bottom, top-1, -1): result.append(matrix[i][left])\n            left += 1\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "boundaries",
+            "simulation",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Rotate Image (#48) — In-place rotation?",
+        "back": [
+            "Step 1: Transpose the matrix (swap matrix[i][j] with matrix[j][i]).\nStep 2: Reverse each row.\nThis gives you a 90° clockwise rotation.",
+            "Trick: Transpose + reverse = rotate. For counter-clockwise: reverse + transpose."
+        ],
+        "example": [
+            "```python\ndef rotate(matrix):\n    n = len(matrix)\n    for i in range(n):\n        for j in range(i+1, n):\n            matrix[i][j], matrix[j][i] = matrix[j][i], matrix[i][j]\n    for row in matrix:\n        row.reverse()\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "transpose",
+            "in_place",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Longest Repeating Character Replacement (#424) — Sliding window insight?",
+        "back": [
+            "Sliding window. Track frequency of most common char in window.\nWindow is valid if: window_size - max_freq <= k (can replace the rest).\nIf invalid, shrink from left.",
+            "Trick: You don't need to update max_freq when shrinking — it only matters when it increases. This subtle optimization keeps it O(n)."
+        ],
+        "example": [
+            "```python\ndef characterReplacement(s, k):\n    count = {}\n    left = max_freq = result = 0\n    for right in range(len(s)):\n        count[s[right]] = count.get(s[right], 0) + 1\n        max_freq = max(max_freq, count[s[right]])\n        if (right - left + 1) - max_freq > k:\n            count[s[left]] -= 1\n            left += 1\n        result = max(result, right - left + 1)\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "sliding_window",
+            "frequency",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Minimum Window Substring (#76) — Sliding window template?",
+        "back": [
+            "Expand right to include chars. Track how many required chars are satisfied.\nOnce all satisfied, shrink from left to find minimum window.\nUse two frequency maps: need (from t) and have (from window).",
+            "Trick: Track a 'formed' counter — how many unique chars in t have the required frequency in window. Avoids comparing full maps each time."
+        ],
+        "example": [
+            "```python\ndef minWindow(s, t):\n    from collections import Counter\n    need = Counter(t)\n    have, required = 0, len(need)\n    left, min_len, min_start = 0, float('inf'), 0\n    window = {}\n    for right, c in enumerate(s):\n        window[c] = window.get(c, 0) + 1\n        if c in need and window[c] == need[c]:\n            have += 1\n        while have == required:\n            if right - left + 1 < min_len:\n                min_len = right - left + 1\n                min_start = left\n            window[s[left]] -= 1\n            if s[left] in need and window[s[left]] < need[s[left]]:\n                have -= 1\n            left += 1\n    return s[min_start:min_start + min_len] if min_len != float('inf') else ''\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "sliding_window",
+            "hash_map",
+            "hard",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Palindromic Substrings (#647) — Count all palindromes?",
+        "back": [
+            "Same expand-around-center technique as Longest Palindromic Substring.\nFor each center (odd and even), expand and COUNT every valid expansion.",
+            "Trick: Every expansion step that succeeds IS a palindrome. Just increment counter instead of tracking the longest."
+        ],
+        "example": [
+            "```python\ndef countSubstrings(s):\n    count = 0\n    for i in range(len(s)):\n        for l, r in [(i, i), (i, i+1)]:\n            while l >= 0 and r < len(s) and s[l] == s[r]:\n                count += 1\n                l -= 1\n                r += 1\n    return count\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "expand_around_center",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Design Add and Search Words (#211) — Trie with wildcards?",
+        "back": [
+            "Standard trie for addWord. For search with '.', use DFS/recursion.\nAt '.': try ALL children at that level.\nAt regular char: follow the single matching child.",
+            "Trick: The '.' wildcard turns a simple trie lookup into a branching DFS. That's the only added complexity."
+        ],
+        "example": [
+            "```python\nclass WordDictionary:\n    def __init__(self):\n        self.root = {}\n    def addWord(self, word):\n        node = self.root\n        for c in word:\n            node = node.setdefault(c, {})\n        node['#'] = True\n    def search(self, word):\n        def dfs(node, i):\n            if i == len(word):\n                return '#' in node\n            if word[i] == '.':\n                return any(dfs(child, i+1) for key, child in node.items() if key != '#')\n            if word[i] not in node:\n                return False\n            return dfs(node[word[i]], i+1)\n        return dfs(self.root, 0)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "trie",
+            "dfs",
+            "wildcards",
+            "medium",
+            "neetcode_150",
+            "blind_75"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Valid Sudoku (#36) — What to check?",
+        "back": [
+            "Check each row, column, and 3x3 box for duplicates.\nUse sets (or hash sets) for each row, column, and box.",
+            "Trick: Box index = (row // 3) * 3 + (col // 3). This maps each cell to one of 9 boxes."
+        ],
+        "example": [
+            "```python\ndef isValidSudoku(board):\n    rows = [set() for _ in range(9)]\n    cols = [set() for _ in range(9)]\n    boxes = [set() for _ in range(9)]\n    for r in range(9):\n        for c in range(9):\n            val = board[r][c]\n            if val == '.': continue\n            box = (r // 3) * 3 + (c // 3)\n            if val in rows[r] or val in cols[c] or val in boxes[box]:\n                return False\n            rows[r].add(val)\n            cols[c].add(val)\n            boxes[box].add(val)\n    return True\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "hash_set",
+            "matrix",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Valid Palindrome (#125) — Clean approach?",
+        "back": [
+            "Two pointers from both ends. Skip non-alphanumeric chars.\nCompare lowercase versions.",
+            "Trick: Use isalnum() to skip non-alphanumeric. Don't create a new cleaned string — do it in-place with pointers."
+        ],
+        "example": [
+            "```python\ndef isPalindrome(s):\n    l, r = 0, len(s) - 1\n    while l < r:\n        while l < r and not s[l].isalnum(): l += 1\n        while l < r and not s[r].isalnum(): r -= 1\n        if s[l].lower() != s[r].lower(): return False\n        l += 1; r -= 1\n    return True\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "two_pointers",
+            "string",
+            "easy",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Two Sum II - Sorted Array (#167) — Why two pointers?",
+        "back": [
+            "Array is sorted → use left/right pointers.\nIf sum < target, move left up. If sum > target, move right down.",
+            "Trick: Sorted input = two pointers. Unsorted = hash map. Know when to use which."
+        ],
+        "example": [
+            "```python\ndef twoSum(numbers, target):\n    l, r = 0, len(numbers) - 1\n    while l < r:\n        s = numbers[l] + numbers[r]\n        if s < target: l += 1\n        elif s > target: r -= 1\n        else: return [l + 1, r + 1]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "two_pointers",
+            "sorted_array",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Trapping Rain Water (#42) — Two pointer approach?",
+        "back": [
+            "Two pointers l, r. Track left_max and right_max.\nWater at any position = min(left_max, right_max) - height[i].\nMove the pointer with the smaller max inward.",
+            "Trick: You only need to know the SMALLER of the two maxes to calculate water at that position. The other side is guaranteed to be at least as tall."
+        ],
+        "example": [
+            "```python\ndef trap(height):\n    l, r = 0, len(height) - 1\n    left_max = right_max = result = 0\n    while l < r:\n        if height[l] < height[r]:\n            left_max = max(left_max, height[l])\n            result += left_max - height[l]\n            l += 1\n        else:\n            right_max = max(right_max, height[r])\n            result += right_max - height[r]\n            r -= 1\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "two_pointers",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Permutation in String (#567) — Sliding window with frequency?",
+        "back": [
+            "Fixed-size sliding window of len(s1) over s2.\nCompare frequency counts of window with s1's count.\nSlide: add right char, remove left char, compare.",
+            "Trick: Instead of comparing full maps each time, track a 'matches' count of how many of 26 chars have equal frequency."
+        ],
+        "example": [
+            "```python\ndef checkInclusion(s1, s2):\n    if len(s1) > len(s2): return False\n    from collections import Counter\n    c1 = Counter(s1)\n    window = Counter(s2[:len(s1)])\n    if c1 == window: return True\n    for i in range(len(s1), len(s2)):\n        window[s2[i]] += 1\n        left = s2[i - len(s1)]\n        window[left] -= 1\n        if window[left] == 0: del window[left]\n        if c1 == window: return True\n    return False\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "sliding_window",
+            "frequency",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Sliding Window Maximum (#239) — Monotonic deque?",
+        "back": [
+            "Use a deque storing INDICES. Keep it monotonically decreasing (front = max of window).\nFor each new element: remove smaller elements from back. Remove front if outside window.\nFront of deque = current window max.",
+            "Trick: The deque stores indices, not values. Check bounds by index. This gives O(n) instead of O(n*k)."
+        ],
+        "example": [
+            "```python\nfrom collections import deque\ndef maxSlidingWindow(nums, k):\n    dq = deque()\n    result = []\n    for i in range(len(nums)):\n        while dq and nums[dq[-1]] <= nums[i]:\n            dq.pop()\n        dq.append(i)\n        if dq[0] < i - k + 1:\n            dq.popleft()\n        if i >= k - 1:\n            result.append(nums[dq[0]])\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "monotonic_deque",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Min Stack (#155) — O(1) getMin?",
+        "back": [
+            "Use two stacks: one normal, one tracking the current minimum.\nOn push: push to min_stack if val <= current min.\nOn pop: pop from min_stack if popped value == current min.",
+            "Trick: Or store (value, current_min) as tuples in a single stack. Each entry remembers its own min."
+        ],
+        "example": [
+            "```python\nclass MinStack:\n    def __init__(self):\n        self.stack = []\n    def push(self, val):\n        curr_min = min(val, self.stack[-1][1] if self.stack else val)\n        self.stack.append((val, curr_min))\n    def pop(self):\n        self.stack.pop()\n    def top(self):\n        return self.stack[-1][0]\n    def getMin(self):\n        return self.stack[-1][1]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "stack",
+            "design",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Evaluate Reverse Polish Notation (#150) — Stack approach?",
+        "back": [
+            "Push numbers onto stack. When you hit an operator, pop two, apply operator, push result.\nOrder matters for subtraction and division: second_popped OP first_popped.",
+            "Trick: In Python, use int(a/b) instead of a//b for division to truncate toward zero (not negative infinity)."
+        ],
+        "example": [
+            "```python\ndef evalRPN(tokens):\n    stack = []\n    for t in tokens:\n        if t in '+-*/':\n            b, a = stack.pop(), stack.pop()\n            if t == '+': stack.append(a + b)\n            elif t == '-': stack.append(a - b)\n            elif t == '*': stack.append(a * b)\n            else: stack.append(int(a / b))\n        else:\n            stack.append(int(t))\n    return stack[0]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "stack",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Generate Parentheses (#22) — Backtracking rules?",
+        "back": [
+            "Track open_count and close_count.\nCan add '(' if open_count < n.\nCan add ')' if close_count < open_count.\nBase case: len(current) == 2*n.",
+            "Trick: The constraint 'close < open' is what prevents invalid combinations. That's the entire pruning logic."
+        ],
+        "example": [
+            "```python\ndef generateParenthesis(n):\n    result = []\n    def backtrack(curr, open_c, close_c):\n        if len(curr) == 2 * n:\n            result.append(curr)\n            return\n        if open_c < n:\n            backtrack(curr + '(', open_c + 1, close_c)\n        if close_c < open_c:\n            backtrack(curr + ')', open_c, close_c + 1)\n    backtrack('', 0, 0)\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "backtracking",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Daily Temperatures (#739) — Monotonic stack?",
+        "back": [
+            "Stack stores indices of unresolved temperatures (decreasing order).\nFor each new temp: pop all smaller temps from stack — current day is their answer.\nPush current index.",
+            "Trick: Monotonic decreasing stack. When you pop, the distance = current_index - popped_index."
+        ],
+        "example": [
+            "```python\ndef dailyTemperatures(temperatures):\n    result = [0] * len(temperatures)\n    stack = []\n    for i, temp in enumerate(temperatures):\n        while stack and temperatures[stack[-1]] < temp:\n            j = stack.pop()\n            result[j] = i - j\n        stack.append(i)\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "monotonic_stack",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Car Fleet (#853) — Sort + stack?",
+        "back": [
+            "Calculate time to reach target for each car: (target - pos) / speed.\nSort by position descending. If current car's time <= car ahead's time, they merge (same fleet).\nCount distinct fleets.",
+            "Trick: A slower car ahead blocks faster cars behind it. Stack tracks fleet leaders' times."
+        ],
+        "example": [
+            "```python\ndef carFleet(target, position, speed):\n    pairs = sorted(zip(position, speed), reverse=True)\n    stack = []\n    for pos, spd in pairs:\n        time = (target - pos) / spd\n        if not stack or time > stack[-1]:\n            stack.append(time)\n    return len(stack)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "stack",
+            "sorting",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Largest Rectangle in Histogram (#84) — Stack approach?",
+        "back": [
+            "Monotonic increasing stack of indices. When a shorter bar appears, pop and calculate area.\nWidth = current_index - stack_top - 1 (or current_index if stack empty).\nHeight = popped bar's height.",
+            "Trick: Add a sentinel 0 at the end to flush remaining bars from the stack."
+        ],
+        "example": [
+            "```python\ndef largestRectangleArea(heights):\n    stack = []\n    max_area = 0\n    heights.append(0)\n    for i, h in enumerate(heights):\n        while stack and heights[stack[-1]] > h:\n            height = heights[stack.pop()]\n            width = i if not stack else i - stack[-1] - 1\n            max_area = max(max_area, height * width)\n        stack.append(i)\n    return max_area\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "monotonic_stack",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Binary Search (#704) — Template?",
+        "back": [
+            "l, r = 0, len(nums)-1. While l <= r: mid = (l+r)//2.\nIf nums[mid] == target, return mid. If less, l = mid+1. If more, r = mid-1.",
+            "Trick: Use l <= r (not l < r) when searching for exact match. Use l < r when converging to a boundary."
+        ],
+        "example": [
+            "```python\ndef search(nums, target):\n    l, r = 0, len(nums) - 1\n    while l <= r:\n        mid = (l + r) // 2\n        if nums[mid] == target: return mid\n        elif nums[mid] < target: l = mid + 1\n        else: r = mid - 1\n    return -1\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "binary_search",
+            "easy",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Search a 2D Matrix (#74) — Treat as 1D?",
+        "back": [
+            "Treat the 2D matrix as a sorted 1D array. Binary search with index mapping.\nrow = mid // cols, col = mid % cols.",
+            "Trick: Total elements = rows * cols. Binary search from 0 to total-1. Convert 1D index to 2D on the fly."
+        ],
+        "example": [
+            "```python\ndef searchMatrix(matrix, target):\n    m, n = len(matrix), len(matrix[0])\n    l, r = 0, m * n - 1\n    while l <= r:\n        mid = (l + r) // 2\n        val = matrix[mid // n][mid % n]\n        if val == target: return True\n        elif val < target: l = mid + 1\n        else: r = mid - 1\n    return False\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "binary_search",
+            "matrix",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Koko Eating Bananas (#875) — Binary search on answer?",
+        "back": [
+            "Binary search on the eating speed k (1 to max(piles)).\nFor each k, calculate total hours needed. If hours <= h, try smaller k.\nFind the minimum k that works.",
+            "Trick: 'Binary search on the answer' pattern — when you need to find the minimum/maximum value that satisfies a condition."
+        ],
+        "example": [
+            "```python\nimport math\ndef minEatingSpeed(piles, h):\n    l, r = 1, max(piles)\n    while l < r:\n        mid = (l + r) // 2\n        hours = sum(math.ceil(p / mid) for p in piles)\n        if hours <= h:\n            r = mid\n        else:\n            l = mid + 1\n    return l\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "binary_search_on_answer",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Time Based Key-Value Store (#981) — Binary search on timestamps?",
+        "back": [
+            "Store values as {key: [(timestamp, value)]}. Timestamps are always increasing.\nFor get: binary search for largest timestamp <= given timestamp.",
+            "Trick: bisect_right gives insertion point — subtract 1 to get the floor value."
+        ],
+        "example": [
+            "```python\nimport bisect\nclass TimeMap:\n    def __init__(self):\n        self.store = {}\n    def set(self, key, value, timestamp):\n        self.store.setdefault(key, []).append((timestamp, value))\n    def get(self, key, timestamp):\n        if key not in self.store: return ''\n        arr = self.store[key]\n        i = bisect.bisect_right(arr, (timestamp, chr(127))) - 1\n        return arr[i][1] if i >= 0 else ''\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "binary_search",
+            "design",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Median of Two Sorted Arrays (#4) — Binary search insight?",
+        "back": [
+            "Binary search on the smaller array to find the correct partition.\nPartition both arrays so left half total = right half total.\nCondition: max(left1, left2) <= min(right1, right2).",
+            "Trick: Always binary search on the SMALLER array. Partition position in second array is derived: half - partition1."
+        ],
+        "example": [
+            "```python\ndef findMedianSortedArrays(nums1, nums2):\n    if len(nums1) > len(nums2): nums1, nums2 = nums2, nums1\n    m, n = len(nums1), len(nums2)\n    l, r = 0, m\n    while l <= r:\n        i = (l + r) // 2\n        j = (m + n + 1) // 2 - i\n        left1 = nums1[i-1] if i > 0 else float('-inf')\n        right1 = nums1[i] if i < m else float('inf')\n        left2 = nums2[j-1] if j > 0 else float('-inf')\n        right2 = nums2[j] if j < n else float('inf')\n        if left1 <= right2 and left2 <= right1:\n            if (m + n) % 2:\n                return max(left1, left2)\n            return (max(left1, left2) + min(right1, right2)) / 2\n        elif left1 > right2: r = i - 1\n        else: l = i + 1\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "binary_search",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Find Duplicate Number (#287) — Floyd's cycle detection?",
+        "back": [
+            "Treat array as a linked list: index → value → next index.\nDuplicate means a cycle exists. Use slow/fast pointers to find it.\nPhase 1: Find meeting point. Phase 2: Find cycle entrance (= duplicate).",
+            "Trick: This is Floyd's algorithm on an implicit linked list. O(1) space, no modifying the array."
+        ],
+        "example": [
+            "```python\ndef findDuplicate(nums):\n    slow = fast = 0\n    while True:\n        slow = nums[slow]\n        fast = nums[nums[fast]]\n        if slow == fast: break\n    slow = 0\n    while slow != fast:\n        slow = nums[slow]\n        fast = nums[fast]\n    return slow\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "floyd",
+            "cycle_detection",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Reverse Nodes in k-Group (#25) — Iterative approach?",
+        "back": [
+            "Process k nodes at a time. Check if k nodes remain. If yes, reverse them. Connect to previous group.\nUse a dummy node and track group_prev pointer.",
+            "Trick: After reversing a group, the old group head becomes the group tail. Use it as the connector to the next group."
+        ],
+        "example": [
+            "```python\ndef reverseKGroup(head, k):\n    dummy = ListNode(0, head)\n    group_prev = dummy\n    while True:\n        kth = group_prev\n        for _ in range(k):\n            kth = kth.next\n            if not kth: return dummy.next\n        group_next = kth.next\n        prev, curr = kth.next, group_prev.next\n        for _ in range(k):\n            tmp = curr.next\n            curr.next = prev\n            prev = curr\n            curr = tmp\n        tmp = group_prev.next\n        group_prev.next = kth if kth else prev\n        group_prev = tmp\n    return dummy.next\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "linked_list",
+            "reverse",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Add Two Numbers (#2) — Linked list addition?",
+        "back": [
+            "Iterate both lists simultaneously, add digits + carry.\nCreate new nodes with (sum % 10), carry = sum // 10.\nDon't forget the final carry after both lists are exhausted.",
+            "Trick: Use a dummy head to simplify building the result list. Numbers are already in reverse order — no need to reverse."
+        ],
+        "example": [
+            "```python\ndef addTwoNumbers(l1, l2):\n    dummy = curr = ListNode(0)\n    carry = 0\n    while l1 or l2 or carry:\n        val = carry\n        if l1: val += l1.val; l1 = l1.next\n        if l2: val += l2.val; l2 = l2.next\n        carry, val = divmod(val, 10)\n        curr.next = ListNode(val)\n        curr = curr.next\n    return dummy.next\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "linked_list",
+            "dummy_node",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Copy List with Random Pointer (#138) — Interleaving trick?",
+        "back": [
+            "Approach 1: Hash map {original → clone}. Two passes: create clones, then set next/random.\nApproach 2: Interleave cloned nodes into original list, set random pointers, then separate.",
+            "Trick: The hash map approach is cleaner for interviews. Same pattern as Clone Graph."
+        ],
+        "example": [
+            "```python\ndef copyRandomList(head):\n    if not head: return None\n    old_to_new = {}\n    curr = head\n    while curr:\n        old_to_new[curr] = Node(curr.val)\n        curr = curr.next\n    curr = head\n    while curr:\n        old_to_new[curr].next = old_to_new.get(curr.next)\n        old_to_new[curr].random = old_to_new.get(curr.random)\n        curr = curr.next\n    return old_to_new[head]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "hash_map",
+            "linked_list",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Balanced Binary Tree (#110) — Bottom-up?",
+        "back": [
+            "Return height from each subtree. If any subtree is unbalanced, propagate -1 upward.\nBalanced = |left_height - right_height| <= 1 at every node.",
+            "Trick: Top-down is O(n²). Bottom-up with -1 sentinel is O(n) — check balance while computing height."
+        ],
+        "example": [
+            "```python\ndef isBalanced(root):\n    def height(node):\n        if not node: return 0\n        left, right = height(node.left), height(node.right)\n        if left == -1 or right == -1 or abs(left - right) > 1:\n            return -1\n        return 1 + max(left, right)\n    return height(root) != -1\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "recursion",
+            "bottom_up",
+            "easy",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Diameter of Binary Tree (#543) — Global max trick?",
+        "back": [
+            "Diameter = longest path between any two nodes = left_height + right_height at some node.\nCompute height recursively, but update a global max with left + right at each node.",
+            "Trick: Same pattern as Binary Tree Maximum Path Sum — the answer is a global variable, not the return value."
+        ],
+        "example": [
+            "```python\ndef diameterOfBinaryTree(root):\n    diameter = [0]\n    def height(node):\n        if not node: return 0\n        left, right = height(node.left), height(node.right)\n        diameter[0] = max(diameter[0], left + right)\n        return 1 + max(left, right)\n    height(root)\n    return diameter[0]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "recursion",
+            "global_state",
+            "easy",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Right Side View of Binary Tree (#199) — BFS last element?",
+        "back": [
+            "BFS level by level. The LAST node in each level is visible from the right side.\nOr DFS: visit right child before left, first node at each depth is the right-side view.",
+            "Trick: DFS with right-first traversal is more elegant: if depth == len(result), append node."
+        ],
+        "example": [
+            "```python\ndef rightSideView(root):\n    result = []\n    def dfs(node, depth):\n        if not node: return\n        if depth == len(result):\n            result.append(node.val)\n        dfs(node.right, depth + 1)\n        dfs(node.left, depth + 1)\n    dfs(root, 0)\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "bfs",
+            "dfs",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Count Good Nodes in Binary Tree (#1448) — Track max so far?",
+        "back": [
+            "DFS passing the maximum value seen on the path from root.\nA node is 'good' if its value >= max on the path.\nUpdate max as you go deeper.",
+            "Trick: Root is always good. Just pass max_so_far down the recursion."
+        ],
+        "example": [
+            "```python\ndef goodNodes(root):\n    def dfs(node, max_val):\n        if not node: return 0\n        good = 1 if node.val >= max_val else 0\n        max_val = max(max_val, node.val)\n        return good + dfs(node.left, max_val) + dfs(node.right, max_val)\n    return dfs(root, root.val)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dfs",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Max Area of Island (#695) — DFS with area counting?",
+        "back": [
+            "Same as Number of Islands but return the area (count of cells) from each DFS.\nTrack the maximum area across all islands.",
+            "Trick: DFS returns 1 + sum of recursive calls. Mark visited by setting cell to 0."
+        ],
+        "example": [
+            "```python\ndef maxAreaOfIsland(grid):\n    def dfs(i, j):\n        if i < 0 or j < 0 or i >= len(grid) or j >= len(grid[0]) or grid[i][j] == 0:\n            return 0\n        grid[i][j] = 0\n        return 1 + dfs(i+1,j) + dfs(i-1,j) + dfs(i,j+1) + dfs(i,j-1)\n    return max((dfs(i,j) for i in range(len(grid)) for j in range(len(grid[0]))), default=0)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dfs",
+            "grid",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Rotting Oranges (#994) — Multi-source BFS?",
+        "back": [
+            "Start BFS from ALL rotten oranges simultaneously (add all to queue initially).\nEach BFS step = 1 minute. Track fresh orange count.\nIf fresh > 0 after BFS, return -1.",
+            "Trick: Multi-source BFS — add all starting points to queue at once. Time = number of BFS levels - 1."
+        ],
+        "example": [
+            "```python\ndef orangesRotting(grid):\n    from collections import deque\n    m, n = len(grid), len(grid[0])\n    queue = deque()\n    fresh = 0\n    for i in range(m):\n        for j in range(n):\n            if grid[i][j] == 2: queue.append((i, j))\n            elif grid[i][j] == 1: fresh += 1\n    minutes = 0\n    while queue and fresh:\n        minutes += 1\n        for _ in range(len(queue)):\n            r, c = queue.popleft()\n            for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n                nr, nc = r+dr, c+dc\n                if 0<=nr<m and 0<=nc<n and grid[nr][nc]==1:\n                    grid[nr][nc] = 2\n                    fresh -= 1\n                    queue.append((nr, nc))\n    return minutes if fresh == 0 else -1\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "bfs",
+            "multi_source",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Walls and Gates (#286) — BFS from gates?",
+        "back": [
+            "Multi-source BFS starting from all gates (0s) simultaneously.\nEach BFS step fills neighboring INF cells with distance + 1.",
+            "Trick: Same pattern as Rotting Oranges — BFS from all sources at once propagates distances optimally."
+        ],
+        "example": [
+            "```python\ndef wallsAndGates(rooms):\n    from collections import deque\n    m, n = len(rooms), len(rooms[0])\n    INF = 2**31 - 1\n    queue = deque()\n    for i in range(m):\n        for j in range(n):\n            if rooms[i][j] == 0:\n                queue.append((i, j))\n    while queue:\n        r, c = queue.popleft()\n        for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n            nr, nc = r+dr, c+dc\n            if 0<=nr<m and 0<=nc<n and rooms[nr][nc]==INF:\n                rooms[nr][nc] = rooms[r][c] + 1\n                queue.append((nr, nc))\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "bfs",
+            "multi_source",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Surrounded Regions (#130) — Reverse thinking?",
+        "back": [
+            "Don't find surrounded regions directly. Instead, find UN-surrounded O's (connected to border).\nDFS/BFS from all border O's, mark them as safe.\nEverything else that's still O → flip to X.",
+            "Trick: Same reverse-thinking as Pacific Atlantic Water Flow — start from the boundary."
+        ],
+        "example": [
+            "```python\ndef solve(board):\n    m, n = len(board), len(board[0])\n    def dfs(i, j):\n        if i<0 or j<0 or i>=m or j>=n or board[i][j]!='O': return\n        board[i][j] = 'S'\n        for di,dj in [(1,0),(-1,0),(0,1),(0,-1)]: dfs(i+di,j+dj)\n    for i in range(m):\n        for j in range(n):\n            if (i in (0,m-1) or j in (0,n-1)) and board[i][j]=='O':\n                dfs(i, j)\n    for i in range(m):\n        for j in range(n):\n            if board[i][j]=='O': board[i][j]='X'\n            elif board[i][j]=='S': board[i][j]='O'\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dfs",
+            "reverse_thinking",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Redundant Connection (#684) — Union-Find cycle detection?",
+        "back": [
+            "Process edges one by one. Union-Find: if both nodes already in same set, this edge creates a cycle → return it.",
+            "Trick: The LAST edge that creates a cycle is the answer. Union-Find makes this clean and O(n)."
+        ],
+        "example": [
+            "```python\ndef findRedundantConnection(edges):\n    parent = list(range(len(edges) + 1))\n    def find(x):\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]\n            x = parent[x]\n        return x\n    for a, b in edges:\n        pa, pb = find(a), find(b)\n        if pa == pb: return [a, b]\n        parent[pa] = pb\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "union_find",
+            "cycle_detection",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Word Ladder (#127) — BFS shortest transformation?",
+        "back": [
+            "BFS from beginWord. At each step, try changing each character to a-z.\nIf new word is in wordList, add to queue and remove from list.\nFirst time you reach endWord = shortest path.",
+            "Trick: Use wildcard patterns (e.g., h*t) as intermediate nodes for O(m²*n) optimization. Or just iterate 26 chars per position."
+        ],
+        "example": [
+            "```python\ndef ladderLength(beginWord, endWord, wordList):\n    from collections import deque\n    words = set(wordList)\n    if endWord not in words: return 0\n    queue = deque([(beginWord, 1)])\n    while queue:\n        word, steps = queue.popleft()\n        for i in range(len(word)):\n            for c in 'abcdefghijklmnopqrstuvwxyz':\n                new_word = word[:i] + c + word[i+1:]\n                if new_word == endWord: return steps + 1\n                if new_word in words:\n                    words.remove(new_word)\n                    queue.append((new_word, steps + 1))\n    return 0\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "bfs",
+            "shortest_path",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Subsets (#78) — Backtracking template?",
+        "back": [
+            "At each index, two choices: include current element or skip it.\nRecurse to next index. When index == len(nums), add current subset to result.",
+            "Trick: This is THE backtracking template. Every backtracking problem is a variation of 'include or skip'."
+        ],
+        "example": [
+            "```python\ndef subsets(nums):\n    result = []\n    def backtrack(i, current):\n        if i == len(nums):\n            result.append(current[:])\n            return\n        current.append(nums[i])\n        backtrack(i + 1, current)\n        current.pop()\n        backtrack(i + 1, current)\n    backtrack(0, [])\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "backtracking",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Subsets II (#90) — Skip duplicates?",
+        "back": [
+            "Sort first. Same as Subsets but skip duplicates: if nums[i] == nums[i-1] and we didn't include nums[i-1], skip nums[i].",
+            "Trick: Sort + skip consecutive duplicates at the same decision level. This pattern applies to Combination Sum II and 3Sum too."
+        ],
+        "example": [
+            "```python\ndef subsetsWithDup(nums):\n    nums.sort()\n    result = []\n    def backtrack(i, current):\n        result.append(current[:])\n        for j in range(i, len(nums)):\n            if j > i and nums[j] == nums[j-1]: continue\n            current.append(nums[j])\n            backtrack(j + 1, current)\n            current.pop()\n    backtrack(0, [])\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "backtracking",
+            "duplicates",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Combination Sum (#39) — Unlimited picks?",
+        "back": [
+            "Backtracking but you CAN reuse the same element.\nAt each step: include current (stay at same index) or move to next.\nStop when sum exceeds target.",
+            "Trick: Stay at same index (not i+1) to allow reuse. Move to i+1 only when skipping."
+        ],
+        "example": [
+            "```python\ndef combinationSum(candidates, target):\n    result = []\n    def backtrack(i, current, total):\n        if total == target:\n            result.append(current[:])\n            return\n        if i >= len(candidates) or total > target:\n            return\n        current.append(candidates[i])\n        backtrack(i, current, total + candidates[i])\n        current.pop()\n        backtrack(i + 1, current, total)\n    backtrack(0, [], 0)\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "backtracking",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Combination Sum II (#40) — No reuse + no duplicates?",
+        "back": [
+            "Sort first. Each element used at most once (start from i+1).\nSkip duplicates: if nums[j] == nums[j-1] at the same level, skip.",
+            "Trick: Combines the 'no reuse' rule from Subsets with the 'skip duplicates' rule from Subsets II."
+        ],
+        "example": [
+            "```python\ndef combinationSum2(candidates, target):\n    candidates.sort()\n    result = []\n    def backtrack(i, current, total):\n        if total == target:\n            result.append(current[:])\n            return\n        for j in range(i, len(candidates)):\n            if total + candidates[j] > target: break\n            if j > i and candidates[j] == candidates[j-1]: continue\n            current.append(candidates[j])\n            backtrack(j + 1, current, total + candidates[j])\n            current.pop()\n    backtrack(0, [], 0)\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "backtracking",
+            "duplicates",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Permutations (#46) — Backtracking approach?",
+        "back": [
+            "At each position, try every unused number. Use a visited set or swap-based approach.\nWhen current permutation length == n, add to result.",
+            "Trick: Subsets = include/skip. Permutations = try all remaining at each position. Different branching logic."
+        ],
+        "example": [
+            "```python\ndef permute(nums):\n    result = []\n    def backtrack(current):\n        if len(current) == len(nums):\n            result.append(current[:])\n            return\n        for num in nums:\n            if num not in current:\n                current.append(num)\n                backtrack(current)\n                current.pop()\n    backtrack([])\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "backtracking",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Letter Combinations of Phone Number (#17) — Mapping + backtrack?",
+        "back": [
+            "Map each digit to its letters. Backtrack through digits, trying each letter at each position.",
+            "Trick: Simple backtracking with a digit-to-letters map. Output length = product of letter counts."
+        ],
+        "example": [
+            "```python\ndef letterCombinations(digits):\n    if not digits: return []\n    phone = {'2':'abc','3':'def','4':'ghi','5':'jkl','6':'mno','7':'pqrs','8':'tuv','9':'wxyz'}\n    result = []\n    def backtrack(i, current):\n        if i == len(digits):\n            result.append(current)\n            return\n        for c in phone[digits[i]]:\n            backtrack(i + 1, current + c)\n    backtrack(0, '')\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "backtracking",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "N-Queens (#51) — Backtracking with conflict checks?",
+        "back": [
+            "Place queens row by row. Track occupied columns, diagonals (r-c), and anti-diagonals (r+c).\nIf column and both diagonals are free, place queen and recurse.",
+            "Trick: Diagonals share the same (row - col) value. Anti-diagonals share (row + col). Use sets to track."
+        ],
+        "example": [
+            "```python\ndef solveNQueens(n):\n    result = []\n    cols, diag, anti = set(), set(), set()\n    board = [['.']*n for _ in range(n)]\n    def backtrack(r):\n        if r == n:\n            result.append([''.join(row) for row in board])\n            return\n        for c in range(n):\n            if c in cols or (r-c) in diag or (r+c) in anti:\n                continue\n            cols.add(c); diag.add(r-c); anti.add(r+c)\n            board[r][c] = 'Q'\n            backtrack(r + 1)\n            cols.remove(c); diag.remove(r-c); anti.remove(r+c)\n            board[r][c] = '.'\n    backtrack(0)\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "backtracking",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Kth Largest Element in Array (#215) — Quickselect?",
+        "back": [
+            "Use quickselect (partition-based). Average O(n), worst O(n²).\nOr use a min-heap of size k — push all, heap maintains top k. Top of heap = kth largest.",
+            "Trick: Heap approach is safer for interviews: O(n log k). Quickselect is faster on average but tricky to implement correctly."
+        ],
+        "example": [
+            "```python\nimport heapq\ndef findKthLargest(nums, k):\n    return heapq.nlargest(k, nums)[-1]\n# Or manual heap:\n#   heap = nums[:k]\n#   heapq.heapify(heap)\n#   for num in nums[k:]:\n#       if num > heap[0]:\n#           heapq.heapreplace(heap, num)\n#   return heap[0]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "heap",
+            "quickselect",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Task Scheduler (#621) — Greedy with cooling?",
+        "back": [
+            "Most frequent task determines the frame. Arrange in rounds of (n+1) slots.\nTotal time = (max_freq - 1) * (n + 1) + count_of_tasks_with_max_freq.\nBut never less than total number of tasks.",
+            "Trick: Answer = max(len(tasks), formula). The formula can overcount if there are many distinct tasks."
+        ],
+        "example": [
+            "```python\ndef leastInterval(tasks, n):\n    from collections import Counter\n    freq = Counter(tasks)\n    max_freq = max(freq.values())\n    max_count = sum(1 for v in freq.values() if v == max_freq)\n    return max(len(tasks), (max_freq - 1) * (n + 1) + max_count)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "greedy",
+            "frequency",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Design Twitter (#355) — Merge k sorted feeds?",
+        "back": [
+            "Each user has a list of tweets (with timestamps). Follow/unfollow updates a set.\ngetNewsFeed: collect tweets from self + followees, use a max-heap to get top 10.",
+            "Trick: Same pattern as Merge K Sorted Lists — heap merge of multiple sorted streams."
+        ],
+        "example": [
+            "```python\nclass Twitter:\n    def __init__(self):\n        self.time = 0\n        self.tweets = defaultdict(list)  # userId -> [(time, tweetId)]\n        self.follows = defaultdict(set)  # userId -> set of followeeIds\n    def postTweet(self, userId, tweetId):\n        self.tweets[userId].append((self.time, tweetId))\n        self.time += 1\n    def getNewsFeed(self, userId):\n        feed = []\n        self.follows[userId].add(userId)\n        for uid in self.follows[userId]:\n            feed.extend(self.tweets[uid][-10:])\n        feed.sort(reverse=True)\n        return [t[1] for t in feed[:10]]\n    def follow(self, followerId, followeeId):\n        self.follows[followerId].add(followeeId)\n    def unfollow(self, followerId, followeeId):\n        self.follows[followerId].discard(followeeId)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "heap",
+            "design",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Longest Common Subsequence (#1143) — 2D DP?",
+        "back": [
+            "dp[i][j] = LCS of text1[:i] and text2[:j].\nIf chars match: dp[i][j] = dp[i-1][j-1] + 1.\nElse: dp[i][j] = max(dp[i-1][j], dp[i][j-1]).",
+            "Trick: Match = diagonal + 1. No match = max of top or left. Classic 2D DP pattern."
+        ],
+        "example": [
+            "```python\ndef longestCommonSubsequence(text1, text2):\n    m, n = len(text1), len(text2)\n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            if text1[i-1] == text2[j-1]:\n                dp[i][j] = dp[i-1][j-1] + 1\n            else:\n                dp[i][j] = max(dp[i-1][j], dp[i][j-1])\n    return dp[m][n]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "2d",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Target Sum (#494) — DP or subset sum?",
+        "back": [
+            "Reduce to subset sum: find subset with sum = (total + target) / 2.\nOr use a dictionary-based DP tracking {current_sum: count_of_ways}.",
+            "Trick: The math reduction to subset sum avoids exploring all 2^n combinations. If (total + target) is odd, answer is 0."
+        ],
+        "example": [
+            "```python\ndef findTargetSumWays(nums, target):\n    from collections import defaultdict\n    dp = defaultdict(int)\n    dp[0] = 1\n    for num in nums:\n        new_dp = defaultdict(int)\n        for s, count in dp.items():\n            new_dp[s + num] += count\n            new_dp[s - num] += count\n        dp = new_dp\n    return dp[target]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "subset_sum",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Interleaving String (#97) — 2D DP?",
+        "back": [
+            "dp[i][j] = can s3[:i+j] be formed by interleaving s1[:i] and s2[:j]?\nIf s1[i-1] == s3[i+j-1] and dp[i-1][j], OR s2[j-1] == s3[i+j-1] and dp[i][j-1].",
+            "Trick: First check if len(s1) + len(s2) == len(s3). If not, return False immediately."
+        ],
+        "example": [
+            "```python\ndef isInterleave(s1, s2, s3):\n    if len(s1) + len(s2) != len(s3): return False\n    m, n = len(s1), len(s2)\n    dp = [[False] * (n + 1) for _ in range(m + 1)]\n    dp[0][0] = True\n    for i in range(m + 1):\n        for j in range(n + 1):\n            if i > 0 and s1[i-1] == s3[i+j-1] and dp[i-1][j]:\n                dp[i][j] = True\n            if j > 0 and s2[j-1] == s3[i+j-1] and dp[i][j-1]:\n                dp[i][j] = True\n    return dp[m][n]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "2d",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Edit Distance (#72) — Classic 2D DP?",
+        "back": [
+            "dp[i][j] = min operations to convert word1[:i] to word2[:j].\nIf chars match: dp[i][j] = dp[i-1][j-1].\nElse: 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]) — delete, insert, replace.",
+            "Trick: Three operations map to three DP neighbors. Match = free diagonal move."
+        ],
+        "example": [
+            "```python\ndef minDistance(word1, word2):\n    m, n = len(word1), len(word2)\n    dp = [[0] * (n+1) for _ in range(m+1)]\n    for i in range(m+1): dp[i][0] = i\n    for j in range(n+1): dp[0][j] = j\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if word1[i-1] == word2[j-1]:\n                dp[i][j] = dp[i-1][j-1]\n            else:\n                dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])\n    return dp[m][n]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "2d",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Burst Balloons (#312) — Interval DP?",
+        "back": [
+            "dp[l][r] = max coins from bursting all balloons between l and r.\nKey insight: think about which balloon is burst LAST (not first) in the range.\nLast burst balloon k gets nums[l-1] * nums[k] * nums[r+1] + dp[l][k-1] + dp[k+1][r].",
+            "Trick: Thinking 'last burst' eliminates dependency issues. Add boundary 1s: [1] + nums + [1]."
+        ],
+        "example": [
+            "```python\ndef maxCoins(nums):\n    nums = [1] + nums + [1]\n    n = len(nums)\n    dp = [[0] * n for _ in range(n)]\n    for length in range(2, n):\n        for l in range(0, n - length):\n            r = l + length\n            for k in range(l + 1, r):\n                dp[l][r] = max(dp[l][r],\n                    dp[l][k] + dp[k][r] + nums[l]*nums[k]*nums[r])\n    return dp[0][n-1]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "interval",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Regular Expression Matching (#10) — 2D DP?",
+        "back": [
+            "dp[i][j] = does s[:i] match p[:j]?\nIf p[j-1] == '*': either use it 0 times (dp[i][j-2]) or 1+ times (dp[i-1][j] if chars match).\nIf p[j-1] == '.' or matches s[i-1]: dp[i][j] = dp[i-1][j-1].",
+            "Trick: '*' means 0 or more of the PRECEDING element. So always check p[j-2] for the char being repeated."
+        ],
+        "example": [
+            "```python\ndef isMatch(s, p):\n    m, n = len(s), len(p)\n    dp = [[False]*(n+1) for _ in range(m+1)]\n    dp[0][0] = True\n    for j in range(2, n+1):\n        if p[j-1] == '*': dp[0][j] = dp[0][j-2]\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if p[j-1] == '*':\n                dp[i][j] = dp[i][j-2]\n                if p[j-2] == '.' or p[j-2] == s[i-1]:\n                    dp[i][j] = dp[i][j] or dp[i-1][j]\n            elif p[j-1] == '.' or p[j-1] == s[i-1]:\n                dp[i][j] = dp[i-1][j-1]\n    return dp[m][n]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "2d",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Coin Change II (#518) — Unbounded knapsack?",
+        "back": [
+            "dp[amount] = number of combinations.\nOuter loop: coins. Inner loop: amounts.\nThis ordering counts combinations (not permutations).",
+            "Trick: Coins outer = combinations. Amounts outer = permutations (that's Combination Sum IV). Know the difference!"
+        ],
+        "example": [
+            "```python\ndef change(amount, coins):\n    dp = [0] * (amount + 1)\n    dp[0] = 1\n    for coin in coins:\n        for i in range(coin, amount + 1):\n            dp[i] += dp[i - coin]\n    return dp[amount]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "knapsack",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Partition Equal Subset Sum (#416) — 0/1 Knapsack?",
+        "back": [
+            "Target = total_sum / 2. If odd, return False.\nDP: can we make sum = target using a subset?\ndp[j] = True if sum j is achievable. Process each num: iterate j from target down to num.",
+            "Trick: Iterate backwards to avoid using same element twice (0/1 knapsack pattern)."
+        ],
+        "example": [
+            "```python\ndef canPartition(nums):\n    total = sum(nums)\n    if total % 2: return False\n    target = total // 2\n    dp = [False] * (target + 1)\n    dp[0] = True\n    for num in nums:\n        for j in range(target, num - 1, -1):\n            dp[j] = dp[j] or dp[j - num]\n    return dp[target]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "knapsack",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Longest Increasing Path in Matrix (#329) — DFS + memoization?",
+        "back": [
+            "DFS from each cell. Only move to neighbors with STRICTLY larger values.\nMemoize: dp[i][j] = longest path starting from (i,j).\nNo visited set needed — strictly increasing means no cycles.",
+            "Trick: No need for a visited set because strictly increasing guarantees no cycles."
+        ],
+        "example": [
+            "```python\ndef longestIncreasingPath(matrix):\n    m, n = len(matrix), len(matrix[0])\n    memo = {}\n    def dfs(i, j):\n        if (i,j) in memo: return memo[(i,j)]\n        best = 1\n        for di, dj in [(1,0),(-1,0),(0,1),(0,-1)]:\n            ni, nj = i+di, j+dj\n            if 0<=ni<m and 0<=nj<n and matrix[ni][nj]>matrix[i][j]:\n                best = max(best, 1 + dfs(ni, nj))\n        memo[(i,j)] = best\n        return best\n    return max(dfs(i,j) for i in range(m) for j in range(n))\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dfs",
+            "memoization",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Distinct Subsequences (#115) — 2D DP?",
+        "back": [
+            "dp[i][j] = number of ways s[:i] contains t[:j] as a subsequence.\nIf s[i-1] == t[j-1]: dp[i][j] = dp[i-1][j-1] + dp[i-1][j] (use it or skip it).\nElse: dp[i][j] = dp[i-1][j] (skip it).",
+            "Trick: Same 'include or skip' pattern as Subsets but in DP form."
+        ],
+        "example": [
+            "```python\ndef numDistinct(s, t):\n    m, n = len(s), len(t)\n    dp = [[0]*(n+1) for _ in range(m+1)]\n    for i in range(m+1): dp[i][0] = 1\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            dp[i][j] = dp[i-1][j]\n            if s[i-1] == t[j-1]:\n                dp[i][j] += dp[i-1][j-1]\n    return dp[m][n]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "2d",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Maximum Profit in Job Scheduling (#1235) — DP + binary search?",
+        "back": [
+            "Sort by end time. dp[i] = max profit considering first i jobs.\nFor each job: either skip it (dp[i-1]) or take it (profit + dp[last non-conflicting]).\nBinary search to find last non-conflicting job.",
+            "Trick: Sort by end time, not start. Binary search for the latest job that ends <= current job's start."
+        ],
+        "example": [
+            "```python\nimport bisect\ndef jobScheduling(startTime, endTime, profit):\n    jobs = sorted(zip(endTime, startTime, profit))\n    ends = [j[0] for j in jobs]\n    dp = [0] * (len(jobs) + 1)\n    for i in range(1, len(jobs) + 1):\n        e, s, p = jobs[i-1]\n        j = bisect.bisect_right(ends, s, 0, i-1)\n        dp[i] = max(dp[i-1], dp[j] + p)\n    return dp[-1]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "binary_search",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Maximum Subarray (Circular) (#918) — Two cases?",
+        "back": [
+            "Case 1: Max subarray is normal (no wrap) → use Kadane's.\nCase 2: Max subarray wraps around → total_sum - min_subarray.\nAnswer = max(case1, case2). Edge case: if all negative, return case1.",
+            "Trick: Wrapping max = total - non-wrapping min. You get both from one pass with Kadane's on max AND min."
+        ],
+        "example": [
+            "```python\ndef maxSubarraySumCircular(nums):\n    max_sum = cur_max = float('-inf')\n    min_sum = cur_min = float('inf')\n    total = 0\n    for num in nums:\n        cur_max = max(num, cur_max + num)\n        max_sum = max(max_sum, cur_max)\n        cur_min = min(num, cur_min + num)\n        min_sum = min(min_sum, cur_min)\n        total += num\n    return max(max_sum, total - min_sum) if max_sum > 0 else max_sum\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "kadanes",
+            "circular",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Happy Number (#202) — Cycle detection?",
+        "back": [
+            "Repeatedly sum the squares of digits. If you reach 1 → happy.\nIf you enter a cycle (seen a sum before) → not happy.\nUse Floyd's slow/fast or a hash set.",
+            "Trick: This is cycle detection in disguise. The sequence either reaches 1 or loops forever."
+        ],
+        "example": [
+            "```python\ndef isHappy(n):\n    seen = set()\n    while n != 1 and n not in seen:\n        seen.add(n)\n        n = sum(int(d)**2 for d in str(n))\n    return n == 1\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "hash_set",
+            "cycle_detection",
+            "easy",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Plus One (#66) — Handle carry?",
+        "back": [
+            "Start from last digit. Add 1. If digit becomes 10, set to 0 and carry to next.\nIf carry remains after all digits, prepend 1.",
+            "Trick: Only edge case is all 9s (e.g., 999 → 1000). In that case, return [1] + [0]*len(digits)."
+        ],
+        "example": [
+            "```python\ndef plusOne(digits):\n    for i in range(len(digits) - 1, -1, -1):\n        if digits[i] < 9:\n            digits[i] += 1\n            return digits\n        digits[i] = 0\n    return [1] + digits\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "math",
+            "easy",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Pow(x, n) (#50) — Fast exponentiation?",
+        "back": [
+            "Binary exponentiation: x^n = (x^(n/2))^2 if even, x * (x^(n/2))^2 if odd.\nHandle negative n: x^(-n) = 1 / x^n.",
+            "Trick: O(log n) instead of O(n). Halve the exponent each step."
+        ],
+        "example": [
+            "```python\ndef myPow(x, n):\n    if n < 0: x, n = 1/x, -n\n    result = 1\n    while n:\n        if n % 2: result *= x\n        x *= x\n        n //= 2\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "math",
+            "divide_conquer",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Multiply Strings (#43) — Grade school multiplication?",
+        "back": [
+            "Simulate digit-by-digit multiplication. Result has at most m+n digits.\nFor digits at positions i and j, their product contributes to positions i+j and i+j+1.",
+            "Trick: Use an array of size m+n. Process carries at the end. Skip leading zeros."
+        ],
+        "example": [
+            "```python\ndef multiply(num1, num2):\n    m, n = len(num1), len(num2)\n    result = [0] * (m + n)\n    for i in range(m - 1, -1, -1):\n        for j in range(n - 1, -1, -1):\n            mul = int(num1[i]) * int(num2[j])\n            p1, p2 = i + j, i + j + 1\n            total = mul + result[p2]\n            result[p2] = total % 10\n            result[p1] += total // 10\n    result_str = ''.join(map(str, result)).lstrip('0')\n    return result_str or '0'\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "math",
+            "string",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Detect Squares (#2013) — Hash map geometry?",
+        "back": [
+            "Store point counts in a hash map. For a query point, find all points with same x or y.\nFor each candidate diagonal point, check if the other two corners exist.\nCount = product of counts at the three other corners.",
+            "Trick: For each point with same y as query, use it as a potential diagonal corner and check the other two."
+        ],
+        "example": [
+            "```python\nclass DetectSquares:\n    def __init__(self):\n        self.counts = defaultdict(int)\n        self.points = []\n    def add(self, point):\n        self.counts[tuple(point)] += 1\n        self.points.append(point)\n    def count(self, point):\n        px, py = point\n        result = 0\n        for x, y in self.points:\n            if abs(x - px) != abs(y - py) or x == px or y == py:\n                continue\n            result += self.counts[(x, py)] * self.counts[(px, y)]\n        return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "hash_map",
+            "geometry",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Maximum Subarray Min Product (#1856) — Monotonic stack + prefix sum?",
+        "back": [
+            "For each element, find how far left and right it's the minimum.\nUse monotonic stack for nearest smaller element on both sides.\nProduct = element * prefix_sum of that range.",
+            "Trick: Combine monotonic stack (for boundaries) with prefix sums (for range sums). Two tools, one answer."
+        ],
+        "example": [
+            "```python\ndef maxSumMinProduct(nums):\n    n = len(nums)\n    prefix = [0] * (n + 1)\n    for i in range(n): prefix[i+1] = prefix[i] + nums[i]\n    left, right = [-1]*n, [n]*n\n    stack = []\n    for i in range(n):\n        while stack and nums[stack[-1]] >= nums[i]:\n            right[stack.pop()] = i\n        if stack: left[i] = stack[-1]\n        stack.append(i)\n    result = 0\n    for i in range(n):\n        total = prefix[right[i]] - prefix[left[i]+1]\n        result = max(result, nums[i] * total)\n    return result % (10**9 + 7)\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "monotonic_stack",
+            "prefix_sum",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Hand of Straights (#846) — Greedy with sorted groups?",
+        "back": [
+            "Sort cards. Use a frequency map. Start from smallest, try to form consecutive groups of size groupSize.\nFor each smallest available card, try to use card, card+1, ..., card+groupSize-1.",
+            "Trick: Always start from the smallest remaining card. If any consecutive card is missing, return False."
+        ],
+        "example": [
+            "```python\ndef isNStraightHand(hand, groupSize):\n    if len(hand) % groupSize: return False\n    count = Counter(hand)\n    for card in sorted(count):\n        while count[card] > 0:\n            for i in range(card, card + groupSize):\n                if count[i] <= 0: return False\n                count[i] -= 1\n    return True\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "greedy",
+            "sorting",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Merge Triplets to Form Target (#1899) — Greedy filtering?",
+        "back": [
+            "A triplet is usable if none of its values exceed the corresponding target value.\nFrom usable triplets, check if you can achieve target[0], target[1], and target[2] each from at least one triplet.",
+            "Trick: Filter out 'bad' triplets (any value > target). From remaining, collect achievable values."
+        ],
+        "example": [
+            "```python\ndef mergeTriplets(triplets, target):\n    good = set()\n    for t in triplets:\n        if t[0] <= target[0] and t[1] <= target[1] and t[2] <= target[2]:\n            for i in range(3):\n                if t[i] == target[i]:\n                    good.add(i)\n    return len(good) == 3\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "greedy",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Partition Labels (#763) — Greedy with last occurrence?",
+        "back": [
+            "For each char, record its LAST occurrence. Iterate through string.\nExpand current partition's end to include last occurrence of each char.\nWhen index reaches current end, that's a partition boundary.",
+            "Trick: The partition end grows as you encounter chars that appear later. When i == end, you've found a complete partition."
+        ],
+        "example": [
+            "```python\ndef partitionLabels(s):\n    last = {c: i for i, c in enumerate(s)}\n    result = []\n    start = end = 0\n    for i, c in enumerate(s):\n        end = max(end, last[c])\n        if i == end:\n            result.append(end - start + 1)\n            start = end + 1\n    return result\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "greedy",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Valid Parenthesis String (#678) — Greedy with range?",
+        "back": [
+            "Track a RANGE of possible open-paren counts: [low, high].\n'(' → both increase. ')' → both decrease. '*' → low decreases, high increases.\nKeep low >= 0. If high < 0 at any point → invalid. At end, low must be 0.",
+            "Trick: Don't think about what each '*' is. Track the range of possibilities. If 0 is in the range at the end, it's valid."
+        ],
+        "example": [
+            "```python\ndef checkValidString(s):\n    low = high = 0\n    for c in s:\n        if c == '(':\n            low += 1; high += 1\n        elif c == ')':\n            low -= 1; high -= 1\n        else:\n            low -= 1; high += 1\n        if high < 0: return False\n        low = max(low, 0)\n    return low == 0\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "greedy",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Gas Station (#134) — Greedy one pass?",
+        "back": [
+            "If total gas >= total cost, a solution exists.\nTrack running surplus. When surplus goes negative, restart from next station.\nThe answer is the last restart point.",
+            "Trick: If total >= 0, there's guaranteed to be exactly one valid start. Find it by tracking where surplus resets."
+        ],
+        "example": [
+            "```python\ndef canCompleteCircuit(gas, cost):\n    if sum(gas) < sum(cost): return -1\n    start = surplus = 0\n    for i in range(len(gas)):\n        surplus += gas[i] - cost[i]\n        if surplus < 0:\n            start = i + 1\n            surplus = 0\n    return start\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "greedy",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Jump Game II (#45) — Greedy BFS?",
+        "back": [
+            "Think of it as BFS levels. From current range [left, right], find the farthest you can reach.\nThat farthest becomes the new right. Increment jumps.\nStop when right >= last index.",
+            "Trick: Each 'jump' is a BFS level. Track the farthest reachable from the current level."
+        ],
+        "example": [
+            "```python\ndef jump(nums):\n    jumps = left = right = 0\n    while right < len(nums) - 1:\n        farthest = 0\n        for i in range(left, right + 1):\n            farthest = max(farthest, i + nums[i])\n        left = right + 1\n        right = farthest\n        jumps += 1\n    return jumps\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "greedy",
+            "bfs",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Reconstruct Itinerary (#332) — Euler path (Hierholzer)?",
+        "back": [
+            "Build adjacency list sorted in reverse (to pop smallest). DFS post-order.\nVisit all edges (not just nodes). Reverse the result at the end.",
+            "Trick: Hierholzer's algorithm — DFS, appending to result AFTER exhausting all edges from a node. Then reverse."
+        ],
+        "example": [
+            "```python\ndef findItinerary(tickets):\n    graph = defaultdict(list)\n    for src, dst in sorted(tickets, reverse=True):\n        graph[src].append(dst)\n    result = []\n    def dfs(node):\n        while graph[node]:\n            dfs(graph[node].pop())\n        result.append(node)\n    dfs('JFK')\n    return result[::-1]\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dfs",
+            "euler_path",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Swim in Rising Water (#778) — Binary search + BFS or Dijkstra?",
+        "back": [
+            "Binary search on time t. For each t, BFS/DFS to check if you can reach (n-1,n-1) using only cells <= t.\nOr use Dijkstra/min-heap: process cells by max elevation on path.",
+            "Trick: The answer is the minimum t such that a path exists where all cells have elevation <= t."
+        ],
+        "example": [
+            "```python\nimport heapq\ndef swimInWater(grid):\n    n = len(grid)\n    heap = [(grid[0][0], 0, 0)]\n    visited = {(0, 0)}\n    while heap:\n        t, r, c = heapq.heappop(heap)\n        if r == n-1 and c == n-1: return t\n        for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:\n            nr, nc = r+dr, c+dc\n            if 0<=nr<n and 0<=nc<n and (nr,nc) not in visited:\n                visited.add((nr, nc))\n                heapq.heappush(heap, (max(t, grid[nr][nc]), nr, nc))\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dijkstra",
+            "binary_search",
+            "hard",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Min Cost to Connect All Points (#1584) — Prim's MST?",
+        "back": [
+            "Minimum spanning tree. Use Prim's: start from any node, always add the cheapest edge to an unvisited node.\nCost = Manhattan distance. Use a min-heap.",
+            "Trick: Prim's with a heap is O(n² log n) here. Since the graph is complete (all points connected), Prim's is cleaner than Kruskal's."
+        ],
+        "example": [
+            "```python\nimport heapq\ndef minCostConnectPoints(points):\n    n = len(points)\n    visited = set()\n    heap = [(0, 0)]  # (cost, point_index)\n    total = 0\n    while len(visited) < n:\n        cost, i = heapq.heappop(heap)\n        if i in visited: continue\n        visited.add(i)\n        total += cost\n        for j in range(n):\n            if j not in visited:\n                dist = abs(points[i][0]-points[j][0]) + abs(points[i][1]-points[j][1])\n                heapq.heappush(heap, (dist, j))\n    return total\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "prims",
+            "mst",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Network Delay Time (#743) — Dijkstra's?",
+        "back": [
+            "Single-source shortest path from node k. Use Dijkstra's with a min-heap.\nAnswer = max distance to any node. If any node unreachable, return -1.",
+            "Trick: Classic Dijkstra template. Process nodes in order of distance. First time you pop a node = shortest distance."
+        ],
+        "example": [
+            "```python\nimport heapq\ndef networkDelayTime(times, n, k):\n    graph = defaultdict(list)\n    for u, v, w in times:\n        graph[u].append((v, w))\n    dist = {}\n    heap = [(0, k)]\n    while heap:\n        d, u = heapq.heappop(heap)\n        if u in dist: continue\n        dist[u] = d\n        for v, w in graph[u]:\n            if v not in dist:\n                heapq.heappush(heap, (d + w, v))\n    return max(dist.values()) if len(dist) == n else -1\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "dijkstra",
+            "shortest_path",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Cheapest Flights Within K Stops (#787) — BFS/Bellman-Ford?",
+        "back": [
+            "Bellman-Ford with k+1 iterations (k stops = k+1 edges).\nOr BFS level by level, up to k+1 levels.\nKey: copy the distance array each iteration to avoid using current round's updates.",
+            "Trick: Must copy prices array each round — otherwise you might chain updates within a single iteration and exceed k stops."
+        ],
+        "example": [
+            "```python\ndef findCheapestPrice(n, flights, src, dst, k):\n    prices = [float('inf')] * n\n    prices[src] = 0\n    for _ in range(k + 1):\n        temp = prices[:]\n        for u, v, w in flights:\n            if prices[u] != float('inf'):\n                temp[v] = min(temp[v], prices[u] + w)\n        prices = temp\n    return prices[dst] if prices[dst] != float('inf') else -1\n```"
+        ],
+        "deck": "",
+        "tags": [
+            "bellman_ford",
+            "shortest_path",
+            "medium",
+            "neetcode_150"
+        ],
+        "liked": false,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you create a dictionary from two lists keys and values in one line?",
+        "back": [
+            "Use `dict()` wrapped around `zip()`:\n```python\ndict(zip(keys, values))\n```\n`zip()` pairs them up, `dict()` converts to key-value pairs."
+        ],
+        "example": [
+            "keys = ['a','b','c']\nvalues = [1,2,3]\nd = dict(zip(keys, values))\n# {'a': 1, 'b': 2, 'c': 3}"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you add an element to the BEGINNING of a regular Python list?",
+        "back": [
+            "Use `list.insert(index, value)`:\n```python\nnums.insert(0, value)\n```\nThis is O(n) because it shifts all elements right.\n\nFor O(1), use a deque:\n```python\nfrom collections import deque\nd = deque(nums)\nd.appendleft(value)\n```"
+        ],
+        "example": [
+            "nums = [1, 2, 3]\nnums.insert(0, 0)\n# [0, 1, 2, 3]"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you get the INDEX of the maximum value in a list?",
+        "back": [
+            "Use `list.index()` combined with `max()`:\n```python\nnums.index(max(nums))\n```\n`max()` finds the value, `.index()` finds its position."
+        ],
+        "example": [
+            "nums = [3, 7, 2, 8, 1]\nnums.index(max(nums))  # 3"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you sort a list of tuples by the second element? And by first element, then second on tie?",
+        "back": [
+            "By second element:\n```python\npairs.sort(key=lambda x: x[1])\n```\nBy first, then second on tie:\n```python\npairs.sort(key=lambda x: (x[0], x[1]))\n```\nFor first ascending, second descending (numeric):\n```python\npairs.sort(key=lambda x: (x[0], -x[1]))\n```"
+        ],
+        "example": [
+            "pairs = [(2,'b'),(1,'a'),(3,'c')]\npairs.sort(key=lambda x: x[1])\n# [(1,'a'), (2,'b'), (3,'c')]"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you remove and return the LAST element from a list? And at a specific index?",
+        "back": [
+            "Last element:\n```python\nnums.pop()\n```\nAt specific index:\n```python\nnums.pop(0)  # removes first element\n```\n`pop()` is O(1), `pop(0)` is O(n).\n\nNote: `.popleft()` is only for `deque`, NOT lists."
+        ],
+        "example": [
+            "nums = [1, 2, 3]\nnums.pop()   # returns 3\nnums.pop(0)  # returns 1"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you sort a list of tuples by multiple criteria (e.g. first element, then second on tie)?",
+        "back": [
+            "Return a tuple in the lambda:\n```python\npairs.sort(key=lambda x: (x[0], x[1]))\n```\nPython compares tuples element by element. Second element only matters on ties.\n\nFor mixed order (first ascending, second descending):\n```python\npairs.sort(key=lambda x: (x[0], -x[1]))\n```"
+        ],
+        "example": [
+            "pairs = [(2,'b'),(1,'a'),(1,'c')]\npairs.sort(key=lambda x: (x[0], x[1]))\n# [(1,'a'), (1,'c'), (2,'b')]"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you count the frequency of each character in a string? And get the most common?",
+        "back": [
+            "Use Counter from collections:\n```python\nfrom collections import Counter\nCounter(s)\n```\nMost common element:\n```python\nCounter(s).most_common(1)  # [(char, count)]\n```\n`most_common(n)` returns top n. No argument returns all sorted by frequency."
+        ],
+        "example": [
+            "from collections import Counter\nCounter('aabbc')\n# Counter({'a':2, 'b':2, 'c':1})\nCounter('aabbc').most_common(1)\n# [('a', 2)]"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you create a min-heap, push, and pop from it? And how do you make a max-heap?",
+        "back": [
+            "Min-heap:\n```python\nimport heapq\nheapq.heapify(nums)       # list to heap in place\nheapq.heappop(nums)       # pop smallest\nheapq.heappush(nums, val) # push value\n```\nMax-heap (negate values):\n```python\nmax_heap = [-x for x in nums]\nheapq.heapify(max_heap)\nlargest = -heapq.heappop(max_heap)\n```"
+        ],
+        "example": [
+            "import heapq\nnums = [5,3,8,1]\nheapq.heapify(nums)\nheapq.heappop(nums)  # 1"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you reverse a string without [::-1]?",
+        "back": [
+            "Use `reversed()` with `join()`:\n```python\n''.join(reversed(s))\n```\n`reversed(s)` returns an iterator, `join()` stitches it back.\n\nRemember:\n- **list**: `nums.reverse()` (in place) or `reversed(nums)`\n- **string**: `s[::-1]` or `''.join(reversed(s))`\n\nStrings are immutable — no `.reverse()` method."
+        ],
+        "example": [
+            "s = 'hello'\n''.join(reversed(s))  # 'olleh'"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you get all keys, all values, and all key-value pairs from a dict?",
+        "back": [
+            "```python\nd.keys()    # dict_keys\nd.values()  # dict_values\nd.items()   # dict_items (tuples)\n```\nWrap with `list()` to get actual lists:\n```python\nlist(d.keys())\nlist(d.values())\nlist(d.items())\n```\nTo get list of lists instead of tuples:\n```python\n[[k, v] for k, v in d.items()]\n```"
+        ],
+        "example": [
+            "d = {'a':1, 'b':2}\nlist(d.items())  # [('a',1), ('b',2)]"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you convert integer 65 to its ASCII character, and character 'A' back to integer?",
+        "back": [
+            "```python\nchr(65)   # 'A' — int to char\nord('A')  # 65  — char to int\n```\nUseful patterns:\n- `ord(c) - ord('a')` — letter's position (0-25)\n- `chr(ord('a') + 2)` — gives 'c'"
+        ],
+        "example": [
+            "chr(65)           # 'A'\nord('A')          # 65\nord('c') - ord('a')  # 2"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you check if ALL elements are truthy, or if ANY element is truthy?",
+        "back": [
+            "```python\nall(nums)  # True if every element is truthy\nany(nums)  # True if at least one is truthy\n```\nCan use with generators:\n```python\nall(x > 0 for x in nums)\nany(x == target for x in nums)\n```"
+        ],
+        "example": [
+            "all([True, True, False])  # False\nany([False, False, True]) # True\nall(x > 0 for x in [1,2,3])  # True"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you concatenate two lists? What's the difference between append and extend?",
+        "back": [
+            "Concatenate (new list):\n```python\na + b\n```\nExtend in place:\n```python\na.extend(b)\n```\nKey difference:\n- `a.append(b)` → `[1, 2, [3, 4]]` — adds list as ONE element\n- `a.extend(b)` → `[1, 2, 3, 4]` — merges all elements"
+        ],
+        "example": [
+            "a = [1,2]; b = [3,4]\na + b        # [1,2,3,4]\na.extend(b)  # a is now [1,2,3,4]\na.append(b)  # a is [1,2,[3,4]]"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you deep copy a nested list so modifying the copy doesn't affect the original?",
+        "back": [
+            "```python\nimport copy\nnew_matrix = copy.deepcopy(matrix)\n```\n- `matrix.copy()` or `matrix[:]` — shallow copy, nested objects still shared\n- `copy.deepcopy(matrix)` — fully independent copy\n\nFor flat lists, shallow copy is fine. For nested structures, always use deepcopy."
+        ],
+        "example": [
+            "import copy\nmatrix = [[1,2],[3,4]]\ndeep = copy.deepcopy(matrix)\ndeep[0][0] = 99\n# matrix still [[1,2],[3,4]]"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you get absolute value and compute power in Python?",
+        "back": [
+            "```python\nabs(-5)    # 5 — absolute value (distance from zero)\n2 ** 10    # 1024 — power\npow(2, 10) # 1024 — alternative for power\n```"
+        ],
+        "example": [
+            "abs(-5)    # 5\nabs(5)     # 5\n2 ** 10    # 1024"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you initialize a 2D list (matrix) of size 3x3 filled with zeros?",
+        "back": [
+            "```python\n[[0] * 3 for _ in range(3)]\n```\nNEVER do this:\n```python\n[[0] * 3] * 3  # WRONG!\n```\nThe `* 3` makes all rows point to the SAME list. Changing one row changes all of them. The list comprehension creates independent rows."
+        ],
+        "example": [
+            "matrix = [[0]*3 for _ in range(3)]\n# [[0,0,0], [0,0,0], [0,0,0]]\nmatrix[0][0] = 1\n# [[1,0,0], [0,0,0], [0,0,0]] — only first row changed"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you convert a string to uppercase, lowercase? And check if string is alpha/digit/alnum?",
+        "back": [
+            "```python\ns.upper()      # all uppercase\ns.lower()      # all lowercase\ns.capitalize() # first letter only\ns.title()      # first letter of each word\n```\nChecks:\n```python\ns.isalpha()  # all letters?\ns.isdigit()  # all digits?\ns.isalnum()  # all letters or digits?\n```\n`isalnum()` is key for Valid Palindrome problem."
+        ],
+        "example": [
+            "'hello'.upper()    # 'HELLO'\n'HELLO'.lower()    # 'hello'\n'abc'.isalpha()    # True\n'abc123'.isalnum() # True"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you get a substring from index 2 to 7 in Python?",
+        "back": [
+            "Use slice notation directly on the string:\n```python\ns[2:7]\n```\nEnd index is exclusive. No `.slice()` method — that's JavaScript.\n\nSame bracket syntax works for lists too."
+        ],
+        "example": [
+            "s = 'hello world'\ns[2:7]  # 'llo w'"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you create a defaultdict with empty list as default value?",
+        "back": [
+            "```python\nfrom collections import defaultdict\nd = defaultdict(list)\n```\nPass the TYPE itself, not an instance:\n- `defaultdict(list)` — defaults to `[]`\n- `defaultdict(int)` — defaults to `0`\n- `defaultdict(set)` — defaults to empty set\n\nPython calls the type as a function whenever a missing key is accessed."
+        ],
+        "example": [
+            "from collections import defaultdict\nd = defaultdict(list)\nd['a'].append(1)\n# {'a': [1]} — no KeyError!"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you remove duplicates from a list while preserving order?",
+        "back": [
+            "```python\nlist(dict.fromkeys(nums))\n```\n`dict.fromkeys()` uses each element as a key (preserving insertion order since Python 3.7), then `list()` converts back.\n\n`list(set(nums))` removes duplicates but does NOT preserve order."
+        ],
+        "example": [
+            "nums = [1,2,2,3,3,3]\nlist(dict.fromkeys(nums))  # [1, 2, 3]"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you do binary search on a sorted list using a built-in module?",
+        "back": [
+            "```python\nimport bisect\nbisect.bisect_left(nums, val)   # leftmost index for val\nbisect.bisect_right(nums, val)  # rightmost index for val\nbisect.insort(nums, val)        # insert keeping sorted\n```\n`bisect_left` vs `bisect_right` matters when there are duplicates."
+        ],
+        "example": [
+            "import bisect\nnums = [1,3,5,7,9]\nbisect.bisect_left(nums, 5)  # 2"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you check if a key exists in a dictionary? And if a value is in a set?",
+        "back": [
+            "Both use the `in` keyword:\n```python\n'a' in d          # check key in dict\n4 in my_set       # check value in set\n```\nBoth are O(1) lookups. No `.has()` method in Python — that's JavaScript."
+        ],
+        "example": [
+            "d = {'a':1, 'b':2}\n'a' in d       # True\ns = {1,2,3}\n4 in s         # False"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you initialize a dict where every key from a list starts with value 0?",
+        "back": [
+            "```python\ndict.fromkeys(keys, 0)\n```\nOr the longer way:\n```python\ndict(zip(keys, [0] * len(keys)))\n```\n`dict.fromkeys()` is cleaner."
+        ],
+        "example": [
+            "keys = ['a','b','c']\ndict.fromkeys(keys, 0)\n# {'a': 0, 'b': 0, 'c': 0}"
+        ],
+        "deck": "",
+        "tags": [
+            "python"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "In a linked list, how do you decide if you need one or two pointer variables?",
+        "back": [
+            "Ask: \"Do I need to know what's behind me?\"\n\nIf yes → two pointers (`prev` and `curr`)\nIf no → one pointer (`curr`) is enough\n\nExamples needing `prev`:\n- Reversing (point backward)\n- Deleting (skip over node)\n- Inserting (attach new node)\n\nExamples needing only `curr`:\n- Searching\n- Reading values"
+        ],
+        "example": [
+            "Reversing needs prev because each node must point backward, and linked lists only go forward."
+        ],
+        "deck": "",
+        "tags": [
+            "python",
+            "confusing"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "What is the one rule to never lose data in a linked list?",
+        "back": [
+            "If `.next` is on the LEFT side of `=`, save it first.\n\n```python\n# RIGHT side = reading, safe\ntemp = list1.next\n\n# LEFT side = rewriting, dangerous\nlist1.next = list2  # old .next is gone\n```\n\nAlways save `.next` BEFORE you overwrite it."
+        ],
+        "example": [
+            "temp = curr.next  # save first\ncurr.next = prev   # now safe to rewire"
+        ],
+        "deck": "",
+        "tags": [
+            "python",
+            "confusing"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "What is the difference between saving a node vs saving its .next?",
+        "back": [
+            "Saving the node (`node = list1`): You're watching the same person. If their `.next` changes, you see it too.\n\nSaving `.next` (`temp = list1.next`): You grabbed the neighbor directly. You have your own independent connection. Changes to `list1.next` don't affect you.\n\n```python\n# Case 1: shares changes\nnode = list1\nlist1.next = None\n# node.next is also None\n\n# Case 2: independent\ntemp = list1.next\nlist1.next = list2\n# temp still holds the old next\n```"
+        ],
+        "example": [
+            "Think of a node as a person. node = list1 means you're watching that person. temp = list1.next means you walked over and grabbed their neighbor's hand directly."
+        ],
+        "deck": "",
+        "tags": [
+            "python",
+            "confusing"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "What is the save-rewire-advance pattern for reversing a linked list?",
+        "back": [
+            "```python\nprev = None\ncurr = head\nwhile curr:\n    temp = curr.next   # 1) SAVE\n    curr.next = prev    # 2) REWIRE\n    prev = curr         # 3) advance prev\n    curr = temp         # 4) advance curr\nreturn prev\n```\n\n- `prev` starts as None because node 1 becomes the tail\n- `prev` ends at the last node, which is the new head\n- Same four steps every iteration, no special cases"
+        ],
+        "example": [
+            "1→2→3 becomes 3→2→1 by flipping one arrow per iteration"
+        ],
+        "deck": "",
+        "tags": [
+            "python",
+            "confusing"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "How do you return the whole list from a function?",
+        "back": [
+            "Return the head node. The head is the entry point — from it you can reach every node by following `.next`.\n\nIf the head might change during the operation, use a dummy node:\n\n```python\ndummy = ListNode(0)\ntail = dummy\n# ... build the list ...\nreturn dummy.next  # real head\n```\n\n`tail` moves forward as you build. `dummy` stays at the start. `dummy.next` is always the head."
+        ],
+        "example": [
+            "Merge two sorted lists: you don't know which node will be head until you compare, so use a dummy node."
+        ],
+        "deck": "",
+        "tags": [
+            "python",
+            "confusing"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "If temp = list1.next, then list1.next = list2, is temp affected?",
+        "back": [
+            "No. `temp` grabbed the neighbor independently before the rewire. Changes to `list1.next` after that don't affect `temp`.\n\nThis is WHY the save-before-rewire pattern works. You grab `.next` first, then you're free to overwrite it."
+        ],
+        "example": [
+            "temp = list1.next  # temp holds node 2\nlist1.next = list2  # list1 rewires\n# temp is still node 2"
+        ],
+        "deck": "",
+        "tags": [
+            "python",
+            "confusing"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Moving a variable vs changing .next — what's the difference?",
+        "back": [
+            "Moving a variable (`list1 = list1.next`): The variable now points somewhere else. Other variables pointing to the old node are unaffected. No data is lost.\n\nChanging `.next` (`list1.next = something`): You're modifying the actual node. All variables pointing to that node see the change.\n\n```python\n# Moving — safe, no side effects\noutput = list1\nlist1 = list1.next\n# output still at old node, unchanged\n\n# Changing .next — modifies the node\noutput = list1\nlist1.next = list2\n# output.next is also list2 now\n```"
+        ],
+        "example": [
+            "Moving a variable is like walking to a new spot. Changing .next is like rewiring a connection that everyone holding that node can see."
+        ],
+        "deck": "",
+        "tags": [
+            "python",
+            "confusing"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "BFS Template — When to use and how to write it",
+        "back": [
+            "Use for: shortest path, level-order traversal, 'minimum steps to reach X'",
+            "Key idea: process nodes level by level using a queue",
+            "Template:\n```python\nfrom collections import deque\n\ndef bfs(graph, start):\n    queue = deque([start])\n    visited = set([start])\n\n    while queue:\n        node = queue.popleft()\n        # process node here\n\n        for neighbor in graph[node]:\n            if neighbor not in visited:\n                visited.add(neighbor)\n                queue.append(neighbor)\n```"
+        ],
+        "example": [
+            "Clone Graph, Number of Islands, Shortest Path in Binary Matrix"
+        ],
+        "deck": "",
+        "tags": [
+            "bfs",
+            "graph",
+            "template",
+            "coding-template"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "DFS Template — When to use and how to write it",
+        "back": [
+            "Use for: explore all paths, connected components, 'does a path exist'",
+            "Key idea: go as deep as possible before trying the next branch",
+            "Template:\n```python\ndef dfs(graph, node, visited):\n    visited.add(node)\n    # process node here\n\n    for neighbor in graph[node]:\n        if neighbor not in visited:\n            dfs(graph, neighbor, visited)\n```"
+        ],
+        "example": [
+            "Number of Connected Components, Flood Fill"
+        ],
+        "deck": "",
+        "tags": [
+            "dfs",
+            "graph",
+            "template",
+            "coding-template"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Topological Sort Template — When to use and how to write it",
+        "back": [
+            "Use for: dependency ordering, course scheduling, build order",
+            "Key idea: process nodes with no dependencies first, then reduce in-degree of neighbors",
+            "Template:\n```python\nfrom collections import deque, defaultdict\n\ndef topo_sort(numCourses, prerequisites):\n    graph = defaultdict(list)\n    in_degree = [0] * numCourses\n\n    for course, prereq in prerequisites:\n        graph[prereq].append(course)\n        in_degree[course] += 1\n\n    queue = deque()\n    for i in range(numCourses):\n        if in_degree[i] == 0:\n            queue.append(i)\n\n    count = 0\n    while queue:\n        node = queue.popleft()\n        count += 1\n\n        for neighbor in graph[node]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n\n    return count == numCourses\n```"
+        ],
+        "example": [
+            "Course Schedule, Course Schedule II, Alien Dictionary"
+        ],
+        "deck": "",
+        "tags": [
+            "topological-sort",
+            "graph",
+            "template",
+            "coding-template"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Backtracking Template — When to use and how to write it",
+        "back": [
+            "Use for: find ALL valid combinations/paths/permutations",
+            "Key idea: choose → explore → undo",
+            "Template:\n```python\ndef backtrack(start, path, remaining):\n    if remaining == 0:\n        result.append(path[:])\n        return\n    if remaining < 0:\n        return\n\n    for i in range(start, len(candidates)):\n        path.append(candidates[i])       # choose\n        backtrack(i, path, remaining - candidates[i])  # explore\n        path.pop()                        # undo\n```"
+        ],
+        "example": [
+            "Combination Sum, Word Search, Permutations, Subsets, N-Queens"
+        ],
+        "deck": "",
+        "tags": [
+            "backtracking",
+            "template",
+            "coding-template"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "When to use BFS vs DFS vs Backtracking?",
+        "back": [
+            "BFS → 'Can I reach it?' / 'What's the shortest way?'",
+            "DFS → 'Explore everything' / 'Connected components'",
+            "Backtracking → 'Find ALL valid paths/combinations' (choose → explore → undo)",
+            "Topo Sort → 'What order should I do things in?'"
+        ],
+        "example": [
+            "Shortest path → BFS\nFind all combinations → Backtracking\nCourse schedule → Topo Sort\nConnected components → DFS"
+        ],
+        "deck": "",
+        "tags": [
+            "decision-making",
+            "graph",
+            "template",
+            "coding-template"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "DP vs Backtracking — When to use which?",
+        "back": [
+            "Find the best/min/max → DP (returns a single value)",
+            "How many ways? → DP (returns a number)",
+            "Give me ALL ways → Backtracking (returns lists)",
+            "Can I reach target? → DP (returns True/False)"
+        ],
+        "example": [
+            "Minimum coins to reach target → DP\nAll combinations that reach target → Backtracking"
+        ],
+        "deck": "",
+        "tags": [
+            "dp",
+            "backtracking",
+            "decision-making",
+            "coding-template"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Cycle detection in directed graphs — Two approaches",
+        "back": [
+            "Approach 1: In-degree BFS (Kahn's algorithm)\nIf count of processed nodes != total nodes → cycle exists",
+            "Approach 2: Three-state DFS using two sets\n```python\nvisited = set()   # fully processed\nvisiting = set()  # currently in recursion stack\n\ndef dfs(node):\n    if node in visiting: return False  # cycle!\n    if node in visited: return True    # safe\n\n    visiting.add(node)\n    for neighbor in graph[node]:\n        if not dfs(neighbor): return False\n    visiting.remove(node)\n    visited.add(node)\n    return True\n```"
+        ],
+        "example": [
+            "Course Schedule, Detect Cycle in Directed Graph"
+        ],
+        "deck": "",
+        "tags": [
+            "cycle-detection",
+            "graph",
+            "template",
+            "coding-template"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    },
+    {
+        "front": "Why does backtracking need 'undo'?",
+        "back": [
+            "Because state (visited set, path list) is SHARED across all recursive calls",
+            "A failed path leaves dirty footprints that block valid paths",
+            "So after exploring, you undo your choice so the next path gets a clean slate",
+            "Pattern:\n```python\npath.append(choice)    # choose\nexplore(...)           # explore\npath.pop()             # undo\n```"
+        ],
+        "example": [
+            "Word Search: visited.add((row,col)) → recurse → visited.remove((row,col))\nCombination Sum: path.append(num) → recurse → path.pop()"
+        ],
+        "deck": "",
+        "tags": [
+            "backtracking",
+            "concept",
+            "coding-template"
+        ],
+        "liked": true,
+        "pass": 0,
+        "fail": 0
+    }
+]

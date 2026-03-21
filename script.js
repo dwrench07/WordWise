@@ -1,13 +1,19 @@
+
 let cards = [];
+let folders = [];
+let currentFolderParentId = null;
 let totalQuizzes = 0;
 let currentFilter = 'all';
 let activeTags = new Set();
+let selectedFolders = new Set();
+let folderSortMode = 'name';
 let tagMatchMode = 'OR';
 let editingId = null;
 let modalTags = [];
 let expandedCards = new Set();
 let quizCardCount = 20;
-
+let currentDeckFilter = 'all';
+let saveTimer = null;
 const STORAGE_KEY = 'wordwise_cards_v5';
 const QUIZ_KEY = 'wordwise_quizzes_v5';
 
@@ -49,13 +55,14 @@ function stripMarkdown(text) {
   return text.replace(/[#_*~`>]/g, '').replace(/\[(.*?)\]\(.*?\)/g, '$1');
 }
 
-let saveTimer = null;
 function save(immediate = false) {
   if (saveTimer) clearTimeout(saveTimer);
   const performSave = async () => {
     try {
       await localforage.setItem(STORAGE_KEY, JSON.stringify(cards));
       await localforage.setItem(QUIZ_KEY, totalQuizzes.toString());
+      await localforage.setItem('wordwise_folders_v5', JSON.stringify(folders));
+      await localforage.setItem('wordwise_folderSort_v5', folderSortMode);
     } catch (e) { console.error("Failed to save WordWise data:", e); }
   };
   if (immediate) performSave();
@@ -69,6 +76,11 @@ async function load() {
       // Handle both stringified and direct object storage for robustness
       cards = typeof d === 'string' ? JSON.parse(d) : d;
     }
+    const f = await localforage.getItem('wordwise_folders_v5');
+    if (f) folders = typeof f === 'string' ? JSON.parse(f) : f;
+    const fs = await localforage.getItem('wordwise_folderSort_v5');
+    if (fs) folderSortMode = fs;
+
     cards.forEach(c => {
       if (!Array.isArray(c.tags)) c.tags = [];
       c.back = toArr(c.back); c.example = toArr(c.example || c.examples);
@@ -170,11 +182,25 @@ function switchTab(name, el) {
   }
 }
 function updateStats() {
-  document.getElementById('statTotal').textContent = cards.length;
-  document.getElementById('statMastered').textContent = cards.filter(c => getStatus(c) === 'mastered').length;
-  document.getElementById('statFailed').textContent = cards.filter(c => getStatus(c) === 'struggling').length;
-  document.getElementById('statLiked').textContent = cards.filter(c => c.liked).length;
-  document.getElementById('statRevisit').textContent = cards.filter(c => c.revisit).length;
+  let pool = cards;
+  if (selectedFolders.size > 0) {
+    pool = pool.filter(c => {
+      if (!c.folderId) return false;
+      const anc = [c.folderId, ...getFolderAncestors(c.folderId)];
+      return anc.some(id => selectedFolders.has(id));
+    });
+  }
+  const tot = pool.length;
+  const mas = pool.filter(c => getStatus(c) === 'mastered').length;
+  const str = pool.filter(c => getStatus(c) === 'struggling').length;
+  const newc = pool.filter(c => getStatus(c) === 'new').length;
+
+  document.getElementById('statTotal').textContent = tot;
+  document.getElementById('statMastered').textContent = mas;
+  document.getElementById('statStruggling').textContent = str;
+  document.getElementById('statNew').textContent = newc;
+  document.getElementById('statLiked').textContent = pool.filter(c => c.liked).length;
+  document.getElementById('statRevisit').textContent = pool.filter(c => c.revisit).length;
   document.getElementById('statQuizzes').textContent = totalQuizzes;
 }
 
@@ -220,7 +246,18 @@ function getFilteredCards() {
     else if (currentFilter !== 'all') matchFilter = getStatus(c) === currentFilter;
     const matchTags = activeTags.size === 0 ||
       (tagMatchMode === 'AND' ? [...activeTags].every(t => (c.tags || []).includes(t)) : [...activeTags].some(t => (c.tags || []).includes(t)));
-    return matchSearch && matchFilter && matchTags;
+      
+    let matchFolder = true;
+    if (selectedFolders.size > 0) {
+      if (!c.folderId) {
+        matchFolder = false;
+      } else {
+        const anc = [c.folderId, ...getFolderAncestors(c.folderId)];
+        matchFolder = anc.some(id => selectedFolders.has(id));
+      }
+    }
+    
+    return matchSearch && matchFilter && matchTags && matchFolder;
   });
 }
 
@@ -393,7 +430,8 @@ function removeExampleEntry(i) { const v = [...document.querySelectorAll('.mExam
 function openAddModal() {
   editingId = null; modalTags = [];
   document.getElementById('modalTitle').textContent = 'Add New Card';
-  document.getElementById('mFront').value = ''; document.getElementById('mDeck').value = '';
+  document.getElementById('mFront').value = '';
+  renderFolderOptions(document.getElementById('mFolderId'), selectedFolders.size === 1 ? [...selectedFolders][0] : null);
   document.getElementById('mNote').value = ''; document.getElementById('mTagInput').value = '';
   renderBackEntries(['']); renderExampleEntries([]); renderModalTags(); renderTagSuggestions();
   document.getElementById('modal').classList.add('show'); setTimeout(() => document.getElementById('mFront').focus(), 50);
@@ -402,7 +440,8 @@ function editCard(id) {
   const c = cards.find(x => x.id === id); if (!c) return;
   editingId = id; modalTags = [...(c.tags || [])];
   document.getElementById('modalTitle').textContent = 'Edit Card';
-  document.getElementById('mFront').value = c.front; document.getElementById('mDeck').value = c.deck || '';
+  document.getElementById('mFront').value = c.front;
+  renderFolderOptions(document.getElementById('mFolderId'), c.folderId || null);
   document.getElementById('mNote').value = c.note || ''; document.getElementById('mTagInput').value = '';
   renderBackEntries(c.back.length > 0 ? [...c.back] : ['']); renderExampleEntries([...c.example]);
   renderModalTags(); renderTagSuggestions(); document.getElementById('modal').classList.add('show');
@@ -410,12 +449,16 @@ function editCard(id) {
 function closeModal() { document.getElementById('modal').classList.remove('show'); }
 function saveCard() {
   const front = document.getElementById('mFront').value.trim(); const back = getBackValues(); const example = getExampleValues();
-  const deck = document.getElementById('mDeck').value.trim();
+  const folderId = document.getElementById('mFolderId').value || null;
   const note = document.getElementById('mNote').value.trim();
   const pending = document.getElementById('mTagInput').value.trim();
   if (pending) addModalTag(pending); if (!front || back.length === 0) return;
-  if (editingId) { const c = cards.find(x => x.id === editingId); if (c) { c.front = front; c.back = back; c.example = example; c.deck = deck; c.tags = [...modalTags]; c.note = note; } }
-  else { cards.push({ id: genId(), front, back, example, deck, note, tags: [...modalTags], liked: false, revisit: false, pass: 0, fail: 0, created: Date.now(), repetition: 0, interval: 0, efactor: 2.5, nextReview: Date.now() }); }
+  if (editingId) {
+    const c = cards.find(x => x.id === editingId);
+    if (c) { c.front = front; c.back = back; c.example = example; c.folderId = folderId; delete c.deck; c.tags = [...modalTags]; c.note = note; }
+  } else {
+    cards.push({ id: genId(), front, back, example, folderId, note, tags: [...modalTags], liked: false, revisit: false, pass: 0, fail: 0, created: Date.now(), repetition: 0, interval: 0, efactor: 2.5, nextReview: Date.now() });
+  }
   save(true); closeModal(); renderAll();
 }
 function deleteCard(id) { if (!confirm('Delete this card?')) return; cards = cards.filter(c => c.id !== id); expandedCards.delete(id); save(true); renderAll(); }
@@ -424,7 +467,15 @@ function deleteCard(id) { if (!confirm('Delete this card?')) return; cards = car
 let quizCards = [], quizIdx = 0, quizCorrect = 0, quizMode = '';
 let quizSelectedTags = new Set();
 function getQuizFilteredCards() {
-  return quizSelectedTags.size === 0 ? cards : cards.filter(c =>
+  let pool = cards;
+  if (selectedFolders.size > 0) {
+    pool = pool.filter(c => {
+      if (!c.folderId) return false;
+      const anc = [c.folderId, ...getFolderAncestors(c.folderId)];
+      return anc.some(id => selectedFolders.has(id));
+    });
+  }
+  return quizSelectedTags.size === 0 ? pool : pool.filter(c =>
     tagMatchMode === 'AND' ? [...quizSelectedTags].every(t => (c.tags || []).includes(t)) : [...quizSelectedTags].some(t => (c.tags || []).includes(t))
   );
 }
@@ -581,11 +632,13 @@ function showResults() {
 
 // IMPORT/EXPORT
 function exportCards() {
-  const json = JSON.stringify(cards.map(c => ({ front: c.front, back: c.back, example: c.example, deck: c.deck || '', note: c.note || '', tags: c.tags || [], liked: !!c.liked, revisit: !!c.revisit, pass: c.pass, fail: c.fail, repetition: c.repetition, interval: c.interval, efactor: c.efactor, nextReview: c.nextReview })), null, 2);
+  const data = { type: 'wordwise_folder_export', folders: folders, cards: cards };
+  const json = JSON.stringify(data, null, 2);
   navigator.clipboard.writeText(json).then(() => { document.getElementById('exportArea').value = json; alert('Copied!'); }).catch(() => { document.getElementById('exportArea').value = json; });
 }
 function downloadJSON() {
-  const json = JSON.stringify(cards.map(c => ({ front: c.front, back: c.back, example: c.example, deck: c.deck || '', note: c.note || '', tags: c.tags || [], liked: !!c.liked, revisit: !!c.revisit, pass: c.pass, fail: c.fail, repetition: c.repetition, interval: c.interval, efactor: c.efactor, nextReview: c.nextReview })), null, 2);
+  const data = { type: 'wordwise_folder_export', folders: folders, cards: cards };
+  const json = JSON.stringify(data, null, 2);
   document.getElementById('exportArea').value = json;
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -602,13 +655,127 @@ function importCards() {
         let tags = [];
         if (Array.isArray(item.tags)) tags = item.tags.map(t => String(t).trim()).filter(Boolean);
         else if (typeof item.tags === 'string') tags = item.tags.split(',').map(t => t.trim()).filter(Boolean);
-        cards.push({ id: genId(), front: String(item.front), back: toArr(item.back), example: toArr(item.example || item.examples), deck: item.deck || '', note: item.note || '', tags, liked: !!item.liked, revisit: !!item.revisit, pass: parseInt(item.pass) || 0, fail: parseInt(item.fail) || 0, created: Date.now(), repetition: item.repetition || 0, interval: item.interval || 0, efactor: item.efactor || 2.5, nextReview: item.nextReview || Date.now() }); count++;
+        cards.push({ id: genId(), front: String(item.front), back: toArr(item.back), example: toArr(item.example || item.examples), deck: item.deck || '', folderId: null, note: item.note || '', tags, liked: !!item.liked, revisit: !!item.revisit, pass: parseInt(item.pass) || 0, fail: parseInt(item.fail) || 0, created: Date.now(), repetition: item.repetition || 0, interval: item.interval || 0, efactor: item.efactor || 2.5, nextReview: item.nextReview || Date.now() }); count++;
       }
     });
-    save(true); renderAll(); msg.innerHTML = `<span style="color:var(--green)">✓ Imported ${count} cards!</span>`;
+    save(true); migrateDecksToFolders(); renderAll(); msg.innerHTML = `<span style="color:var(--green)">✓ Imported ${count} cards!</span>`;
     document.getElementById('importArea').value = '';
   } catch (e) { msg.innerHTML = `<span style="color:var(--red)">✗ Invalid JSON: ${esc(e.message)}</span>`; }
 }
+
+function exportFolder(id) {
+  const validIds = new Set([id, ...getAllDescendants(id)]);
+  const exportCards = cards.filter(c => validIds.has(c.folderId));
+  const exportFolders = folders.filter(f => validIds.has(f.id));
+  const data = { type: 'wordwise_folder_export', folders: exportFolders, cards: exportCards };
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+  const fName = folders.find(x => x.id === id)?.name || "export";
+  const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", `wordwise_${fName}.json`); dl.click();
+}
+
+function importData(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    try {
+      const result = event.target.result;
+      if (file.name.endsWith('.md')) {
+         importMarkdownData(result, file.name);
+      } else {
+         const imported = JSON.parse(result);
+         if (imported.type === 'wordwise_folder_export') {
+           importFolderData(imported);
+         } else if (Array.isArray(imported)) {
+           importJsonCards(imported, file.name);
+         } else {
+           alert("Unrecognized format.");
+         }
+      }
+    } catch(err) { alert("Import failed."); }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function importJsonCards(importedCards, filename) {
+  const folderName = filename.replace(/\.[^/.]+$/, "");
+  const rootId = genId();
+  folders.push({ id: rootId, name: folderName, parentId: null, expanded: true, created: Date.now() });
+  let count = 0;
+  importedCards.forEach(c => {
+    if (c.front && c.back) {
+      if (!c.id) c.id = genId();
+      c.folderId = rootId;
+      cards.push(c); count++;
+    }
+  });
+  save(true); renderAll(); alert(`Imported ${count} cards into folder "${folderName}".`);
+}
+
+function importFolderData(data) {
+  const idMap = {};
+  data.folders.forEach(f => {
+    const newId = genId(); idMap[f.id] = newId;
+    f.id = newId; f.created = Date.now();
+  });
+  data.folders.forEach(f => {
+    if (f.parentId && idMap[f.parentId]) f.parentId = idMap[f.parentId];
+    else f.parentId = null; 
+    folders.push(f);
+  });
+  let count = 0;
+  data.cards.forEach(c => {
+    if (c.front && c.back) {
+      c.id = genId();
+      if (c.folderId && idMap[c.folderId]) c.folderId = idMap[c.folderId];
+      else c.folderId = null;
+      cards.push(c); count++;
+    }
+  });
+  save(true); renderAll(); alert(`Imported folder structure and ${count} cards.`);
+}
+
+function importMarkdownData(mdString, filename) {
+  const folderName = filename.replace(/\.[^/.]+$/, "");
+  const folderId = genId();
+  folders.push({ id: folderId, name: folderName, parentId: null, expanded: true, created: Date.now() });
+  
+  const lines = mdString.split('\n');
+  let currentCard = null;
+  let count = 0;
+  
+  lines.forEach(line => {
+    if (line.match(/^#{2,3}\s+(.*)/)) {
+      if (currentCard && currentCard.front && currentCard.back.length > 0) {
+         cards.push(currentCard); count++;
+      }
+      currentCard = {
+         id: genId(), front: line.replace(/^#{2,3}\s+/, '').trim(),
+         back: [], example: [], tags: [], folderId: folderId,
+         liked: false, revisit: false, pass: 0, fail: 0, created: Date.now(), repetition:0, interval:0, efactor:2.5, nextReview:Date.now()
+      };
+    } else if (currentCard) {
+      if (line.trim().startsWith('Tags:')) {
+         currentCard.tags = line.replace('Tags:', '').split(',').map(t=>t.trim()).filter(Boolean);
+      } else if (line.trim() !== '') {
+         currentCard.back.push(line);
+      }
+    }
+  });
+  if (currentCard && currentCard.front && currentCard.back.length > 0) {
+    cards.push(currentCard); count++;
+  }
+  
+  let recentlyAdded = cards.slice(-count);
+  recentlyAdded.forEach(c => {
+    if (c.back.length > 0) {
+      c.back = [c.back.join('\n')];
+    }
+  });
+  
+  save(true); renderAll(); alert(`Imported ${count} cards from Markdown into "${folderName}".`);
+}
+
 function loadSampleDeck() {
   const sample = [
     { front: "Ephemeral", back: ["Lasting a very short time; transitory", "Fleeting or brief in duration"], example: ["The ephemeral beauty of cherry blossoms draws millions of visitors each spring.", "His fame was ephemeral — forgotten within a year."], tags: ["GRE", "Adjective"], liked: true, deck: "Vocabulary" },
@@ -644,12 +811,260 @@ function loadSampleDeck() {
 let searchTimer = null;
 function debouncedRenderCards() { clearTimeout(searchTimer); searchTimer = setTimeout(renderCards, 150); }
 
-function renderAll() { renderWotd(); renderCards(); renderTagFilter(); updateStats(); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+/* --- FOLDERS SYSTEM (Phase 2 Logic) --- */
+function getRootFolders() { return folders.filter(f => !f.parentId).sort((a,b) => folderSortMode === 'name' ? a.name.localeCompare(b.name) : b.created - a.created); }
+function getChildFolders(parentId) { return folders.filter(f => f.parentId === parentId).sort((a,b) => folderSortMode === 'name' ? a.name.localeCompare(b.name) : b.created - a.created); }
+
+function getFolderAncestors(id) {
+  let ancestors = [];
+  let current = folders.find(f => f.id === id);
+  while (current && current.parentId) {
+    let parent = folders.find(f => f.id === current.parentId);
+    if (!parent) break;
+    ancestors.push(parent.id);
+    current = parent;
+  }
+  return ancestors;
+}
+
+function getAllDescendants(id) {
+  let desc = [];
+  const children = folders.filter(f => f.parentId === id);
+  for (let c of children) {
+    desc.push(c.id);
+    desc.push(...getAllDescendants(c.id));
+  }
+  return desc;
+}
+
+function buildFolderHTML(f, level = 0) {
+  const children = getChildFolders(f.id);
+  const hasChildren = children.length > 0;
+  const isExpanded = f.expanded;
+  
+  const isExplicit = selectedFolders.has(f.id);
+  const isImplicit = getFolderAncestors(f.id).some(a => selectedFolders.has(a));
+  const isSelected = isExplicit || isImplicit;
+  
+  const toggleIcon = hasChildren ? `<div class="folder-toggle ${isExpanded ? 'expanded' : ''}" onclick="event.stopPropagation();toggleFolderExpansion('${f.id}')">▶</div>` : `<div class="folder-toggle hidden">▶</div>`;
+  const iconHtml = f.icon ? `<div class="folder-icon">${esc(f.icon)}</div>` : `<div class="folder-icon">📁</div>`;
+  
+  const validFolderIds = new Set([f.id, ...getAllDescendants(f.id)]);
+  const count = cards.filter(c => validFolderIds.has(c.folderId)).length;
+  
+  const actionsHtml = `
+    <div class="folder-actions">
+      <span onclick="event.stopPropagation();exportFolder('${f.id}')" title="Export">⬇️</span>
+      <span onclick="event.stopPropagation();openAddFolderModal('${f.id}')" title="Add Subfolder">➕</span>
+      <span onclick="event.stopPropagation();renameFolderPrompt('${f.id}')" title="Rename">✏️</span>
+      <span onclick="event.stopPropagation();deleteFolderPrompt('${f.id}')" title="Delete">🗑️</span>
+    </div>`;
+
+  return `
+    <div class="folder-item-container" data-id="${f.id}">
+      <div class="folder-row ${isSelected ? 'selected' : ''}" 
+           onclick="toggleFolderSelection('${f.id}', event)" 
+           draggable="true" ondragstart="folderDragStart(event, '${f.id}')" 
+           ondragover="folderDragOver(event)" ondragleave="folderDragLeave(event)" ondrop="folderDrop(event, '${f.id}')"
+           style="padding-left: ${8 + (level * 12)}px;">
+        ${toggleIcon}
+        ${iconHtml}
+        <div class="folder-name" title="${esc(f.name)}">${esc(f.name)}</div>
+        ${count > 0 ? `<div class="folder-count">${count}</div>` : ''}
+        ${actionsHtml}
+      </div>
+      <div class="folder-children ${isExpanded ? 'expanded' : ''}">
+        ${children.map(child => buildFolderHTML(child, level + 1)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderFolders() {
+  const tree = document.getElementById('folderTree');
+  if (!tree) return;
+  const sortBtn = document.getElementById('folderSortBtn');
+  if (sortBtn) sortBtn.innerText = folderSortMode === 'name' ? '⇅ Name' : '⇅ Date';
+  
+  if (folders.length === 0) {
+    tree.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">No folders yet.<br>Click + New Folder</div>`;
+    return;
+  }
+  tree.innerHTML = getRootFolders().map(f => buildFolderHTML(f, 0)).join('');
+}
+
+function renderFolderOptions(selectEl, selectedId) {
+  const buildOptions = (parentId, level, prefix = '') => {
+    let opts = '';
+    const children = folders.filter(f => f.parentId === parentId).sort((a,b) => a.name.localeCompare(b.name));
+    for (let f of children) {
+      const sel = f.id === selectedId ? 'selected' : '';
+      opts += `<option value="${f.id}" ${sel}>${esc(prefix + (f.icon?f.icon+' ':'') + f.name)}</option>`;
+      opts += buildOptions(f.id, level + 1, prefix + '\u00A0\u00A0\u00A0\u00A0');
+    }
+    return opts;
+  };
+  selectEl.innerHTML = `<option value="">-- No Folder --</option>` + buildOptions(null, 0);
+}
+
+function openAddFolderModal(parentId) {
+  currentFolderParentId = parentId;
+  document.getElementById('folderModalTitle').textContent = parentId ? 'New Subfolder' : 'New Folder';
+  document.getElementById('fName').value = '';
+  document.getElementById('fIcon').value = '';
+  document.getElementById('folderModal').classList.add('show');
+}
+function closeFolderModal() { document.getElementById('folderModal').classList.remove('show'); }
+function saveFolder() {
+  const name = document.getElementById('fName').value.trim();
+  const icon = document.getElementById('fIcon').value.trim();
+  if (!name) return;
+  folders.push({ id: genId(), name, icon, parentId: currentFolderParentId, expanded: true, created: Date.now() });
+  save(true);
+  renderFolders();
+  closeFolderModal();
+}
+
+function deleteFolderPrompt(id) {
+  if (confirm("Delete folder and move its contents to the parent level?")) {
+    const f = folders.find(x => x.id === id);
+    if (!f) return;
+    folders.filter(x => x.parentId === id).forEach(child => child.parentId = f.parentId);
+    cards.filter(c => c.folderId === id).forEach(c => c.folderId = f.parentId);
+    folders = folders.filter(x => x.id !== id);
+    selectedFolders.delete(id);
+    save(true); renderAll();
+  }
+}
+
+function renameFolderPrompt(id) {
+  const f = folders.find(x => x.id === id);
+  if (!f) return;
+  const newName = prompt("Rename folder:", f.name);
+  if (newName && newName.trim()) {
+    f.name = newName.trim();
+    save(true); renderFolders();
+  }
+}
+
+function mergeFolders(sourceId, targetId) {
+  if (sourceId === targetId) return;
+  cards.filter(c => c.folderId === sourceId).forEach(c => c.folderId = targetId);
+  folders.filter(f => f.parentId === sourceId).forEach(f => f.parentId = targetId);
+  folders = folders.filter(f => f.id !== sourceId);
+  selectedFolders.delete(sourceId);
+  save(true); renderAll();
+}
+
+function toggleFolderSort() {
+  folderSortMode = folderSortMode === 'name' ? 'date' : 'name';
+  save(true); renderFolders();
+}
+function toggleFolderExpansion(id) {
+  const f = folders.find(x => x.id === id);
+  if (f) {
+    f.expanded = !f.expanded;
+    save(true);
+    renderFolders();
+  }
+}
+function toggleFolderSelection(id, e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  
+  const isDirect = selectedFolders.has(id);
+  const isImplicit = getFolderAncestors(id).some(a => selectedFolders.has(a));
+  
+  if (isDirect || isImplicit) {
+    // Deselect
+    selectedFolders.delete(id);
+    getFolderAncestors(id).forEach(a => selectedFolders.delete(a));
+    getAllDescendants(id).forEach(d => selectedFolders.delete(d));
+  } else {
+    // Select
+    selectedFolders.add(id);
+    // Subsume children automatically
+    getAllDescendants(id).forEach(d => selectedFolders.delete(d));
+  }
+  renderAll(); // updates folders, cards list, and stats
+}
+
+function renderAll() { renderFolders(); renderWotd(); renderCards(); renderTagFilter(); updateStats(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeFolderModal(); } });
+
+function migrateDecksToFolders() {
+  let changed = false;
+  let unorderedId = null;
+  
+  cards.forEach(c => {
+    // 1. Migrate legacy deck string if present
+    if (c.deck !== undefined) {
+      if (c.deck && !c.folderId) {
+        let parts = c.deck.split('/').map(p => p.trim()).filter(Boolean);
+        let parentId = null;
+        for (let pName of parts) {
+          let folder = folders.find(f => f.name === pName && f.parentId === parentId);
+          if (!folder) {
+            folder = { id: genId(), name: pName, parentId: parentId, expanded: true, created: Date.now() };
+            folders.push(folder);
+          }
+          parentId = folder.id;
+        }
+        if (parentId) c.folderId = parentId;
+      }
+      delete c.deck;
+      changed = true;
+    }
+    
+    // 2. Put any card without a folder into "Unordered"
+    if (!c.folderId) {
+      if (!unorderedId) {
+        let f = folders.find(f => f.name === "Unordered" && f.parentId === null);
+        if (f) {
+          unorderedId = f.id;
+        } else {
+          unorderedId = genId();
+          folders.push({ id: unorderedId, name: "Unordered", icon: "📦", parentId: null, expanded: true, created: Date.now() - 10000 });
+        }
+      }
+      c.folderId = unorderedId;
+      changed = true;
+    }
+  });
+  if (changed) save(true);
+}
+
+/* --- DRAG AND DROP --- */
+function cardDragStart(e, id) { e.dataTransfer.setData('text/plain', JSON.stringify({type: 'card', id})); }
+function folderDragStart(e, id) { e.dataTransfer.setData('text/plain', JSON.stringify({type: 'folder', id})); }
+function folderDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function folderDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function folderDrop(e, targetFolderId) {
+  e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+  try {
+    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+    if (data.type === 'card') {
+      const c = cards.find(x => x.id === data.id);
+      if (c && c.folderId !== targetFolderId) {
+        c.folderId = targetFolderId; save(true); renderAll();
+      }
+    } else if (data.type === 'folder') {
+      const sourceId = data.id;
+      if (sourceId !== targetFolderId) {
+        if (targetFolderId !== null) {
+          const targetAncestors = getFolderAncestors(targetFolderId);
+          if (targetAncestors.includes(sourceId)) { alert("Cannot move a folder into its own subfolder."); return; }
+        }
+        const f = folders.find(x => x.id === sourceId);
+        if (f) { f.parentId = targetFolderId; save(true); renderFolders(); }
+      }
+    }
+  } catch(err) { console.error("Drop error", err); }
+}
 
 // async initialization
 async function initApp() {
   await load();
+  migrateDecksToFolders();
   renderAll();
 }
 initApp();
