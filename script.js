@@ -42,6 +42,14 @@ function tagHTML(n, s) { const c = tagColor(n); return `<span class="tag" style=
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function toArr(v) { if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean); if (typeof v === 'string' && v.trim()) return [v.trim()]; return []; }
 
+function normalizeText(s) {
+  if (!s) return "";
+  return s.trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, "") // Remove all punctuation and special characters (keeps letters, numbers, spaces)
+    .replace(/\s+/g, " ");            // Compress multiple spaces into a single space
+}
+
 // Insights & Mantras
 const LEARNING_MANTRAS = [
   "Active recall is 3x more powerful than rereading.",
@@ -580,11 +588,24 @@ function editCard(id) {
 }
 function closeModal() { document.getElementById('modal').classList.remove('show'); }
 function saveCard() {
-  const front = document.getElementById('mFront').value.trim(); const back = getBackValues(); const example = getExampleValues();
+  const front = document.getElementById('mFront').value.trim(); 
+  let back = getBackValues(); 
+  let example = getExampleValues();
   const folderId = document.getElementById('mFolderId').value || null;
   const note = document.getElementById('mNote').value.trim();
   const pending = document.getElementById('mTagInput').value.trim();
   if (pending) addModalTag(pending); if (!front || back.length === 0) return;
+
+  const mSet = new Set();
+  back = back.filter(m => { const n = normalizeText(m); if (mSet.has(n)) return false; mSet.add(n); return true; });
+  const eSet = new Set();
+  example = example.filter(e => { const n = normalizeText(e); if (eSet.has(n)) return false; eSet.add(n); return true; });
+
+  if (!editingId) {
+    const isDuplicate = cards.some(c => normalizeText(c.front) === normalizeText(front));
+    if (isDuplicate && !confirm('A card with this word already exists in your deck. Add anyway?')) return;
+  }
+
   if (editingId) {
     const c = cards.find(x => x.id === editingId);
     if (c) { c.front = front; c.back = back; c.example = example; c.folderId = folderId; delete c.deck; c.tags = [...modalTags]; c.note = note; }
@@ -594,6 +615,88 @@ function saveCard() {
   save(true); closeModal(); renderAll();
 }
 function deleteCard(id) { if (!confirm('Delete this card?')) return; cards = cards.filter(c => c.id !== id); expandedCards.delete(id); save(true); renderAll(); }
+
+function cleanupDuplicates() {
+  const isGlobal = confirm("Do you want to merge duplicates globally across ALL folders?\n\n- Click 'OK' to merge identical words everywhere.\n- Click 'Cancel' to only merge duplicates that sit inside the same folder.");
+
+  let duplicateCount = 0;
+  let internalCount = 0;
+
+  cards.forEach(c => {
+    const mSet = new Set();
+    const oldBackLen = (c.back || []).length;
+    c.back = (c.back || []).filter(m => { const n = normalizeText(m); if (mSet.has(n)) return false; mSet.add(n); return true; });
+    if (c.back.length !== oldBackLen) internalCount += (oldBackLen - c.back.length);
+
+    const oldExLen = (c.example || []).length;
+    const eSet = new Set();
+    c.example = (c.example || []).filter(e => { const n = normalizeText(e); if (eSet.has(n)) return false; eSet.add(n); return true; });
+    if (c.example.length !== oldExLen) internalCount += (oldExLen - c.example.length);
+  });
+
+  const map = new Map();
+  cards.forEach(c => {
+    const keyStr = normalizeText(c.front);
+    const key = isGlobal ? keyStr : `${c.folderId || 'unassigned'}:${keyStr}`;
+    if (!map.has(key)) {
+      map.set(key, [c]);
+    } else {
+      map.get(key).push(c);
+    }
+  });
+
+  const newCards = [];
+  map.forEach(group => {
+    if (group.length === 1) {
+      newCards.push(group[0]);
+    } else {
+      group.sort((a, b) => (b.repetition - a.repetition) || (b.interval - a.interval) || (b.created - a.created));
+      
+      const winner = group[0];
+      const losers = group.slice(1);
+      
+      const tags = new Set(winner.tags || []);
+      const meanings = new Set((winner.back || []).map(m => normalizeText(m)));
+      const examples = new Set((winner.example || []).map(e => normalizeText(e)));
+      let combinedNote = winner.note || "";
+
+      losers.forEach(c => {
+        (c.tags || []).forEach(t => tags.add(t));
+        (c.back || []).forEach(m => {
+          if (!meanings.has(normalizeText(m))) {
+            winner.back.push(m);
+            meanings.add(normalizeText(m));
+          }
+        });
+        (c.example || []).forEach(e => {
+          if (!examples.has(normalizeText(e))) {
+            winner.example.push(e);
+            examples.add(normalizeText(e));
+          }
+        });
+        if (c.note && !combinedNote.includes(c.note)) combinedNote += (combinedNote ? "\n" : "") + c.note;
+      });
+      
+      winner.tags = [...tags];
+      winner.note = combinedNote;
+      
+      newCards.push(winner);
+      duplicateCount += losers.length;
+    }
+  });
+  
+  if (duplicateCount > 0 || internalCount > 0) {
+    cards = newCards;
+    save(true);
+    renderAll();
+    let msg = [];
+    if (duplicateCount > 0) msg.push(`${duplicateCount} duplicate card(s)`);
+    if (internalCount > 0) msg.push(`${internalCount} redundant internal meaning(s)/example(s)`);
+    alert(`Cleaned up ${msg.join(" and ")}!`);
+  } else {
+    alert("No duplicate cards or redundant meanings found.");
+  }
+}
 
 // QUIZ
 let quizCards = [], quizIdx = 0, quizCorrect = 0, quizMode = '';
@@ -844,9 +947,12 @@ function gradeQuiz(quality) { // quality 0-5
     }
 
     if (quality >= 3) {
+      real.pass = (real.pass || 0) + 1;
       quizCorrect++;
       updateQuests('cards_reviewed', 1);
       if (quality >= 4) updateQuests('easy_grades', 1);
+    } else {
+      real.fail = (real.fail || 0) + 1;
     }
     grantXP(earnedXP);
     updateQuests('earn_xp', earnedXP);
