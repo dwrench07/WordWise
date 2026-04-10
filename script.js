@@ -127,6 +127,7 @@ function stripMarkdown(text) {
 function save(immediate = false) {
   if (saveTimer) clearTimeout(saveTimer);
   const performSave = async () => {
+    // ── Local cache (offline fallback) ──────────────────────────────────────
     try {
       await localforage.setItem(STORAGE_KEY, JSON.stringify(cards));
       await localforage.setItem(QUIZ_KEY, totalQuizzes.toString());
@@ -141,67 +142,112 @@ function save(immediate = false) {
       await localforage.setItem('wordwise_tss', totalStudySeconds.toString());
       await localforage.setItem('wordwise_quests', JSON.stringify(dailyQuests));
       await localforage.setItem('wordwise_questdate', questDate);
-    } catch (e) { console.error("Failed to save WordWise data:", e); }
+    } catch (e) { console.error("Failed to save to local cache:", e); }
+
+    // ── MongoDB sync (when logged in) ────────────────────────────────────────
+    if (!isLoggedIn()) return;
+    try {
+      const cardPayload = cards.map(c => ({ ...c, localId: c.id }));
+      const folderPayload = folders.map(f => ({ ...f, localId: f.id }));
+      await Promise.all([
+        api.cards.bulk(cardPayload),
+        api.folders.bulk(folderPayload),
+        api.user.updateStats({
+          xp: userXP, streak: userStreak, freezes: userFreezes,
+          totalStudySeconds, quizzes: totalQuizzes,
+          lastStudyDate, studyHistory, dailyQuests, theme: currentTheme,
+        }),
+      ]);
+    } catch (e) { console.warn("Cloud sync failed (offline?):", e.message); }
   };
   if (immediate) performSave();
-  else saveTimer = setTimeout(performSave, 500);
+  else saveTimer = setTimeout(performSave, 1500);
+}
+
+function normalizeCards(rawCards) {
+  rawCards.forEach(c => {
+    if (!c.id && c.localId) c.id = c.localId; // map server localId back to id
+    if (!Array.isArray(c.tags)) c.tags = [];
+    c.back = toArr(c.back); c.example = toArr(c.example || c.examples);
+    if (typeof c.liked === 'undefined') c.liked = false;
+    if (typeof c.revisit === 'undefined') c.revisit = false;
+    if (typeof c.note === 'undefined') c.note = '';
+    if (typeof c.repetition === 'undefined') c.repetition = 0;
+    if (typeof c.interval === 'undefined') c.interval = 0;
+    if (typeof c.efactor === 'undefined') c.efactor = 2.5;
+    if (typeof c.nextReview === 'undefined') c.nextReview = Date.now();
+    if (typeof c.pass === 'undefined') c.pass = 0;
+    if (typeof c.fail === 'undefined') c.fail = 0;
+  });
+}
+
+async function loadFromLocalCache() {
+  const d = await localforage.getItem(STORAGE_KEY);
+  if (d) {
+    cards = typeof d === 'string' ? JSON.parse(d) : d;
+  } else {
+    const v4 = await localforage.getItem('wordwise_cards_v4');
+    if (v4) { cards = typeof v4 === 'string' ? JSON.parse(v4) : v4; }
+  }
+  const f = await localforage.getItem('wordwise_folders_v5');
+  if (f) {
+    folders = typeof f === 'string' ? JSON.parse(f) : f;
+  } else {
+    const v4f = await localforage.getItem('wordwise_folders_v4');
+    if (v4f) folders = typeof v4f === 'string' ? JSON.parse(v4f) : v4f;
+  }
+  const fs = await localforage.getItem('wordwise_folderSort_v5') || await localforage.getItem('wordwise_folderSort_v4');
+  if (fs) folderSortMode = fs;
+  const q  = await localforage.getItem(QUIZ_KEY); totalQuizzes = parseInt(q || '0');
+  const xp = await localforage.getItem('wordwise_xp'); if (xp) userXP = parseInt(xp);
+  const streak   = await localforage.getItem('wordwise_streak');   if (streak)   userStreak   = parseInt(streak);
+  const freezes  = await localforage.getItem('wordwise_freezes');  if (freezes)  userFreezes  = parseInt(freezes);
+  const lsd      = await localforage.getItem('wordwise_lsd');      if (lsd)      lastStudyDate = lsd;
+  const hist     = await localforage.getItem('wordwise_hist');     if (hist)     studyHistory  = typeof hist === 'string' ? JSON.parse(hist) : hist;
+  const tss      = await localforage.getItem('wordwise_tss');      if (tss)      totalStudySeconds = parseInt(tss);
+  const dq       = await localforage.getItem('wordwise_quests');   if (dq)       dailyQuests   = typeof dq === 'string' ? JSON.parse(dq) : dq;
+  const qd       = await localforage.getItem('wordwise_questdate');if (qd)       questDate     = qd;
+  const th       = await localforage.getItem('wordwise_theme');
+  if (th) { currentTheme = th; if (currentTheme === 'dark') document.documentElement.dataset.theme = 'dark'; updateThemeBtn(); }
 }
 
 async function load() {
   try {
-    const d = await localforage.getItem(STORAGE_KEY);
-    if (d) {
-      cards = typeof d === 'string' ? JSON.parse(d) : d;
-    } else {
-      // Recovery/Migration from v4 if v5 is empty
-      const v4 = await localforage.getItem('wordwise_cards_v4');
-      if (v4) {
-        cards = typeof v4 === 'string' ? JSON.parse(v4) : v4;
-        console.log("Migrated data from v4 to v5");
-        save(true);
+    if (isLoggedIn()) {
+      // ── Primary: load from MongoDB ────────────────────────────────────────
+      try {
+        const [serverCards, serverFolders, stats] = await Promise.all([
+          api.cards.getAll(),
+          api.folders.getAll(),
+          api.user.getStats(),
+        ]);
+
+        cards   = serverCards;
+        folders = serverFolders.map(f => ({ ...f, id: f.localId || f.id }));
+
+        userXP            = stats.xp            ?? 0;
+        userStreak        = stats.streak         ?? 0;
+        userFreezes       = stats.freezes        ?? 0;
+        totalStudySeconds = stats.totalStudySeconds ?? 0;
+        totalQuizzes      = stats.quizzes        ?? 0;
+        lastStudyDate     = stats.lastStudyDate  ?? '';
+        studyHistory      = stats.studyHistory   ? Object.fromEntries(Object.entries(stats.studyHistory)) : {};
+        dailyQuests       = stats.dailyQuests    ?? [];
+        currentTheme      = stats.theme          ?? 'light';
+
+        if (currentTheme === 'dark') document.documentElement.dataset.theme = 'dark';
+        updateThemeBtn();
+      } catch (e) {
+        console.warn("Cloud load failed, falling back to local cache:", e.message);
+        await loadFromLocalCache();
       }
-    }
-    const f = await localforage.getItem('wordwise_folders_v5');
-    if (f) {
-      folders = typeof f === 'string' ? JSON.parse(f) : f;
     } else {
-      const v4f = await localforage.getItem('wordwise_folders_v4');
-      if (v4f) folders = typeof v4f === 'string' ? JSON.parse(v4f) : v4f;
+      // ── Fallback: local IndexedDB (not logged in / offline) ───────────────
+      await loadFromLocalCache();
     }
-    const fs = await localforage.getItem('wordwise_folderSort_v5') || await localforage.getItem('wordwise_folderSort_v4');
-    if (fs) folderSortMode = fs;
 
-    cards.forEach(c => {
-      if (!Array.isArray(c.tags)) c.tags = [];
-      c.back = toArr(c.back); c.example = toArr(c.example || c.examples);
-      if (typeof c.liked === 'undefined') c.liked = false;
-      if (typeof c.revisit === 'undefined') c.revisit = false;
-      if (typeof c.note === 'undefined') c.note = '';
-      // SRS Defaults
-      if (typeof c.repetition === 'undefined') c.repetition = 0;
-      if (typeof c.interval === 'undefined') c.interval = 0;
-      if (typeof c.efactor === 'undefined') c.efactor = 2.5;
-      if (typeof c.nextReview === 'undefined') c.nextReview = Date.now();
-      if (typeof c.pass === 'undefined') c.pass = 0;
-      if (typeof c.fail === 'undefined') c.fail = 0;
-    });
-    const q = await localforage.getItem(QUIZ_KEY);
-    totalQuizzes = parseInt(q || '0');
-
-    const xp = await localforage.getItem('wordwise_xp'); if (xp) userXP = parseInt(xp);
-    const streak = await localforage.getItem('wordwise_streak'); if (streak) userStreak = parseInt(streak);
-    const freezes = await localforage.getItem('wordwise_freezes'); if (freezes) userFreezes = parseInt(freezes);
-    const lsd = await localforage.getItem('wordwise_lsd'); if (lsd) lastStudyDate = lsd;
-    const hist = await localforage.getItem('wordwise_hist'); if (hist) studyHistory = typeof hist === 'string' ? JSON.parse(hist) : hist;
-
-    const tss = await localforage.getItem('wordwise_tss'); if (tss) totalStudySeconds = parseInt(tss);
-    const dq = await localforage.getItem('wordwise_quests'); if (dq) dailyQuests = typeof dq === 'string' ? JSON.parse(dq) : dq;
-    const qd = await localforage.getItem('wordwise_questdate'); if (qd) questDate = qd;
-
-    const th = await localforage.getItem('wordwise_theme');
-    if (th) { currentTheme = th; if (currentTheme === 'dark') document.documentElement.dataset.theme = 'dark'; updateThemeBtn(); }
-
-    generateDailyQuests(); // ensures missing quests are hydrated based on date
+    normalizeCards(cards);
+    generateDailyQuests();
     updateGamificationUI();
   } catch (e) {
     console.error("Failed to load WordWise data:", e);
@@ -1658,4 +1704,9 @@ async function initApp() {
   migrateDecksToFolders();
   renderAll();
 }
-initApp();
+
+// Boot sequence (auth disabled — loads app directly)
+(async () => {
+  hideAuthScreen();
+  await initApp();
+})();

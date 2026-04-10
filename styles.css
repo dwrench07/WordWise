@@ -2616,3 +2616,125 @@ body::before {
 .quiz-note-input:focus {
   border-color: var(--accent);
 }
+/* ── Auth Screen ─────────────────────────────────────────────────────────────── */
+#authScreen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 36px 32px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+}
+
+.auth-logo {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  color: var(--text);
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.auth-logo span {
+  color: var(--accent);
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 9px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text2);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.auth-tab.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.auth-error {
+  background: hsla(0, 80%, 50%, 0.1);
+  border: 1px solid var(--red);
+  color: var(--red);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+#authLoginForm input,
+#authRegisterForm input {
+  display: block;
+  width: 100%;
+  padding: 13px 16px;
+  margin-bottom: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+#authLoginForm input:focus,
+#authRegisterForm input:focus {
+  border-color: var(--accent);
+}
+
+.auth-submit-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-top: 6px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.auth-submit-btn:hover   { opacity: 0.88; }
+.auth-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Safe-area padding for notched phones ────────────────────────────────────── */
+.header {
+  padding-top: max(16px, env(safe-area-inset-top));
+}
+
+.sidebar {
+  padding-bottom: env(safe-area-inset-bottom);
+}

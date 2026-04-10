@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>WordWise — Flashcard Engine</title>
+<meta name="description" content="WordWise — your personal vocabulary & flashcard engine with spaced repetition.">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WordWise">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.svg">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -13,6 +21,34 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
+<!-- Auth Screen (shown when logged out) -->
+<div id="authScreen" style="display:none;">
+  <div class="auth-card">
+    <div class="auth-logo">WordWise<span>.app</span></div>
+    <div class="auth-tabs">
+      <button id="authTabLogin"    class="auth-tab active"  onclick="switchAuthTab('login')">Log In</button>
+      <button id="authTabRegister" class="auth-tab"         onclick="switchAuthTab('register')">Sign Up</button>
+    </div>
+    <div id="authError" class="auth-error" style="display:none;"></div>
+
+    <form id="authLoginForm" onsubmit="handleLogin(event)">
+      <input  type="email"    id="loginEmail"    placeholder="Email"    required autocomplete="email">
+      <input  type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
+      <button type="submit" class="auth-submit-btn" data-label="Log In">Log In</button>
+    </form>
+
+    <form id="authRegisterForm" style="display:none;" onsubmit="handleRegister(event)">
+      <input  type="email"    id="registerEmail"    placeholder="Email"            required autocomplete="email">
+      <input  type="password" id="registerPassword" placeholder="Password (min 6)" required autocomplete="new-password">
+      <input  type="password" id="registerConfirm"  placeholder="Confirm Password" required autocomplete="new-password">
+      <button type="submit" class="auth-submit-btn" data-label="Create Account">Create Account</button>
+    </form>
+  </div>
+</div>
+
+<!-- Main App (hidden until logged in) -->
+<div id="appRoot">
 <div class="layout-wrapper">
   <!-- Sidebar -->
   <aside class="sidebar" id="appSidebar">
@@ -56,6 +92,7 @@
       </div>
       <div class="header-right" style="display:flex;align-items:center;gap:16px;">
         <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="themeToggleBtn" style="padding:4px;border-radius:50%;font-size:16px;width:34px;height:34px;justify-content:center;border-color:var(--border);">🌙</button>
+        <button class="btn btn-ghost btn-sm" onclick="logout()" title="Log out" style="padding:4px;border-radius:50%;font-size:16px;width:34px;height:34px;justify-content:center;border-color:var(--border);">⏏</button>
         <div class="tabs">
           <button class="tab active" onclick="switchTab('cards', this)">Cards</button>
           <button class="tab" onclick="switchTab('quiz', this)">Quiz</button>
@@ -218,7 +255,17 @@
 
 <div id="toastContainer"></div>
 
+</div><!-- /#appRoot -->
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+<script src="api.js"></script>
+<script src="auth.js"></script>
 <script src="script.js"></script>
+<script>
+  // Register service worker for PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+</script>
 </body>
 </html>
