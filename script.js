@@ -1775,7 +1775,9 @@ async function initApp() {
 
 // Boot sequence
 (async () => {
-  if (isLoggedIn()) {
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  
+  if (isLocal || isLoggedIn()) {
     hideAuthScreen();
     await initApp();
   } else {
