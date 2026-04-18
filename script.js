@@ -1765,8 +1765,12 @@ async function initApp() {
   renderAll();
 }
 
-// Boot sequence (auth disabled — loads app directly)
+// Boot sequence
 (async () => {
-  hideAuthScreen();
-  await initApp();
+  if (isLoggedIn()) {
+    hideAuthScreen();
+    await initApp();
+  } else {
+    showAuthScreen();
+  }
 })();
