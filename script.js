@@ -367,8 +367,7 @@ function switchTab(name, el) {
       cards.map(c => ({ front: c.front, back: c.back, example: c.example, deck: c.deck || '', tags: c.tags || [], liked: !!c.liked, pass: c.pass, fail: c.fail })), null, 2);
   }
   
-  // Close sidebar on mobile after switching tabs
-  closeSidebar();
+  // Sidebar no longer auto-closes on tab switch per user request
 }
 function updateStats() {
   let pool = cards;
@@ -1774,8 +1773,7 @@ function toggleFolderSelection(id, e) {
   }
   renderAll(); // updates folders, cards list, and stats
   
-  // Close sidebar on mobile after folder selection
-  closeSidebar();
+  // Sidebar no longer auto-closes on folder selection per user request
 }
 
 function renderAll() { renderFolders(); renderWotd(); renderDailyInsight(); renderCards(); renderTagFilter(); updateStats(); }
@@ -1865,6 +1863,7 @@ function openSidebar() {
   const o = document.getElementById('sidebarOverlay');
   if (s) s.classList.add('open');
   if (o) o.classList.add('show');
+  document.body.style.overflow = 'hidden';
 }
 function closeSidebar() {
   console.log("Closing Sidebar...");
@@ -1872,6 +1871,7 @@ function closeSidebar() {
   const o = document.getElementById('sidebarOverlay');
   if (s) s.classList.remove('open');
   if (o) o.classList.remove('show');
+  document.body.style.overflow = '';
 }
 
 // Initial boot
