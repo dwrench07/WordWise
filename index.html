@@ -222,8 +222,9 @@
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <h3 id="modalTitle">Add New Card</h3>
-    <div class="form-row">
-      <input type="text" id="mFront" placeholder="Front (word/question)">
+    <div class="form-row" style="display:flex; gap:8px;">
+      <input type="text" id="mFront" placeholder="Front (word/question)" style="flex:1; font-size:16px;">
+      <button class="btn btn-ghost" id="lookupBtn" onclick="lookupWord()" style="padding:0 12px; width:44px; height:44px; justify-content:center; border-radius:10px;" title="Lookup definition">🔍</button>
     </div>
     <div style="margin-bottom:12px;">
       <div class="form-label">Meaning(s) <span style="color:var(--text2);font-weight:400;">— multiple definitions supported</span></div>

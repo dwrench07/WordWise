@@ -635,6 +635,57 @@ function editCard(id) {
   renderModalTags(); renderTagSuggestions(); document.getElementById('modal').classList.add('show');
 }
 function closeModal() { document.getElementById('modal').classList.remove('show'); }
+
+async function lookupWord() {
+  const word = document.getElementById('mFront').value.trim();
+  if (!word) return;
+  
+  const btn = document.getElementById('lookupBtn');
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<div class="loader-spinner" style="width:14px;height:14px;border-width:2px;"></div>';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+    if (!res.ok) throw new Error('Not found');
+    const data = await res.json();
+    
+    if (data && data.length > 0) {
+      const entry = data[0];
+      const meanings = [];
+      const examples = [];
+      const tags = new Set(modalTags);
+      
+      entry.meanings.forEach(m => {
+        // Add part of speech as a tag (capitalized)
+        if (m.partOfSpeech) {
+          const pos = m.partOfSpeech.charAt(0).toUpperCase() + m.partOfSpeech.slice(1);
+          tags.add(pos);
+        }
+        
+        m.definitions.forEach(d => {
+          meanings.push(d.definition);
+          if (d.example) examples.push(d.example);
+        });
+      });
+      
+      if (meanings.length > 0) renderBackEntries(meanings.slice(0, 5));
+      if (examples.length > 0) renderExampleEntries(examples.slice(0, 3));
+      
+      modalTags = [...tags];
+      renderModalTags();
+      renderTagSuggestions();
+      
+      showToast(`Found definitions for "${word}"`, 'toast-quest');
+    }
+  } catch (e) {
+    showToast(`No definitions found for "${word}"`, 'toast-crit');
+    console.warn("Lookup failed:", e);
+  } finally {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }
+}
 function saveCard() {
   const front = document.getElementById('mFront').value.trim(); 
   let back = getBackValues(); 
