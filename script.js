@@ -1070,8 +1070,16 @@ function downloadJSON() {
 function importCards() {
   const raw = document.getElementById('importArea').value.trim(); const msg = document.getElementById('importMsg');
   try {
-    const arr = JSON.parse(raw); if (!Array.isArray(arr)) throw new Error('Must be an array');
-    let count = 0; arr.forEach(item => {
+    const imported = JSON.parse(raw);
+    
+    // Support for full folder exports in the text area
+    if (imported.type === 'wordwise_folder_export') {
+      importFolderData(imported);
+      return;
+    }
+
+    if (!Array.isArray(imported)) throw new Error('Must be an array');
+    let count = 0; imported.forEach(item => {
       if (item.front && item.back) {
         let tags = [];
         if (Array.isArray(item.tags)) tags = item.tags.map(t => String(t).trim()).filter(Boolean);
