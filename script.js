@@ -741,10 +741,71 @@ function cleanupDuplicates() {
     let msg = [];
     if (duplicateCount > 0) msg.push(`${duplicateCount} duplicate card(s)`);
     if (internalCount > 0) msg.push(`${internalCount} redundant internal meaning(s)/example(s)`);
-    alert(`Cleaned up ${msg.join(" and ")}!`);
+    
+    // Also cleanup folders after cards are merged
+    const foldersCleaned = cleanupDuplicateFolders(true);
+    if (foldersCleaned > 0) msg.push(`${foldersCleaned} duplicate folder(s)`);
+    
+    showToast(`Cleaned up ${msg.join(" and ")}!`, 'toast-quest');
   } else {
-    alert("No duplicate cards or redundant meanings found.");
+    const foldersCleaned = cleanupDuplicateFolders(true);
+    if (foldersCleaned > 0) {
+      showToast(`Cleaned up ${foldersCleaned} duplicate folder(s)!`, 'toast-quest');
+    } else {
+      alert("No duplicates found.");
+    }
   }
+}
+
+function cleanupDuplicateFolders(silent = false) {
+  let duplicateCount = 0;
+  const map = new Map(); // key: "parentId:name"
+
+  // Sort by created date so we keep the oldest one as the primary
+  folders.sort((a, b) => (a.created || 0) - (b.created || 0));
+
+  const newFolders = [];
+  const folderIdMap = {}; // oldId -> canonicalId
+
+  folders.forEach(f => {
+    const key = `${f.parentId || 'root'}:${normalizeText(f.name)}`;
+    if (!map.has(key)) {
+      map.set(key, f);
+      newFolders.push(f);
+    } else {
+      const primary = map.get(key);
+      folderIdMap[f.id] = primary.id;
+      duplicateCount++;
+    }
+  });
+
+  if (duplicateCount > 0) {
+    folders = newFolders;
+    
+    // Fix parent references for folders
+    let changed = true;
+    while (changed) { // Handle multi-level remapping
+      changed = false;
+      folders.forEach(f => {
+        if (f.parentId && folderIdMap[f.parentId]) {
+          f.parentId = folderIdMap[f.parentId];
+          changed = true;
+        }
+      });
+    }
+
+    // Fix cards
+    cards.forEach(c => {
+      if (c.folderId && folderIdMap[c.folderId]) {
+        c.folderId = folderIdMap[c.folderId];
+      }
+    });
+
+    save(true);
+    renderAll();
+    if (!silent) alert(`Merged ${duplicateCount} duplicate folder(s).`);
+  }
+  return duplicateCount;
 }
 
 // QUIZ
@@ -1153,8 +1214,11 @@ function importData(e) {
 
 function importJsonCards(importedCards, filename) {
   const folderName = filename.replace(/\.[^/.]+$/, "");
-  const rootId = genId();
-  let rootFolderCreated = false;
+  
+  // Try to find existing folder with this name at root
+  let rootFolder = folders.find(f => normalizeText(f.name) === normalizeText(folderName) && !f.parentId);
+  let rootId = rootFolder ? rootFolder.id : genId();
+  let rootFolderCreated = !!rootFolder;
 
   let count = 0;
   importedCards.forEach(item => {
@@ -1201,30 +1265,45 @@ function importJsonCards(importedCards, filename) {
   save(true);
   migrateDecksToFolders();
   renderAll();
-  alert(`Imported ${count} cards.`);
+  showToast(`Imported ${count} cards.`, 'toast-quest');
 }
 
 function importFolderData(data) {
   const idMap = {};
+  
+  // Pass 1: Handle folders
   data.folders.forEach(f => {
-    const newId = genId(); idMap[f.id] = newId;
-    f.id = newId; f.created = Date.now();
+    // Check if a folder with this name and parent already exists
+    // We need to look up the parent name in the source data and find it in destination
+    // But for simplicity, let's first map all folders to new IDs and then cleanupDuplicates
+    const newId = genId(); 
+    idMap[f.id] = newId;
+    f.id = newId; 
+    f.created = Date.now();
   });
+
   data.folders.forEach(f => {
     if (f.parentId && idMap[f.parentId]) f.parentId = idMap[f.parentId];
     else f.parentId = null;
     folders.push(f);
   });
+
+  // Pass 2: Handle cards
   let count = 0;
   data.cards.forEach(c => {
     if (c.front && c.back) {
       c.id = genId();
       if (c.folderId && idMap[c.folderId]) c.folderId = idMap[c.folderId];
       else c.folderId = null;
-      cards.push(c); count++;
+      cards.push(c); 
+      count++;
     }
   });
-  save(true); renderAll(); alert(`Imported folder structure and ${count} cards.`);
+
+  save(true); 
+  cleanupDuplicateFolders(true); // Automatically merge identical folder paths
+  renderAll(); 
+  showToast(`Imported folder structure and ${count} cards.`, 'toast-quest');
 }
 
 function importMarkdownData(mdString, filename) {
@@ -1713,7 +1792,7 @@ function migrateDecksToFolders() {
         let parts = c.deck.split('/').map(p => p.trim()).filter(Boolean);
         let parentId = null;
         for (let pName of parts) {
-          let folder = folders.find(f => f.name === pName && f.parentId === parentId);
+          let folder = folders.find(f => normalizeText(f.name) === normalizeText(pName) && f.parentId === parentId);
           if (!folder) {
             folder = { id: genId(), name: pName, parentId: parentId, expanded: true, created: Date.now() };
             folders.push(folder);

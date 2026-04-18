@@ -33,6 +33,11 @@ router.post('/bulk', async (req, res) => {
   }));
 
   const result = await Folder.bulkWrite(ops);
+
+  // Sync state: Delete folders that were removed on the client
+  const currentIds = folders.map(f => f.localId || f.id);
+  await Folder.deleteMany({ userId: req.userId, localId: { $nin: currentIds } });
+
   res.json({ upserted: result.upsertedCount, modified: result.modifiedCount });
 });
 

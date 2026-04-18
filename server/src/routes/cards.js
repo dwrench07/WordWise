@@ -17,9 +17,8 @@ router.post('/', async (req, res) => {
   res.status(201).json(card);
 });
 
-// POST /api/cards/bulk — upsert many cards at once (used for initial migration)
 router.post('/bulk', async (req, res) => {
-  const cards = req.body; // array of card objects
+  const cards = req.body; 
   if (!Array.isArray(cards)) {
     return res.status(400).json({ message: 'Expected an array of cards' });
   }
@@ -32,7 +31,10 @@ router.post('/bulk', async (req, res) => {
     },
   }));
 
-  const result = await Card.bulkWrite(ops);
+  // Sync state: Delete cards that were removed on the client
+  const currentIds = cards.map(c => c.localId || c.id);
+  await Card.deleteMany({ userId: req.userId, localId: { $nin: currentIds } });
+
   res.json({ upserted: result.upsertedCount, modified: result.modifiedCount });
 });
 
