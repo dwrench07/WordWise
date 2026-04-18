@@ -1075,11 +1075,33 @@ function importCards() {
       if (item.front && item.back) {
         let tags = [];
         if (Array.isArray(item.tags)) tags = item.tags.map(t => String(t).trim()).filter(Boolean);
-        else if (typeof item.tags === 'string') tags = item.tags.split(',').map(t => t.trim()).filter(Boolean);
-        cards.push({ id: genId(), front: String(item.front), back: toArr(item.back), example: toArr(item.example || item.examples), deck: item.deck || '', folderId: null, note: item.note || '', tags, liked: !!item.liked, revisit: !!item.revisit, pass: parseInt(item.pass) || 0, fail: parseInt(item.fail) || 0, created: Date.now(), repetition: item.repetition || 0, interval: item.interval || 0, efactor: item.efactor || 2.5, nextReview: item.nextReview || Date.now() }); count++;
+        let deckValue = (item.folder || item.deck || '').trim();
+        cards.push({
+          id: genId(),
+          front: String(item.front),
+          back: toArr(item.back),
+          example: toArr(item.example || item.examples),
+          deck: deckValue,
+          folderId: null,
+          note: item.note || '',
+          tags,
+          liked: !!item.liked,
+          revisit: !!item.revisit,
+          pass: parseInt(item.pass) || 0,
+          fail: parseInt(item.fail) || 0,
+          created: Date.now(),
+          repetition: item.repetition || 0,
+          interval: item.interval || 0,
+          efactor: item.efactor || 2.5,
+          nextReview: item.nextReview || Date.now()
+        });
+        count++;
       }
     });
-    save(true); migrateDecksToFolders(); renderAll(); msg.innerHTML = `<span style="color:var(--green)">✓ Imported ${count} cards!</span>`;
+    save(true);
+    migrateDecksToFolders();
+    renderAll();
+    msg.innerHTML = `<span style="color:var(--green)">✓ Imported ${count} cards!</span>`;
     document.getElementById('importArea').value = '';
   } catch (e) { msg.innerHTML = `<span style="color:var(--red)">✗ Invalid JSON: ${esc(e.message)}</span>`; }
 }
@@ -1121,16 +1143,54 @@ function importData(e) {
 function importJsonCards(importedCards, filename) {
   const folderName = filename.replace(/\.[^/.]+$/, "");
   const rootId = genId();
-  folders.push({ id: rootId, name: folderName, parentId: null, expanded: true, created: Date.now() });
+  let rootFolderCreated = false;
+
   let count = 0;
-  importedCards.forEach(c => {
-    if (c.front && c.back) {
-      if (!c.id) c.id = genId();
-      c.folderId = rootId;
-      cards.push(c); count++;
+  importedCards.forEach(item => {
+    if (item.front && item.back) {
+      let tags = [];
+      if (Array.isArray(item.tags)) tags = item.tags.map(t => String(t).trim()).filter(Boolean);
+      else if (typeof item.tags === 'string') tags = item.tags.split(',').map(t => t.trim()).filter(Boolean);
+
+      let deckValue = (item.folder || item.deck || '').trim();
+      let fId = null;
+
+      // If no folder/deck specified in JSON, put in the filename folder
+      if (!deckValue) {
+        if (!rootFolderCreated) {
+          folders.push({ id: rootId, name: folderName, parentId: null, expanded: true, created: Date.now() });
+          rootFolderCreated = true;
+        }
+        fId = rootId;
+      }
+
+      cards.push({
+        id: item.id || genId(),
+        front: String(item.front),
+        back: toArr(item.back),
+        example: toArr(item.example || item.examples),
+        deck: deckValue,
+        folderId: fId,
+        note: item.note || '',
+        tags,
+        liked: !!item.liked,
+        revisit: !!item.revisit,
+        pass: parseInt(item.pass) || 0,
+        fail: parseInt(item.fail) || 0,
+        created: item.created || Date.now(),
+        repetition: item.repetition || 0,
+        interval: item.interval || 0,
+        efactor: item.efactor || 2.5,
+        nextReview: item.nextReview || Date.now()
+      });
+      count++;
     }
   });
-  save(true); renderAll(); alert(`Imported ${count} cards into folder "${folderName}".`);
+
+  save(true);
+  migrateDecksToFolders();
+  renderAll();
+  alert(`Imported ${count} cards.`);
 }
 
 function importFolderData(data) {
