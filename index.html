@@ -50,11 +50,14 @@
 <!-- Main App (hidden until logged in) -->
 <div id="appRoot">
 <div class="layout-wrapper">
+  <!-- Sidebar Overlay (Mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
   <!-- Sidebar -->
   <aside class="sidebar" id="appSidebar">
     <div class="sidebar-header">
       <div class="logo">WordWise<span>.app</span></div>
-      <button class="mobile-close-btn" onclick="document.getElementById('appSidebar').classList.remove('open')">✕</button>
+      <button class="mobile-close-btn" onclick="closeSidebar()">✕</button>
     </div>
     <div class="sidebar-scroll">
       <div class="sidebar-actions">
@@ -87,7 +90,7 @@
   <main class="app">
     <div class="header">
       <div class="mobile-nav">
-        <button class="mobile-menu-btn" onclick="document.getElementById('appSidebar').classList.add('open')">☰</button>
+        <button class="mobile-menu-btn" onclick="openSidebar()">☰</button>
         <div class="logo mobile-logo">WordWise</div>
       </div>
       <div class="header-right" style="display:flex;align-items:center;gap:16px;">

@@ -1481,6 +1481,29 @@ body::before {
     transform: translateX(0);
   }
 
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 40;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .sidebar.open + .sidebar ~ .layout-wrapper, /* this selector is tricky, let's keep it simple */
+  #appSidebar.open ~ main { filter: blur(2px); } /* not used, let's stick to standard overlay */
+
+  /* If sidebar is open, show overlay */
+  #appSidebar.open ~ .sidebar-overlay,
+  .sidebar.open { /* logic handled via JS usually, but let's define the class here */ }
+  
+  .sidebar-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+
   .mobile-close-btn {
     display: block;
   }

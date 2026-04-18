@@ -368,8 +368,7 @@ function switchTab(name, el) {
   }
   
   // Close sidebar on mobile after switching tabs
-  const sidebar = document.getElementById('appSidebar');
-  if (sidebar) sidebar.classList.remove('open');
+  closeSidebar();
 }
 function updateStats() {
   let pool = cards;
@@ -1697,8 +1696,7 @@ function toggleFolderSelection(id, e) {
   renderAll(); // updates folders, cards list, and stats
   
   // Close sidebar on mobile after folder selection
-  const sidebar = document.getElementById('appSidebar');
-  if (sidebar) sidebar.classList.remove('open');
+  closeSidebar();
 }
 
 function renderAll() { renderFolders(); renderWotd(); renderDailyInsight(); renderCards(); renderTagFilter(); updateStats(); }
@@ -1781,7 +1779,23 @@ async function initApp() {
   renderAll();
 }
 
-// Boot sequence
+// Sidebar Helpers
+function openSidebar() {
+  console.log("Opening Sidebar...");
+  const s = document.getElementById('appSidebar');
+  const o = document.getElementById('sidebarOverlay');
+  if (s) s.classList.add('open');
+  if (o) o.classList.add('show');
+}
+function closeSidebar() {
+  console.log("Closing Sidebar...");
+  const s = document.getElementById('appSidebar');
+  const o = document.getElementById('sidebarOverlay');
+  if (s) s.classList.remove('open');
+  if (o) o.classList.remove('show');
+}
+
+// Initial boot
 (async () => {
   const host = window.location.hostname;
   const isLocal = host === 'localhost' || 
