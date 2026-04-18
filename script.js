@@ -1775,7 +1775,15 @@ async function initApp() {
 
 // Boot sequence
 (async () => {
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const host = window.location.hostname;
+  const isLocal = host === 'localhost' || 
+                  host === '127.0.0.1' || 
+                  host === '0.0.0.0' || 
+                  host.startsWith('192.168.') || 
+                  host.startsWith('10.') || 
+                  host === '';
+
+  console.log(`WordWise Booting. Host: "${host}", Local Mode: ${isLocal}, Logged In: ${isLoggedIn()}`);
   
   if (isLocal || isLoggedIn()) {
     hideAuthScreen();
