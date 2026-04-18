@@ -366,6 +366,10 @@ function switchTab(name, el) {
     document.getElementById('exportArea').value = JSON.stringify(
       cards.map(c => ({ front: c.front, back: c.back, example: c.example, deck: c.deck || '', tags: c.tags || [], liked: !!c.liked, pass: c.pass, fail: c.fail })), null, 2);
   }
+  
+  // Close sidebar on mobile after switching tabs
+  const sidebar = document.getElementById('appSidebar');
+  if (sidebar) sidebar.classList.remove('open');
 }
 function updateStats() {
   let pool = cards;
@@ -1691,6 +1695,10 @@ function toggleFolderSelection(id, e) {
     getAllDescendants(id).forEach(d => selectedFolders.delete(d));
   }
   renderAll(); // updates folders, cards list, and stats
+  
+  // Close sidebar on mobile after folder selection
+  const sidebar = document.getElementById('appSidebar');
+  if (sidebar) sidebar.classList.remove('open');
 }
 
 function renderAll() { renderFolders(); renderWotd(); renderDailyInsight(); renderCards(); renderTagFilter(); updateStats(); }
