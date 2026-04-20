@@ -893,16 +893,35 @@ function getQuizFilteredCards() {
 function showQuizSetup() {
   const area = document.getElementById('quizArea');
   if (cards.length < 2) { area.innerHTML = `<div class="empty"><div class="empty-icon">🧠</div><h3>Need more cards</h3><p>Add at least 2 cards to start a quiz.</p></div>`; return; }
-  const allTags = getAllTags(); const pool = getQuizFilteredCards(); const fc = pool.length;
+  
+  const allTags = getAllTags(); 
+  const pool = getQuizFilteredCards(); 
+  const fc = pool.length;
+  const isFilteredByFolder = selectedFolders.size > 0;
+  
   const likedCount = pool.filter(c => c.liked).length;
   const revisitCount = pool.filter(c => c.revisit).length;
   const dueCount = pool.filter(c => getStatus(c) === 'due').length;
+  
   const countOptions = [5, 10, 15, 20, 30, 50].filter(n => n <= fc);
   if (!countOptions.includes(fc) && fc > 0) countOptions.push(fc);
   countOptions.sort((a, b) => a - b);
-  if (quizCardCount > fc) quizCardCount = fc;
 
-  area.innerHTML = `<div class="quiz-setup"><h2>Start a Quiz</h2><p>Choose your quiz mode</p>
+  // Use the preferred quizCardCount if it fits the pool, otherwise default to 20 or max available
+  const currentSelection = countOptions.includes(quizCardCount) ? quizCardCount : (countOptions.includes(20) ? 20 : fc);
+
+  let filterWarning = '';
+  if (isFilteredByFolder) {
+    filterWarning = `<div style="background:var(--surface2);padding:10px;border-radius:8px;font-size:12px;color:var(--accent);margin-bottom:15px;display:flex;align-items:center;gap:8px;border-left:3px solid var(--accent);">
+      <span>📂 <b>Filter active:</b> Only showing cards from selected folders.</span>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto;padding:2px 8px;font-size:10px;background:var(--bg);" onclick="selectedFolders.clear();showQuizSetup();renderFolders();">Clear Folders</button>
+    </div>`;
+  }
+
+  area.innerHTML = `<div class="quiz-setup">
+    <h2>Start a Quiz</h2>
+    ${filterWarning}
+    <p>Choose your quiz mode</p>
     ${allTags.length > 0 ? `<div class="quiz-tag-panel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <h4>🏷 Filter by Tags <span style="font-weight:400;color:var(--text2);">(select multiple)</span></h4>
@@ -913,11 +932,11 @@ function showQuizSetup() {
       </div>
       <div class="quiz-tag-grid" id="quizTagGrid">${allTags.map(t => { const c = tagColor(t); return `<span class="quiz-tag-chip ${quizSelectedTags.has(t) ? 'selected' : ''}" style="background:${c.bg};color:${c.fg};" onclick="toggleQuizTag('${esc(t).replace(/'/g, "\\'")}')">${esc(t)}</span>`; }).join('')}</div>
       <div class="quiz-tag-count">${fc} card${fc !== 1 ? 's' : ''} ${quizSelectedTags.size > 0 ? 'matched' : 'available'}${likedCount > 0 ? ` · ${likedCount} liked` : ''} · ${dueCount} due</div>
-      ${quizSelectedTags.size > 0 ? `<span style="font-size:11px;color:var(--accent);cursor:pointer;margin-top:4px;display:inline-block;" onclick="quizSelectedTags.clear();showQuizSetup();">Clear all</span>` : ''}</div>` : ``}
+      ${quizSelectedTags.size > 0 ? `<span style="font-size:11px;color:var(--accent);cursor:pointer;margin-top:4px;display:inline-block;" onclick="quizSelectedTags.clear();showQuizSetup();">Clear all tags</span>` : ''}</div>` : ``}
     <div class="quiz-count-row">
       <span>Quiz</span>
       <select class="quiz-count-select" id="quizCountSelect" onchange="quizCardCount=parseInt(this.value)">
-        ${countOptions.map(n => `<option value="${n}" ${n === quizCardCount || (n === Math.min(20, fc) && !countOptions.includes(quizCardCount)) ? 'selected' : ''}>${n === fc ? 'All (' + n + ')' : n}</option>`).join('')}
+        ${countOptions.map(n => `<option value="${n}" ${n === currentSelection ? 'selected' : ''}>${n === fc ? 'All (' + n + ')' : n}</option>`).join('')}
       </select>
       <span>cards</span>
     </div>
