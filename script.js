@@ -629,14 +629,18 @@ function addExampleEntry() { const v = [...document.querySelectorAll('.mExampleE
 function removeExampleEntry(i) { const v = [...document.querySelectorAll('.mExampleEntry')].map(t => t.value); v.splice(i, 1); renderExampleEntries(v); }
 
 // ADD/EDIT
-function openAddModal() {
+function openAddModal(preFillWord = '') {
   editingId = null; modalTags = [];
   document.getElementById('modalTitle').textContent = 'Add New Card';
-  document.getElementById('mFront').value = '';
+  document.getElementById('mFront').value = preFillWord;
   renderFolderOptions(document.getElementById('mFolderId'), selectedFolders.size === 1 ? [...selectedFolders][0] : null);
   document.getElementById('mNote').value = ''; document.getElementById('mTagInput').value = '';
   renderBackEntries(['']); renderExampleEntries([]); renderModalTags(); renderTagSuggestions();
-  document.getElementById('modal').classList.add('show'); setTimeout(() => document.getElementById('mFront').focus(), 50);
+  document.getElementById('modal').classList.add('show'); 
+  setTimeout(() => {
+    document.getElementById('mFront').focus();
+    if (preFillWord) lookupWord(); // Auto-lookup if shared from outside
+  }, 50);
 }
 function editCard(id) {
   const c = cards.find(x => x.id === id); if (!c) return;
@@ -2127,12 +2131,38 @@ function folderDrop(e, targetFolderId) {
   } catch (err) { console.error("Drop error", err); }
 }
 
+/* --- WEB SHARE TARGET --- */
+function handleIncomingShare() {
+  const params = new URLSearchParams(window.location.search);
+  const title = params.get('title');
+  const text = params.get('text');
+  const url = params.get('url');
+
+  if (title || text || url) {
+    let word = (text || title || '').trim();
+    
+    // Simple heuristic: if it looks like a sentence/URL, maybe just grab the first word or skip
+    // But usually people share a single word highlight from Kindle/Chrome
+    if (word) {
+      // Clean up common "Source - Word" or full URLs if needed
+      // If it's just a URL, don't auto-add
+      if (word.startsWith('http')) return;
+      
+      openAddModal(word);
+      
+      // Clean up the URL so reloads don't keep opening the modal
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }
+}
+
 // async initialization
 async function initApp() {
   // Start the loading process (it now handles its own internal rendering steps)
   await load();
   migrateDecksToFolders();
   startProductivityChecker();
+  handleIncomingShare();
 }
 
 // Sidebar Helpers
