@@ -97,28 +97,35 @@
         <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="themeToggleBtn" style="padding:4px;border-radius:50%;font-size:16px;width:34px;height:34px;justify-content:center;border-color:var(--border);">🌙</button>
         <button class="btn btn-ghost btn-sm" onclick="logout()" title="Log out" style="padding:4px;border-radius:50%;font-size:16px;width:34px;height:34px;justify-content:center;border-color:var(--border);">⏻</button>
         <div class="tabs">
+          <button class="tab" onclick="switchTab('dashboard', this)">Home</button>
           <button class="tab active" onclick="switchTab('cards', this)">Cards</button>
           <button class="tab" onclick="switchTab('quiz', this)">Quiz</button>
-          <button class="tab" onclick="switchTab('import', this)">Import/Export</button>
+          <button class="tab" onclick="switchTab('import', this)">Sync</button>
         </div>
       </div>
     </div>
 
-  <!-- Top Banners -->
-  <div id="wotdBanner"></div>
-  <div id="insightBanner"></div>
+  <div class="section" id="sec-dashboard">
+    <div class="dashboard-header">
+      <h2 class="dashboard-title">Your Daily Overview</h2>
+    </div>
+    <div class="dashboard-grid">
+      <div id="wotdBanner"></div>
+      <div id="insightBanner"></div>
 
-  <div class="stats-bar">
-    <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total Cards</div></div>
-    <div class="stat-card"><div class="stat-num" id="statMastered">0</div><div class="stat-label">Mastered</div></div>
-    <div class="stat-card"><div class="stat-num" id="statStruggling">0</div><div class="stat-label">Struggling</div></div>
-    <div class="stat-card"><div class="stat-num" id="statNew">0</div><div class="stat-label">New Cards</div></div>
-    <div class="stat-card"><div class="stat-num" id="statLiked">0</div><div class="stat-label">Liked</div></div>
-    <div class="stat-card"><div class="stat-num" id="statRevisit">0</div><div class="stat-label">Revisit</div></div>
-    <div class="stat-card"><div class="stat-num" id="statQuizzes">0</div><div class="stat-label">Quizzes Done</div></div>
+      <div class="stats-bar" style="margin-bottom: 0;">
+        <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total Cards</div></div>
+        <div class="stat-card"><div class="stat-num" id="statMastered">0</div><div class="stat-label">Mastered</div></div>
+        <div class="stat-card"><div class="stat-num" id="statStruggling">0</div><div class="stat-label">Struggling</div></div>
+        <div class="stat-card"><div class="stat-num" id="statNew">0</div><div class="stat-label">New Cards</div></div>
+        <div class="stat-card"><div class="stat-num" id="statLiked">0</div><div class="stat-label">Liked</div></div>
+        <div class="stat-card"><div class="stat-num" id="statRevisit">0</div><div class="stat-label">Revisit</div></div>
+        <div class="stat-card"><div class="stat-num" id="statQuizzes">0</div><div class="stat-label">Quizzes Done</div></div>
+      </div>
+      
+      <div id="heatmapContainer"></div>
+    </div>
   </div>
-  
-  <div id="heatmapContainer"></div>
 
   <div class="section active" id="sec-cards">
     <div class="toolbar">

@@ -1535,17 +1535,22 @@ body::before {
   /* Header: replace stack with row since logo is handled by mobile-nav */
   .header {
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     padding: 10px 14px;
     margin-bottom: 20px;
-    gap: 10px;
+    gap: 8px;
     margin-left: -16px;
     margin-right: -16px;
     border-radius: 0;
   }
 
   .header-right {
-    flex-shrink: 0;
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px !important;
   }
 
   .header>.logo {
@@ -1556,20 +1561,16 @@ body::before {
 
   .tabs {
     width: 100%;
-    justify-content: center;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .tabs::-webkit-scrollbar {
-    display: none;
+    order: 10;
+    justify-content: space-between;
+    background: var(--surface2);
   }
 
   .tab {
-    padding: 8px 14px;
-    font-size: 13px;
-    white-space: nowrap;
+    flex: 1;
+    padding: 8px 4px;
+    font-size: 12px;
+    text-align: center;
   }
 
   /* Stats: 2x2 grid, smaller */
@@ -2331,6 +2332,30 @@ body::before {
   margin-bottom: 24px;
   position: relative;
   overflow: hidden;
+  animation: fadeIn 0.4s ease-out;
+}
+
+#sec-dashboard {
+  padding-top: 10px;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.dashboard-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .wotd-banner::before {
