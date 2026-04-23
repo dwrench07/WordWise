@@ -1953,7 +1953,34 @@ function startProductivityChecker() {
   }, 60000); // Check every minute
 }
 
-function renderAll() { renderFolders(); renderWotd(); renderDailyInsight(); renderCards(); renderTagFilter(); updateStats(); renderDeckOverview(); }
+function renderAll() { renderFolders(); renderWotd(); renderDailyInsight(); renderCards(); renderTagFilter(); updateStats(); renderDeckOverview(); renderDeckFilterOptions(); }
+function renderDeckFilterOptions() {
+  const select = document.getElementById('deckFilter');
+  if (!select) return;
+  const currentVal = select.value;
+  
+  let html = `<option value="all">All Decks</option>`;
+  folders.sort((a,b) => a.name.localeCompare(b.name)).forEach(f => {
+    const depth = getFolderAncestors(f.id).length;
+    const prefix = "  ".repeat(depth);
+    html += `<option value="${f.id}" ${f.id === currentVal ? 'selected' : ''}>${prefix}${f.icon || '📁'} ${esc(f.name)}</option>`;
+  });
+  select.innerHTML = html;
+}
+
+function setDeckFilter(val) {
+  selectedFolders.clear();
+  if (val !== 'all') {
+    selectedFolders.add(val);
+    // Expand parents if needed
+    const ancestors = getFolderAncestors(val);
+    ancestors.forEach(aid => {
+      const f = folders.find(x => x.id === aid);
+      if (f) f.expanded = true;
+    });
+  }
+  renderAll();
+}
 function renderDeckOverview() {
   const container = document.getElementById('deckOverview');
   if (!container) return;
