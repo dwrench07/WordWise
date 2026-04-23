@@ -2358,6 +2358,109 @@ body::before {
   gap: 20px;
 }
 
+.deck-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.deck-tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.deck-tile:hover {
+  border-color: var(--accent);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(232, 93, 38, 0.1);
+}
+
+.deck-tile-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.deck-tile-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--surface2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+}
+
+.deck-tile:hover .deck-tile-icon {
+  background: rgba(232, 93, 38, 0.08);
+  border-color: rgba(232, 93, 38, 0.2);
+  color: var(--accent);
+}
+
+.deck-tile-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin-top: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.deck-tile-stats {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.deck-mini-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.deck-mini-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.deck-mini-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--text3);
+  letter-spacing: 0.5px;
+}
+
+.deck-progress-track {
+  width: 100%;
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.deck-progress-fill {
+  height: 100%;
+  background: var(--green);
+  transition: width 0.3s;
+}
+
 .wotd-banner::before {
   content: '';
   position: absolute;

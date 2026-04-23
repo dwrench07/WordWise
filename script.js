@@ -1953,7 +1953,68 @@ function startProductivityChecker() {
   }, 60000); // Check every minute
 }
 
-function renderAll() { renderFolders(); renderWotd(); renderDailyInsight(); renderCards(); renderTagFilter(); updateStats(); }
+function renderAll() { renderFolders(); renderWotd(); renderDailyInsight(); renderCards(); renderTagFilter(); updateStats(); renderDeckOverview(); }
+function renderDeckOverview() {
+  const container = document.getElementById('deckOverview');
+  if (!container) return;
+
+  const rootFolders = getRootFolders();
+  if (rootFolders.length === 0) {
+    container.innerHTML = `<div style="grid-column: 1/-1; padding: 40px; text-align: center; background: var(--surface2); border-radius: 16px; border: 1px dashed var(--border);">
+      <div style="font-size: 32px; margin-bottom: 12px;">📂</div>
+      <h4 style="margin-bottom: 4px;">No decks found</h4>
+      <p style="font-size: 13px; color: var(--text2);">Create your first folder to start organizing cards.</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = rootFolders.map(f => {
+    const descendants = [f.id, ...getAllDescendants(f.id)];
+    const folderCards = cards.filter(c => descendants.includes(c.folderId));
+    const total = folderCards.length;
+    const mastered = folderCards.filter(c => getStatus(c) === 'mastered').length;
+    const progress = total > 0 ? Math.round((mastered / total) * 100) : 0;
+    
+    return `
+      <div class="deck-tile" onclick="gotoDeck('${f.id}')">
+        <div class="deck-tile-header">
+          <div class="deck-tile-icon">${f.icon || '📁'}</div>
+        </div>
+        <div class="deck-tile-name">${esc(f.name)}</div>
+        <div class="deck-tile-stats">
+          <div class="deck-mini-stat">
+            <span class="deck-mini-val">${total}</span>
+            <span class="deck-mini-label">Cards</span>
+          </div>
+          <div class="deck-mini-stat">
+            <span class="deck-mini-val">${progress}%</span>
+            <span class="deck-mini-label">Mastered</span>
+          </div>
+        </div>
+        <div class="deck-progress-track">
+          <div class="deck-progress-fill" style="width: ${progress}%"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function gotoDeck(folderId) {
+  selectedFolders.clear();
+  selectedFolders.add(folderId);
+  
+  // Update sidebar state (expand parents)
+  const ancestors = getFolderAncestors(folderId);
+  ancestors.forEach(aid => {
+    const f = folders.find(x => x.id === aid);
+    if (f) f.expanded = true;
+  });
+  
+  const cardsTabBtn = document.querySelector('.tab[onclick*="\'cards\'"]');
+  if (cardsTabBtn) switchTab('cards', cardsTabBtn);
+  renderAll();
+}
+
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeFolderModal(); } });
 
 function migrateDecksToFolders() {
