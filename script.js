@@ -27,6 +27,8 @@ let totalStudySeconds = 0;
 let currentCardStartTime = 0;
 let dailyQuests = [];
 let questDate = '';
+let notificationsEnabled = false;
+let lastNotifDate = '';
 const STORAGE_KEY = 'wordwise_cards_v5';
 const QUIZ_KEY = 'wordwise_quizzes_v5';
 
@@ -142,6 +144,8 @@ function save(immediate = false) {
       await localforage.setItem('wordwise_tss', totalStudySeconds.toString());
       await localforage.setItem('wordwise_quests', JSON.stringify(dailyQuests));
       await localforage.setItem('wordwise_questdate', questDate);
+      await localforage.setItem('wordwise_notifs', notificationsEnabled ? 'true' : 'false');
+      await localforage.setItem('wordwise_lnd', lastNotifDate);
     } catch (e) { console.error("Failed to save to local cache:", e); }
 
     // ── MongoDB sync (when logged in) ────────────────────────────────────────
@@ -207,6 +211,8 @@ async function loadFromLocalCache() {
   const tss      = await localforage.getItem('wordwise_tss');      if (tss)      totalStudySeconds = parseInt(tss);
   const dq       = await localforage.getItem('wordwise_quests');   if (dq)       dailyQuests   = typeof dq === 'string' ? JSON.parse(dq) : dq;
   const qd       = await localforage.getItem('wordwise_questdate');if (qd)       questDate     = qd;
+  const n = await localforage.getItem('wordwise_notifs'); if (n) { notificationsEnabled = (n === 'true'); updateNotifUI(); }
+  const lnd = await localforage.getItem('wordwise_lnd'); if (lnd) lastNotifDate = lnd;
   const th       = await localforage.getItem('wordwise_theme');
   if (th) { currentTheme = th; if (currentTheme === 'dark') document.documentElement.dataset.theme = 'dark'; updateThemeBtn(); }
 }
@@ -1846,6 +1852,107 @@ function toggleFolderSelection(id, e) {
   // Sidebar no longer auto-closes on folder selection per user request
 }
 
+/* --- NOTIFICATIONS & PRODUCTIVITY --- */
+async function toggleNotifications() {
+  if (!notificationsEnabled) {
+    if (Notification.permission === 'default') {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        notificationsEnabled = true;
+        showToast("Notifications enabled!", "toast-quest");
+        sendNotification("WordWise Reminders Active", { body: "We'll notify you when cards are ready for review." });
+      } else {
+        showToast("Notification permission denied", "toast-crit");
+      }
+    } else if (Notification.permission === 'granted') {
+      notificationsEnabled = true;
+      showToast("Notifications enabled!", "toast-quest");
+    } else {
+      alert("Notifications are blocked by your browser. Please enable them in site settings.");
+    }
+  } else {
+    notificationsEnabled = false;
+    showToast("Notifications disabled", "toast-crit");
+  }
+  save(true);
+  updateNotifUI();
+}
+
+function updateNotifUI() {
+  const btn = document.getElementById('notifToggleBtn');
+  if (!btn) return;
+  if (notificationsEnabled) {
+    btn.innerHTML = '🔕 Disable Reminders';
+    btn.classList.add('btn-active');
+    btn.style.color = 'var(--text2)';
+  } else {
+    btn.innerHTML = '🔔 Enable Reminders';
+    btn.classList.remove('btn-active');
+    btn.style.color = '';
+  }
+}
+
+function sendNotification(title, options) {
+  if (!notificationsEnabled || Notification.permission !== 'granted') return;
+  
+  // Only send if the page is not visible, or if it's an important system event
+  if (document.visibilityState === 'visible' && !options.force) return;
+
+  const defaultOptions = {
+    icon: '/icons/icon-192.svg',
+    badge: '/icons/icon-192.svg',
+    tag: 'wordwise-reminder'
+  };
+
+  try {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(title, { ...defaultOptions, ...options });
+      });
+    } else {
+      new Notification(title, { ...defaultOptions, ...options });
+    }
+  } catch (e) {
+    console.warn("Notification failed:", e);
+  }
+}
+
+// Background checker for productivity
+function startProductivityChecker() {
+  setInterval(() => {
+    if (!notificationsEnabled) return;
+    
+    const today = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    
+    // 1. Check for Due Cards (once every 4 hours if not Study Session)
+    const dueCount = cards.filter(c => getStatus(c) === 'due').length;
+    if (dueCount > 5) {
+      const lastCheck = localStorage.getItem('last_due_notif') || '0';
+      if (Date.now() - parseInt(lastCheck) > 4 * 60 * 60 * 1000) { // 4 hours
+        sendNotification("Study Review Ready", {
+          body: `You have ${dueCount} cards waiting for review. Consistency is key!`,
+          tag: 'due-reminder'
+        });
+        localStorage.setItem('last_due_notif', Date.now().toString());
+      }
+    }
+
+    // 2. Evening Streak Protection (at 8 PM)
+    if (now.getHours() >= 20 && lastStudyDate !== today) {
+      const lastStreakNotif = localStorage.getItem('last_streak_notif') || '';
+      if (lastStreakNotif !== today) {
+        sendNotification("Protect Your Streak! 🔥", {
+          body: `You haven't studied today yet. Keep your ${userStreak}-day streak alive!`,
+          tag: 'streak-reminder',
+          force: true
+        });
+        localStorage.setItem('last_streak_notif', today);
+      }
+    }
+  }, 60000); // Check every minute
+}
+
 function renderAll() { renderFolders(); renderWotd(); renderDailyInsight(); renderCards(); renderTagFilter(); updateStats(); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeFolderModal(); } });
 
@@ -1924,6 +2031,7 @@ async function initApp() {
   await load();
   migrateDecksToFolders();
   renderAll();
+  startProductivityChecker();
 }
 
 // Sidebar Helpers
