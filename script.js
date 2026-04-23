@@ -218,46 +218,54 @@ async function loadFromLocalCache() {
 }
 
 async function load() {
-  try {
-    if (isLoggedIn()) {
-      // ── Primary: load from MongoDB ────────────────────────────────────────
-      try {
-        const [serverCards, serverFolders, stats] = await Promise.all([
-          api.cards.getAll(),
-          api.folders.getAll(),
-          api.user.getStats(),
-        ]);
+  // ── Step 1: Load from local cache immediately for instant UI ────────────
+  await loadFromLocalCache();
+  normalizeCards(cards);
+  generateDailyQuests();
+  updateGamificationUI();
+  renderAll(); // Early render
 
-        cards   = serverCards;
-        folders = serverFolders.map(f => ({ ...f, id: f.localId || f.id }));
+  // ── Step 2: Background sync if logged in ───────────────────────────────
+  if (isLoggedIn()) {
+    try {
+      console.log("Background syncing with cloud...");
+      const [serverCards, serverFolders, stats] = await Promise.all([
+        api.cards.getAll(),
+        api.folders.getAll(),
+        api.user.getStats(),
+      ]);
 
-        userXP            = stats.xp            ?? 0;
-        userStreak        = stats.streak         ?? 0;
-        userFreezes       = stats.freezes        ?? 0;
-        totalStudySeconds = stats.totalStudySeconds ?? 0;
-        totalQuizzes      = stats.quizzes        ?? 0;
-        lastStudyDate     = stats.lastStudyDate  ?? '';
-        studyHistory      = stats.studyHistory   ? Object.fromEntries(Object.entries(stats.studyHistory)) : {};
-        dailyQuests       = stats.dailyQuests    ?? [];
-        currentTheme      = stats.theme          ?? 'light';
-
-        if (currentTheme === 'dark') document.documentElement.dataset.theme = 'dark';
-        updateThemeBtn();
-      } catch (e) {
-        console.warn("Cloud load failed, falling back to local cache:", e.message);
-        await loadFromLocalCache();
+      if (serverCards && serverCards.length > 0) {
+        cards = serverCards;
+        normalizeCards(cards);
       }
-    } else {
-      // ── Fallback: local IndexedDB (not logged in / offline) ───────────────
-      await loadFromLocalCache();
-    }
+      
+      if (serverFolders) {
+        folders = serverFolders.map(f => ({ ...f, id: f.localId || f.id }));
+      }
 
-    normalizeCards(cards);
-    generateDailyQuests();
-    updateGamificationUI();
-  } catch (e) {
-    console.error("Failed to load WordWise data:", e);
-    cards = [];
+      if (stats) {
+        userXP = stats.xp ?? userXP;
+        userStreak = stats.streak ?? userStreak;
+        userFreezes = stats.freezes ?? userFreezes;
+        totalStudySeconds = stats.totalStudySeconds ?? totalStudySeconds;
+        totalQuizzes = stats.quizzes ?? totalQuizzes;
+        lastStudyDate = stats.lastStudyDate ?? lastStudyDate;
+        studyHistory = stats.studyHistory ? Object.fromEntries(Object.entries(stats.studyHistory)) : studyHistory;
+        dailyQuests = stats.dailyQuests ?? dailyQuests;
+        if (stats.theme) {
+          currentTheme = stats.theme;
+          document.documentElement.dataset.theme = currentTheme === 'dark' ? 'dark' : '';
+          updateThemeBtn();
+        }
+      }
+
+      console.log("Cloud sync complete. Re-rendering...");
+      renderAll();
+      save(true); // Persist successfully synced data locally
+    } catch (e) {
+      console.warn("Background cloud sync skipped/failed:", e.message);
+    }
   }
 }
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
@@ -2121,9 +2129,9 @@ function folderDrop(e, targetFolderId) {
 
 // async initialization
 async function initApp() {
+  // Start the loading process (it now handles its own internal rendering steps)
   await load();
   migrateDecksToFolders();
-  renderAll();
   startProductivityChecker();
 }
 
