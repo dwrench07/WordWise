@@ -131,8 +131,7 @@ function save(immediate = false) {
   const performSave = async () => {
     // ── Local cache (offline fallback) ──────────────────────────────────────
     try {
-      // DEBUG: cards local cache disabled — verifying DB writes. Re-enable to restore offline support.
-      // await localforage.setItem(STORAGE_KEY, JSON.stringify(cards));
+      await localforage.setItem(STORAGE_KEY, JSON.stringify(cards));
       await localforage.setItem(QUIZ_KEY, totalQuizzes.toString());
       await localforage.setItem('wordwise_folders_v5', JSON.stringify(folders));
       await localforage.setItem('wordwise_folderSort_v5', folderSortMode);
@@ -187,15 +186,13 @@ function normalizeCards(rawCards) {
 }
 
 async function loadFromLocalCache() {
-  // DEBUG: cards local cache load disabled — forcing DB load to verify cloud writes.
-  // const d = await localforage.getItem(STORAGE_KEY);
-  // if (d) {
-  //   cards = typeof d === 'string' ? JSON.parse(d) : d;
-  // } else {
-  //   const v4 = await localforage.getItem('wordwise_cards_v4');
-  //   if (v4) { cards = typeof v4 === 'string' ? JSON.parse(v4) : v4; }
-  // }
-  cards = [];
+  const d = await localforage.getItem(STORAGE_KEY);
+  if (d) {
+    cards = typeof d === 'string' ? JSON.parse(d) : d;
+  } else {
+    const v4 = await localforage.getItem('wordwise_cards_v4');
+    if (v4) { cards = typeof v4 === 'string' ? JSON.parse(v4) : v4; }
+  }
   const f = await localforage.getItem('wordwise_folders_v5');
   if (f) {
     folders = typeof f === 'string' ? JSON.parse(f) : f;
