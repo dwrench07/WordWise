@@ -371,7 +371,7 @@ function switchTab(name, el) {
     window.scrollTo({ top: lastCardsScroll, behavior: 'instant' });
   }
   if (name === 'quiz') {
-    showQuizSetup();
+    showQuizEntry();
     setTimeout(() => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }, 100);
@@ -879,6 +879,82 @@ function cleanupDuplicateFolders(silent = false) {
 // QUIZ
 let quizCards = [], quizIdx = 0, quizCorrect = 0, quizMode = '';
 let quizSelectedTags = new Set();
+const QUIZ_SESSION_KEY = 'wordwise_quiz_session_v1';
+
+function saveQuizSession() {
+  if (!quizCards.length || quizIdx >= quizCards.length) { clearQuizSession(); return; }
+  localforage.setItem(QUIZ_SESSION_KEY, {
+    mode: quizMode,
+    cardIds: quizCards.map(c => c.id),
+    idx: quizIdx,
+    correct: quizCorrect,
+    selectedTags: [...quizSelectedTags],
+  }).catch(e => console.error('Failed to save quiz session', e));
+}
+
+function clearQuizSession() {
+  localforage.removeItem(QUIZ_SESSION_KEY).catch(() => {});
+}
+
+async function loadQuizSession() {
+  try { return await localforage.getItem(QUIZ_SESSION_KEY); } catch { return null; }
+}
+
+async function showQuizEntry() {
+  const session = await loadQuizSession();
+  if (session && Array.isArray(session.cardIds) && session.idx < session.cardIds.length) {
+    showQuizResumePrompt(session);
+  } else {
+    if (session) clearQuizSession();
+    showQuizSetup();
+  }
+}
+
+function showQuizResumePrompt(session) {
+  const area = document.getElementById('quizArea');
+  const total = session.cardIds.length;
+  const remaining = Math.max(total - session.idx, 0);
+  const modeLabel = ({ flip: 'Flashcard Flip', mc: 'Multiple Choice', type: 'Type Answer', due: 'Due Cards', liked: 'Liked Only', revisit: 'Manual Revisit' })[session.mode] || session.mode;
+  area.innerHTML = `<div class="quiz-setup">
+    <h2>Resume Quiz?</h2>
+    <p>You have a <b>${esc(modeLabel)}</b> quiz in progress — ${session.idx} of ${total} done, ${remaining} card${remaining !== 1 ? 's' : ''} left.</p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="resumeQuizFromStorage()">▶ Resume</button>
+      <button class="btn btn-ghost" onclick="discardQuizSession()">Start Over</button>
+    </div>
+  </div>`;
+}
+
+async function resumeQuizFromStorage() {
+  const session = await loadQuizSession();
+  if (!session) { showQuizSetup(); return; }
+  const idMap = new Map(cards.map(c => [c.id, c]));
+  const reconstructed = [];
+  let newIdx = session.idx;
+  for (let i = 0; i < session.cardIds.length; i++) {
+    const c = idMap.get(session.cardIds[i]);
+    if (c) reconstructed.push(c);
+    else if (i < session.idx) newIdx--;
+  }
+  if (reconstructed.length === 0 || newIdx >= reconstructed.length) {
+    clearQuizSession();
+    showQuizSetup();
+    return;
+  }
+  quizCards = reconstructed;
+  quizMode = session.mode;
+  quizIdx = Math.max(0, newIdx);
+  quizCorrect = session.correct || 0;
+  quizSelectedTags = new Set(session.selectedTags || []);
+  isAutoPlaying = false;
+  stopAutoPlayTimer();
+  showQuizQuestion();
+}
+
+async function discardQuizSession() {
+  await localforage.removeItem(QUIZ_SESSION_KEY).catch(() => {});
+  showQuizSetup();
+}
 
 function filterQuizTags(query) {
   const q = query.toLowerCase();
@@ -982,6 +1058,7 @@ function startQuiz(mode) {
   else { quizCards = shuffle(pool); }
   if (quizCards.length < 2) { alert('Need at least 2 cards matching criteria.'); return; }
   quizCards = quizCards.slice(0, Math.min(count, quizCards.length));
+  saveQuizSession();
   showQuizQuestion();
 }
 
@@ -1059,6 +1136,7 @@ function prevAutoCard() {
     stopAutoPlayTimer();
     // Don't modify actual card SM2 if going backwards, just navigation
     quizIdx--;
+    saveQuizSession();
     showQuizQuestion();
   }
 }
@@ -1155,7 +1233,7 @@ function gradeQuiz(quality) { // quality 0-5
     updateQuests('earn_xp', earnedXP);
     recordHeatmapActivity();
   }
-  save(true); quizIdx++; setTimeout(showQuizQuestion, quality >= 3 ? 400 : 800);
+  save(true); quizIdx++; saveQuizSession(); setTimeout(showQuizQuestion, quality >= 3 ? 400 : 800);
 }
 
 // Global Keyboard Shortcuts for Quiz
@@ -1195,6 +1273,7 @@ document.addEventListener('keydown', function (e) {
 function showResults() {
   stopAutoPlayTimer();
   isAutoPlaying = false;
+  clearQuizSession();
   const pct = quizCards.length ? Math.round(quizCorrect / quizCards.length * 100) : 0;
   const tagInfo = quizSelectedTags.size > 0 ? `<div style="margin-bottom:12px;">${[...quizSelectedTags].map(t => tagHTML(t)).join(' ')}</div>` : '';
   document.getElementById('quizArea').innerHTML = `<div class="results"><h2>Quiz Complete!</h2>${tagInfo}<div class="score">${pct}%</div>
