@@ -1084,6 +1084,21 @@ body::before {
 }
 
 /* Quiz */
+.focus-overlay {
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+.focus-text {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text2);
+  letter-spacing: 0.3px;
+  text-align: center;
+}
+
 .quiz-card {
   background: var(--surface);
   border: 1px solid var(--border);
