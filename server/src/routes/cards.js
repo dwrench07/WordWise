@@ -35,6 +35,7 @@ router.post('/bulk', async (req, res) => {
   const currentIds = cards.map(c => c.localId || c.id);
   await Card.deleteMany({ userId: req.userId, localId: { $nin: currentIds } });
 
+  const result = ops.length ? await Card.bulkWrite(ops) : { upsertedCount: 0, modifiedCount: 0 };
   res.json({ upserted: result.upsertedCount, modified: result.modifiedCount });
 });
 
