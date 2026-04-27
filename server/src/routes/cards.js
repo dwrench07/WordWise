@@ -32,8 +32,12 @@ router.post('/bulk', async (req, res) => {
   }));
 
   // Sync state: Delete cards that were removed on the client
+  // CRITICAL FIX: Only perform deletion if we actually have some cards in the payload 
+  // to avoid wiping everything if the client state is accidentally empty (e.g. failed load).
   const currentIds = cards.map(c => c.localId || c.id);
-  await Card.deleteMany({ userId: req.userId, localId: { $nin: currentIds } });
+  if (currentIds.length > 0) {
+    await Card.deleteMany({ userId: req.userId, localId: { $nin: currentIds } });
+  }
 
   const result = ops.length ? await Card.bulkWrite(ops) : { upsertedCount: 0, modifiedCount: 0 };
   res.json({ upserted: result.upsertedCount, modified: result.modifiedCount });

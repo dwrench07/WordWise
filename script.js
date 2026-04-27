@@ -267,6 +267,24 @@ async function load() {
       console.warn("Background cloud sync skipped/failed:", e.message);
     }
   }
+
+  // ── Step 3: Local Fallback (if still empty) ──────────────────────────────
+  if (cards.length === 0) {
+    try {
+      console.log("App empty. Attempting fallback to Topics/data.json...");
+      const res = await fetch('Topics/data.json');
+      if (res.ok) {
+        const fallbackData = await res.json();
+        if (Array.isArray(fallbackData) && fallbackData.length > 0) {
+          console.log(`Found ${fallbackData.length} cards in Topics/data.json. Auto-importing...`);
+          importCards(fallbackData); // Use existing import logic
+          save(true);
+        }
+      }
+    } catch (e) {
+      console.log("No local data.json fallback found or fetch blocked.");
+    }
+  }
 }
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
