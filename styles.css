@@ -16,8 +16,8 @@
   --cyan: #0891b2;
   --radius: 12px;
   --tag-bg-l: 50%;
-  --tag-bg-a: 0.15;
-  --tag-fg-l: 35%;
+  --tag-bg-a: 0.18;
+  --tag-fg-l: 25%;
 }
 
 [data-theme="dark"] {
@@ -37,8 +37,8 @@
   --purple: #bb9af7;
   --cyan: #7dcfff;
   --tag-bg-l: 25%;
-  --tag-bg-a: 0.3;
-  --tag-fg-l: 80%;
+  --tag-bg-a: 0.35;
+  --tag-fg-l: 92%;
 }
 
 * {
