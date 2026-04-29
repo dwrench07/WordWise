@@ -302,8 +302,16 @@ function calculateFSRSRating(quality) {
 function calculateFSRS(card, quality) {
   if (!window.fsrs_api) return; // Wait for load
   
-  if (!card.fsrs) {
+  if (!card.fsrs || !card.fsrs.due) {
+    const prev = card.fsrs || {};
     card.fsrs = window.fsrs_api.createEmptyCard(new Date(card.created || Date.now()));
+    Object.assign(card.fsrs, {
+      stability: prev.stability ?? card.fsrs.stability,
+      difficulty: prev.difficulty ?? card.fsrs.difficulty,
+      reps: prev.reps ?? card.fsrs.reps,
+      lapses: prev.lapses ?? card.fsrs.lapses,
+      state: prev.state ?? card.fsrs.state,
+    });
     // Fallback migration: If card had previous repetitions, emulate stability
     if (card.interval && card.interval > 0) {
       card.fsrs.stability = card.interval;
