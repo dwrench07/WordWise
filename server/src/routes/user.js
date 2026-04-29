@@ -18,7 +18,7 @@ router.get('/stats', async (req, res) => {
 router.put('/stats', async (req, res) => {
   const allowed = [
     'xp', 'streak', 'freezes', 'totalStudySeconds',
-    'quizzes', 'lastStudyDate', 'studyHistory', 'dailyQuests', 'theme',
+    'quizzes', 'lastStudyDate', 'studyHistory', 'dailyQuests', 'theme', 'quizHistory',
   ];
 
   const update = {};

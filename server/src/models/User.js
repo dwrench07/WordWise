@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema(
     },
     dailyQuests: { type: mongoose.Schema.Types.Mixed, default: null },
     theme: { type: String, default: 'dark' },
+    quizHistory: { type: mongoose.Schema.Types.Mixed, default: [] },
   },
   { timestamps: true }
 );

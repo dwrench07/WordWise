@@ -160,6 +160,7 @@ function save(immediate = false) {
           xp: userXP, streak: userStreak, freezes: userFreezes,
           totalStudySeconds, quizzes: totalQuizzes,
           lastStudyDate, studyHistory, dailyQuests, theme: currentTheme,
+          quizHistory,
         }),
       ]);
     } catch (e) { console.warn("Cloud sync failed (offline?):", e.message); }
@@ -203,6 +204,7 @@ async function loadFromLocalCache() {
   const fs = await localforage.getItem('wordwise_folderSort_v5') || await localforage.getItem('wordwise_folderSort_v4');
   if (fs) folderSortMode = fs;
   const q  = await localforage.getItem(QUIZ_KEY); totalQuizzes = parseInt(q || '0');
+  await loadQuizHistory();
   const xp = await localforage.getItem('wordwise_xp'); if (xp) userXP = parseInt(xp);
   const streak   = await localforage.getItem('wordwise_streak');   if (streak)   userStreak   = parseInt(streak);
   const freezes  = await localforage.getItem('wordwise_freezes');  if (freezes)  userFreezes  = parseInt(freezes);
@@ -253,6 +255,13 @@ async function load() {
         lastStudyDate = stats.lastStudyDate ?? lastStudyDate;
         studyHistory = stats.studyHistory ? Object.fromEntries(Object.entries(stats.studyHistory)) : studyHistory;
         dailyQuests = stats.dailyQuests ?? dailyQuests;
+        if (Array.isArray(stats.quizHistory)) {
+          const merged = new Map();
+          [...stats.quizHistory, ...quizHistory].forEach(s => {
+            if (s && s.id) merged.set(s.id, s);
+          });
+          quizHistory = [...merged.values()].sort((a, b) => (b.date || 0) - (a.date || 0));
+        }
         if (stats.theme) {
           currentTheme = stats.theme;
           document.documentElement.dataset.theme = currentTheme === 'dark' ? 'dark' : '';
@@ -401,6 +410,9 @@ function switchTab(name, el) {
     setTimeout(() => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }, 100);
+  }
+  if (name === 'history') {
+    renderHistoryList();
   }
   if (name === 'import') {
     document.getElementById('exportArea').value = JSON.stringify(
@@ -906,6 +918,42 @@ function cleanupDuplicateFolders(silent = false) {
 let quizCards = [], quizIdx = 0, quizCorrect = 0, quizMode = '';
 let quizSelectedTags = new Set();
 const QUIZ_SESSION_KEY = 'wordwise_quiz_session_v1';
+const QUIZ_HISTORY_KEY = 'wordwise_quiz_history_v1';
+let quizHistory = [];
+let currentQuizSessionId = null;
+let currentQuizGrades = [];
+
+const GRADE_LABELS = { 0: 'Again', 3: 'Hard', 4: 'Good', 5: 'Easy' };
+const GRADE_COLORS = { 0: 'var(--red)', 3: 'var(--orange)', 4: 'var(--green)', 5: 'var(--blue)' };
+
+async function loadQuizHistory() {
+  try {
+    const data = await localforage.getItem(QUIZ_HISTORY_KEY);
+    quizHistory = data ? JSON.parse(data) : [];
+  } catch { quizHistory = []; }
+}
+
+async function persistQuizHistory() {
+  try { await localforage.setItem(QUIZ_HISTORY_KEY, JSON.stringify(quizHistory)); }
+  catch (e) { console.error('Failed to save quiz history', e); }
+  save();
+}
+
+function upsertCurrentQuizHistory(completed = false) {
+  if (!currentQuizSessionId) return;
+  const idx = quizHistory.findIndex(s => s.id === currentQuizSessionId);
+  const entry = {
+    id: currentQuizSessionId,
+    date: idx >= 0 ? quizHistory[idx].date : Date.now(),
+    mode: quizMode,
+    total: quizCards.length,
+    grades: currentQuizGrades.slice(),
+    completed,
+  };
+  if (idx >= 0) quizHistory[idx] = entry;
+  else quizHistory.unshift(entry);
+  persistQuizHistory();
+}
 
 function saveQuizSession() {
   if (!quizCards.length || quizIdx >= quizCards.length) { clearQuizSession(); return; }
@@ -1084,6 +1132,8 @@ function startQuiz(mode) {
   else { quizCards = shuffle(pool); }
   if (quizCards.length < 2) { alert('Need at least 2 cards matching criteria.'); return; }
   quizCards = quizCards.slice(0, Math.min(count, quizCards.length));
+  currentQuizSessionId = 'qs_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  currentQuizGrades = [];
   saveQuizSession();
   showQuizQuestion();
 }
@@ -1259,6 +1309,16 @@ function gradeQuiz(quality) { // quality 0-5
     updateQuests('earn_xp', earnedXP);
     recordHeatmapActivity();
   }
+  if (real) {
+    currentQuizGrades.push({
+      cardId: real.id,
+      front: real.front,
+      back: Array.isArray(real.back) ? real.back.slice() : [real.back],
+      grade: quality,
+      timestamp: Date.now(),
+    });
+    upsertCurrentQuizHistory(false);
+  }
   save(true); quizIdx++; saveQuizSession(); setTimeout(showQuizQuestion, quality >= 3 ? 400 : 800);
 }
 
@@ -1299,6 +1359,9 @@ document.addEventListener('keydown', function (e) {
 function showResults() {
   stopAutoPlayTimer();
   isAutoPlaying = false;
+  upsertCurrentQuizHistory(true);
+  currentQuizSessionId = null;
+  currentQuizGrades = [];
   clearQuizSession();
   const pct = quizCards.length ? Math.round(quizCorrect / quizCards.length * 100) : 0;
   const tagInfo = quizSelectedTags.size > 0 ? `<div style="margin-bottom:12px;">${[...quizSelectedTags].map(t => tagHTML(t)).join(' ')}</div>` : '';
@@ -2307,3 +2370,100 @@ function closeSidebar() {
     showAuthScreen();
   }
 })();
+
+// ── Quiz History UI ─────────────────────────────────────────────────────────
+function formatHistoryDate(ts) {
+  const d = new Date(ts);
+  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function renderHistoryList() {
+  const area = document.getElementById('historyArea');
+  if (!area) return;
+  if (!quizHistory.length) {
+    area.innerHTML = `<div class="quiz-setup"><h2>Quiz History</h2><p style="color:var(--text2);">No quiz sessions yet. Take a quiz to see it here.</p></div>`;
+    return;
+  }
+  const rows = quizHistory.map(s => {
+    const missed = s.grades.filter(g => g.grade < 5).length;
+    const easy = s.grades.filter(g => g.grade === 5).length;
+    const modeLabel = ({ flip: 'Flashcard', mc: 'Multiple Choice', type: 'Type', due: 'Due', liked: 'Liked', revisit: 'Revisit' })[s.mode] || s.mode;
+    const status = s.completed ? '' : `<span style="color:var(--text3);font-size:12px;">· in progress</span>`;
+    return `<div class="history-row" onclick="showHistorySession('${s.id}')" style="padding:14px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+      <div>
+        <div style="font-weight:600;">${esc(modeLabel)} · ${s.grades.length}/${s.total} answered ${status}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px;">${formatHistoryDate(s.date)}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="background:var(--blue);color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;">${easy} easy</span>
+        <span style="background:var(--red);color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;">${missed} to revisit</span>
+      </div>
+    </div>`;
+  }).join('');
+  area.innerHTML = `<div style="max-width:760px;margin:0 auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 style="margin:0;">Quiz History</h2>
+      <button class="btn btn-ghost btn-sm" onclick="clearAllHistory()">Clear All</button>
+    </div>
+    ${rows}
+  </div>`;
+}
+
+function showHistorySession(id) {
+  const session = quizHistory.find(s => s.id === id);
+  const area = document.getElementById('historyArea');
+  if (!session || !area) return;
+  const modeLabel = ({ flip: 'Flashcard', mc: 'Multiple Choice', type: 'Type', due: 'Due', liked: 'Liked', revisit: 'Revisit' })[session.mode] || session.mode;
+  const missed = session.grades.filter(g => g.grade < 5);
+  const items = session.grades.map((g, i) => {
+    const label = GRADE_LABELS[g.grade] ?? `q${g.grade}`;
+    const color = GRADE_COLORS[g.grade] ?? 'var(--text2)';
+    const highlight = g.grade < 5 ? 'background:var(--surface2);' : '';
+    const backHtml = (g.back || []).map(b => esc(b)).join(' · ');
+    return `<div style="padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;${highlight}">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+        <div>
+          <div style="font-weight:600;">${i + 1}. ${esc(g.front)}</div>
+          <div style="color:var(--text2);font-size:13px;margin-top:4px;">${backHtml}</div>
+        </div>
+        <span style="background:${color};color:#fff;padding:3px 10px;border-radius:10px;font-size:12px;flex-shrink:0;">${label}</span>
+      </div>
+    </div>`;
+  }).join('');
+  const missedBtn = missed.length >= 2
+    ? `<button class="btn btn-primary" onclick="quizFromHistory('${id}')">Quiz me on ${missed.length} missed</button>`
+    : (missed.length === 1 ? `<button class="btn btn-primary" disabled title="Need at least 2">1 missed (need 2+)</button>` : '');
+  area.innerHTML = `<div style="max-width:760px;margin:0 auto;">
+    <button class="btn btn-ghost btn-sm" onclick="renderHistoryList()" style="margin-bottom:12px;">← Back</button>
+    <h2 style="margin:0 0 4px;">${esc(modeLabel)} Quiz</h2>
+    <div style="color:var(--text2);font-size:13px;margin-bottom:16px;">${formatHistoryDate(session.date)} · ${session.grades.length}/${session.total} answered · ${missed.length} not Easy</div>
+    <div style="margin-bottom:16px;">${missedBtn}</div>
+    ${items}
+  </div>`;
+}
+
+function quizFromHistory(id) {
+  const session = quizHistory.find(s => s.id === id);
+  if (!session) return;
+  const missedIds = session.grades.filter(g => g.grade < 5).map(g => g.cardId);
+  const idMap = new Map(cards.map(c => [c.id, c]));
+  const pool = missedIds.map(cid => idMap.get(cid)).filter(Boolean);
+  if (pool.length < 2) { alert('Not enough missed cards still available.'); return; }
+  quizMode = session.mode === 'mc' || session.mode === 'type' ? session.mode : 'flip';
+  quizCards = shuffle(pool);
+  quizIdx = 0; quizCorrect = 0;
+  isAutoPlaying = false; stopAutoPlayTimer();
+  currentQuizSessionId = 'qs_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  currentQuizGrades = [];
+  const quizTab = [...document.querySelectorAll('.tab')].find(t => t.textContent.trim() === 'Quiz');
+  if (quizTab) switchTab('quiz', quizTab);
+  saveQuizSession();
+  showQuizQuestion();
+}
+
+function clearAllHistory() {
+  if (!confirm('Delete all quiz history? This cannot be undone.')) return;
+  quizHistory = [];
+  persistQuizHistory();
+  renderHistoryList();
+}
