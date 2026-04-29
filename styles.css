@@ -17,7 +17,7 @@
   --radius: 12px;
   --tag-bg-l: 50%;
   --tag-bg-a: 0.2;
-  --tag-fg-l: 18%;
+  --tag-fg-l: 30%;
 }
 
 [data-theme="dark"] {

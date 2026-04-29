@@ -503,7 +503,7 @@ function getFilteredCards() {
 
 function renderCardHTML(c) {
   const s = getStatus(c); const isExp = expandedCards.has(c.id);
-  const tagsHtml = (c.tags || []).map(t => tagHTML(t, true)).join('');
+  const tagsHtml = (c.tags || []).map(t => tagHTML(t)).join('');
   const deckHtml = c.deck ? `<span class="deck-tag" style="font-size:10px;padding:2px 8px;">${esc(c.deck)}</span>` : '';
   const fb = firstBack(c); const fbPlain = stripMarkdown(fb); const preview = fbPlain.length > 80 ? fbPlain.substring(0, 80) + '…' : fbPlain;
   const mc = c.back.length > 1 ? `<span style="font-size:10px;color:var(--text3);font-weight:600;margin-left:4px;">${c.back.length} meanings</span>` : '';
