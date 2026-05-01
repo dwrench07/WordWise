@@ -31,12 +31,22 @@ router.post('/bulk', async (req, res) => {
     },
   }));
 
-  // Sync state: Delete cards that were removed on the client
-  // CRITICAL FIX: Only perform deletion if we actually have some cards in the payload 
-  // to avoid wiping everything if the client state is accidentally empty (e.g. failed load).
+  // Sync state: Delete cards that were removed on the client.
+  // Opt-in only via ?prune=true, AND require that the payload isn't suspiciously
+  // smaller than what's on the server — prevents a stale client from wiping cards
+  // that exist on the server but not in the (possibly outdated) local cache.
   const currentIds = cards.map(c => c.localId || c.id);
-  if (currentIds.length > 0) {
-    await Card.deleteMany({ userId: req.userId, localId: { $nin: currentIds } });
+  if (req.query.prune === 'true' && currentIds.length > 0) {
+    const serverCount = await Card.countDocuments({ userId: req.userId });
+    // Refuse to prune if the payload would delete more than 10% of server cards
+    // (or more than 5 cards in absolute terms for small libraries).
+    const wouldDelete = serverCount - currentIds.length;
+    const safeThreshold = Math.max(5, Math.ceil(serverCount * 0.1));
+    if (wouldDelete > safeThreshold) {
+      console.warn(`Refusing prune for user ${req.userId}: would delete ${wouldDelete} cards (server=${serverCount}, payload=${currentIds.length})`);
+    } else {
+      await Card.deleteMany({ userId: req.userId, localId: { $nin: currentIds } });
+    }
   }
 
   const result = ops.length ? await Card.bulkWrite(ops) : { upsertedCount: 0, modifiedCount: 0 };

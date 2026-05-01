@@ -14,6 +14,7 @@ let expandedCards = new Set();
 let quizCardCount = 20;
 let currentDeckFilter = 'all';
 let saveTimer = null;
+let cloudSyncComplete = false; // becomes true after initial cloud GET succeeds; gates save() pushes to prevent stale-cache wipes
 let isAutoPlaying = false;
 let autoPlayInterval = 5; // seconds
 let autoPlayTimer = null;
@@ -150,6 +151,10 @@ function save(immediate = false) {
 
     // ── MongoDB sync (when logged in) ────────────────────────────────────────
     if (!isLoggedIn()) return;
+    if (!cloudSyncComplete) {
+      console.warn("Skipping cloud push: initial cloud sync hasn't completed yet (prevents stale-cache overwrite).");
+      return;
+    }
     try {
       const cardPayload = cards.map(c => ({ ...c, localId: c.id }));
       const folderPayload = folders.map(f => ({ ...f, localId: f.id }));
@@ -270,6 +275,7 @@ async function load() {
       }
 
       console.log("Cloud sync complete. Re-rendering...");
+      cloudSyncComplete = true; // safe to push from now on
       renderAll();
       save(true); // Persist successfully synced data locally
     } catch (e) {
