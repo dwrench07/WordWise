@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wordwise-v7';
+const CACHE_NAME = 'wordwise-v8';
 
 // App shell — everything needed to render the UI offline
 const SHELL_ASSETS = [

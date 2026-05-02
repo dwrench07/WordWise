@@ -186,21 +186,48 @@
     <textarea class="json-area" id="exportArea" readonly></textarea>
 
     <h3 style="margin-top:30px;margin-bottom:6px;">Import Cards</h3>
-    <div style="color:var(--text2);font-size:13px;margin-bottom:12px;line-height:1.5;">
-      <b>JSON Format:</b> <code style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px;">[{"front":"q","back":["a1"],"folder":"Name","tags":["tag"]}]</code><br>
-      <div style="margin-top:8px;"><b>1. Vocabulary:</b> Put the word in <code>"front"</code> and definitions in the <code>"back"</code> array.</div>
-      <div style="margin-top:4px;"><b>2. Coding/Tech:</b> Put the question in <code>"front"</code>. In the <code>"back"</code> array, use <code>\n</code> for line breaks and standard Markdown code blocks like <code>\n```javascript\n...```</code>.</div>
-      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--surface3);">
-        <b>3. Folders:</b> Use <code>"folder"</code> or <code>"deck"</code> in JSON to auto-create and organize your sidebar hierarchy.
+    <div style="color:var(--text2);font-size:13px;margin-bottom:12px;line-height:1.6;">
+      Paste a JSON array of cards, or upload a <code>.json</code> / <code>.md</code> file. Markdown <code>code blocks</code> render with syntax highlighting on the back.
+
+      <div style="margin-top:10px;"><b>Required fields</b></div>
+      <ul style="margin:4px 0 0 18px;padding:0;">
+        <li><code>front</code> — the word or question (string).</li>
+        <li><code>back</code> — meaning(s). String or array of strings; multiple entries show as separate definitions.</li>
+      </ul>
+
+      <div style="margin-top:10px;"><b>Optional fields</b></div>
+      <ul style="margin:4px 0 0 18px;padding:0;">
+        <li><code>example</code> / <code>examples</code> — example sentences (string or array).</li>
+        <li><code>note</code> — free-form note shown under meanings.</li>
+        <li><code>tags</code> — array of tag strings (or comma-separated string in file imports).</li>
+        <li><code>folder</code> (alias <code>deck</code>) — folder path. Use <code>/</code> to nest, e.g. <code>"Programming/Python/Decorators"</code> auto-creates the hierarchy.</li>
+        <li><code>liked</code>, <code>revisit</code> — booleans.</li>
+        <li><code>pass</code>, <code>fail</code> — review counters (integers).</li>
+        <li><code>repetition</code>, <code>interval</code>, <code>efactor</code>, <code>nextReview</code> — FSRS scheduling state. Include these to migrate scheduling from another app.</li>
+        <li><code>id</code>, <code>created</code> — preserved on file import; useful for re-imports without duplicating.</li>
+      </ul>
+
+      <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--surface3);">
+        <b>Markdown files (.md):</b> filename becomes the folder. Each <code>##</code> or <code>###</code> header starts a new card; lines below become the back. A line <code>Tags: foo, bar</code> under a header sets that card's tags.
       </div>
-      <div style="margin-top:4px;"><b>4. Markdown Files:</b> Upload <code>.md</code> files—<code>## Headers</code> become card fronts and everything underneath becomes the back.</div>
+      <div style="margin-top:6px;">
+        <b>Folder export round-trip:</b> the JSON produced by <i>Export Folder</i> (<code>{"type":"wordwise_folder_export", ...}</code>) can be pasted or uploaded here to restore folders + cards intact.
+      </div>
     </div>
     <textarea class="json-area" id="importArea" placeholder='[
   {
-    "front": "What is Python?",
-    "back": ["A high-level programming language.\n\n```python\nprint(\"Hello world!\")\n```"],
-    "folder": "Programming",
-    "tags": ["Coding", "Python"]
+    "front": "decorator",
+    "back": [
+      "A function that wraps another function to extend its behavior."
+    ],
+    "example": [
+      "@staticmethod is a built-in decorator.",
+      "Logging decorators are a common use case."
+    ],
+    "note": "Often implemented with functools.wraps to preserve metadata.",
+    "folder": "Programming/Python/Decorators",
+    "tags": ["Coding", "Python"],
+    "liked": false
   }
 ]'></textarea>
     <div style="display:flex;gap:10px;align-items:center;">
