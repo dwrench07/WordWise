@@ -318,6 +318,29 @@
 
 </div><!-- /#appRoot -->
 
+<!-- Cleanup Duplicates Modal -->
+<div class="modal-overlay" id="cleanupModal">
+  <div class="modal" style="max-width:440px;">
+    <h3 style="margin-bottom:8px;">🧹 Clean Up Duplicates</h3>
+    <p style="color:var(--text2);font-size:14px;line-height:1.5;margin-bottom:20px;">
+      Merge cards with the same word. How wide should the search be?
+    </p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+      <button class="btn btn-primary" style="text-align:left;padding:14px 16px;line-height:1.4;" onclick="runCleanupDuplicates(true)">
+        <div style="font-weight:700;">🌐 Global</div>
+        <div style="font-size:12px;font-weight:400;opacity:0.9;margin-top:2px;">Merge identical words across <b>all</b> folders.</div>
+      </button>
+      <button class="btn btn-ghost" style="text-align:left;padding:14px 16px;line-height:1.4;" onclick="runCleanupDuplicates(false)">
+        <div style="font-weight:700;">📁 Per-folder</div>
+        <div style="font-size:12px;font-weight:400;opacity:0.9;margin-top:2px;">Only merge duplicates that sit inside the <b>same</b> folder.</div>
+      </button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeCleanupModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 <script src="api.js"></script>
 <script src="auth.js"></script>

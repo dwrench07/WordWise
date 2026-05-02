@@ -784,7 +784,16 @@ function saveCard() {
 function deleteCard(id) { if (!confirm('Delete this card?')) return; cards = cards.filter(c => c.id !== id); expandedCards.delete(id); save(true); renderAll(); }
 
 function cleanupDuplicates() {
-  const isGlobal = confirm("Do you want to merge duplicates globally across ALL folders?\n\n- Click 'OK' to merge identical words everywhere.\n- Click 'Cancel' to only merge duplicates that sit inside the same folder.");
+  const m = document.getElementById('cleanupModal');
+  if (m) m.classList.add('show');
+  else runCleanupDuplicates(true);
+}
+function closeCleanupModal() {
+  const m = document.getElementById('cleanupModal');
+  if (m) m.classList.remove('show');
+}
+function runCleanupDuplicates(isGlobal) {
+  closeCleanupModal();
 
   let duplicateCount = 0;
   let internalCount = 0;
@@ -876,7 +885,7 @@ function cleanupDuplicates() {
     if (foldersCleaned > 0) {
       showToast(`Cleaned up ${foldersCleaned} duplicate folder(s)!`, 'toast-quest');
     } else {
-      alert("No duplicates found.");
+      showToast('No duplicates found.', 'toast-quest');
     }
   }
 }
