@@ -2188,11 +2188,21 @@ function renderDeckFilterOptions() {
   const currentVal = select.value;
   
   let html = `<option value="all">All Decks</option>`;
-  folders.sort((a,b) => a.name.localeCompare(b.name)).forEach(f => {
-    const depth = getFolderAncestors(f.id).length;
-    const prefix = "  ".repeat(depth);
-    html += `<option value="${f.id}" ${f.id === currentVal ? 'selected' : ''}>${prefix}${f.icon || '📁'} ${esc(f.name)}</option>`;
+  const childrenOf = new Map();
+  folders.forEach(ff => {
+    const key = ff.parentId || null;
+    if (!childrenOf.has(key)) childrenOf.set(key, []);
+    childrenOf.get(key).push(ff);
   });
+  childrenOf.forEach(arr => arr.sort((a, b) => a.name.localeCompare(b.name)));
+  const walk = (parentId, depth) => {
+    (childrenOf.get(parentId) || []).forEach(f => {
+    const prefix = depth > 0 ? "    ".repeat(depth) + "└ " : "";
+    html += `<option value="${f.id}" ${f.id === currentVal ? 'selected' : ''}>${prefix}${f.icon || '📁'} ${esc(f.name)}</option>`;
+      walk(f.id, depth + 1);
+    });
+  };
+  walk(null, 0);
   select.innerHTML = html;
 }
 
