@@ -1262,7 +1262,7 @@ function showQuizNoteArea() {
   const card = quizCards[quizIdx];
   const noteHtml = `<div class="quiz-note-section">
     <div class="card-section-label">Note</div>
-    <textarea class="quiz-note-input" placeholder="Add a note for this card..." oninput="updateQuizNote('${card.id}', this.value)">${esc(card.note || '')}</textarea>
+    <textarea class="quiz-note-input" placeholder="Add a note for this card..." oninput="updateQuizNote('${card.id}', this.value)" onblur="updateQuizNote('${card.id}', this.value, true)">${esc(card.note || '')}</textarea>
   </div>`;
   const anchor = document.getElementById('quizAnswer');
   if (anchor) anchor.insertAdjacentHTML('afterend', noteHtml);
@@ -1276,13 +1276,13 @@ function revealAnswer() {
     <button class="btn btn-blue" onclick="gradeQuiz(5)">🔵 Easy</button>
   `;
 }
-function updateQuizNote(id, val) {
+function updateQuizNote(id, val, immediate = false) {
   const real = cards.find(c => c.id === id);
   if (real) {
     real.note = val;
     const qCard = quizCards.find(c => c.id === id);
     if (qCard) qCard.note = val;
-    save();
+    save(immediate);
   }
 }
 function checkMC(btn, ok) { document.querySelectorAll('.mc-btn').forEach(b => { b.disabled = true; b.style.pointerEvents = 'none'; }); btn.classList.add(ok ? 'correct' : 'wrong'); revealQuizExtras(); gradeQuiz(ok ? 5 : 0); }
