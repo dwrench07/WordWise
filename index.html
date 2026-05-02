@@ -230,7 +230,8 @@
     "liked": false
   }
 ]'></textarea>
-    <div style="display:flex;gap:10px;align-items:center;">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="copyImportExample(this)" title="Copy the example JSON to clipboard">📋 Copy Example</button>
       <button class="btn btn-primary" onclick="importCards()">Import Text</button>
       <label class="btn btn-primary" style="cursor:pointer;margin:0;">
         Import File

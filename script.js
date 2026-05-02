@@ -1388,6 +1388,15 @@ function showResults() {
 }
 
 // IMPORT/EXPORT
+function copyImportExample(btn) {
+  const example = document.getElementById('importArea')?.getAttribute('placeholder') || '';
+  navigator.clipboard.writeText(example).then(() => {
+    if (!btn) return;
+    const original = btn.innerHTML;
+    btn.innerHTML = '✓ Copied';
+    setTimeout(() => { btn.innerHTML = original; }, 1500);
+  }).catch(() => alert('Copy failed — select the placeholder text manually.'));
+}
 function exportCards() {
   const data = { type: 'wordwise_folder_export', folders: folders, cards: cards };
   const json = JSON.stringify(data, null, 2);
