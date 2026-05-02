@@ -540,9 +540,10 @@ function renderCardHTML(c) {
       <div class="card-section-label">Meaning${c.back.length > 1 ? 's' : ''}</div>
       ${renderMeanings(c.back)}
       ${c.example.length > 0 ? `<div class="card-section-label">Example${c.example.length > 1 ? 's' : ''}</div>${renderExamples(c.example)}` : ''}
-      ${c.note ? `<div class="card-section-label">Note</div><div class="card-note-block">${esc(c.note)}</div>` : ''}
+      <div class="card-note-section" data-card-id="${c.id}">${c.note ? `<div class="card-section-label">Note</div><div class="card-note-block" onclick="event.stopPropagation();editCardNote('${c.id}')" title="Click to edit">${esc(c.note)}</div>` : ''}</div>
       ${tagsHtml ? `<div class="card-tags-row">${tagsHtml}</div>` : ''}
       <div class="card-footer">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editCardNote('${c.id}')">📝 Note</button>
         <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editCard('${c.id}')">✎ Edit</button>
         <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();deleteCard('${c.id}')" style="color:var(--red)">✕ Delete</button>
       </div>
@@ -782,6 +783,35 @@ function saveCard() {
   save(true); closeModal(); renderAll();
 }
 function deleteCard(id) { if (!confirm('Delete this card?')) return; cards = cards.filter(c => c.id !== id); expandedCards.delete(id); save(true); renderAll(); }
+
+function editCardNote(id) {
+  const c = cards.find(x => x.id === id); if (!c) return;
+  if (!expandedCards.has(id)) {
+    expandedCards.add(id);
+    const ce = document.querySelector(`.card-item[data-id="${id}"]`);
+    if (ce) ce.classList.add('expanded');
+  }
+  const section = document.querySelector(`.card-note-section[data-card-id="${id}"]`);
+  if (!section) return;
+  section.innerHTML = `<div class="card-section-label">Note</div>
+    <textarea class="quiz-note-input" placeholder="Add a note for this card..." oninput="updateCardNote('${id}', this.value)" onblur="finishCardNote('${id}', this.value)">${esc(c.note || '')}</textarea>`;
+  const ta = section.querySelector('textarea');
+  if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+}
+function updateCardNote(id, val) {
+  const c = cards.find(x => x.id === id); if (!c) return;
+  c.note = val; save(false);
+}
+function finishCardNote(id, val) {
+  const c = cards.find(x => x.id === id); if (!c) return;
+  c.note = val.trim(); save(true);
+  const section = document.querySelector(`.card-note-section[data-card-id="${id}"]`);
+  if (section) {
+    section.innerHTML = c.note
+      ? `<div class="card-section-label">Note</div><div class="card-note-block" onclick="event.stopPropagation();editCardNote('${id}')" title="Click to edit">${esc(c.note)}</div>`
+      : '';
+  }
+}
 
 function cleanupDuplicates() {
   const m = document.getElementById('cleanupModal');
