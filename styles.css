@@ -1062,6 +1062,13 @@ body::before {
   font-weight: 600;
 }
 
+.toolbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .filter-pills {
   display: flex;
   gap: 6px;
