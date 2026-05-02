@@ -146,8 +146,9 @@ body::before {
 
 .deck-filter-dropdown {
   position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  width: fit-content;
 }
 
 .deck-filter-dropdown select {
@@ -183,6 +184,8 @@ body::before {
   color: var(--text3);
   position: absolute;
   right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
   pointer-events: none;
 }
 
