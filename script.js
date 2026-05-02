@@ -807,14 +807,16 @@ function cleanupDuplicates() {
   });
 
   const newCards = [];
+  const removedCardIds = [];
   map.forEach(group => {
     if (group.length === 1) {
       newCards.push(group[0]);
     } else {
       group.sort((a, b) => (b.repetition - a.repetition) || (b.interval - a.interval) || (b.created - a.created));
-      
+
       const winner = group[0];
       const losers = group.slice(1);
+      losers.forEach(c => { if (c.id) removedCardIds.push(c.id); });
       
       const tags = new Set(winner.tags || []);
       const meanings = new Set((winner.back || []).map(m => normalizeText(m)));
@@ -849,6 +851,10 @@ function cleanupDuplicates() {
   if (duplicateCount > 0 || internalCount > 0) {
     cards = newCards;
     save(true);
+    // Explicitly delete merged-away cards on the server so they don't reappear on refresh.
+    if (isLoggedIn() && removedCardIds.length > 0) {
+      Promise.all(removedCardIds.map(id => api.cards.delete(id).catch(e => console.warn('Failed to delete duplicate on server:', id, e.message))));
+    }
     renderAll();
     let msg = [];
     if (duplicateCount > 0) msg.push(`${duplicateCount} duplicate card(s)`);
@@ -872,6 +878,7 @@ function cleanupDuplicates() {
 function cleanupDuplicateFolders(silent = false) {
   let duplicateCount = 0;
   const map = new Map(); // key: "parentId:name"
+  const removedFolderIds = [];
 
   // Sort by created date so we keep the oldest one as the primary
   folders.sort((a, b) => (a.created || 0) - (b.created || 0));
@@ -887,6 +894,7 @@ function cleanupDuplicateFolders(silent = false) {
     } else {
       const primary = map.get(key);
       folderIdMap[f.id] = primary.id;
+      if (f.id) removedFolderIds.push(f.id);
       duplicateCount++;
     }
   });
@@ -914,6 +922,9 @@ function cleanupDuplicateFolders(silent = false) {
     });
 
     save(true);
+    if (isLoggedIn() && removedFolderIds.length > 0) {
+      Promise.all(removedFolderIds.map(id => api.folders.delete(id).catch(e => console.warn('Failed to delete duplicate folder on server:', id, e.message))));
+    }
     renderAll();
     if (!silent) alert(`Merged ${duplicateCount} duplicate folder(s).`);
   }
