@@ -216,6 +216,41 @@
       <div style="margin-top:6px;">
         <b>Folder export round-trip:</b> the JSON produced by <i>Export Folder</i> (<code>{"type":"wordwise_folder_export", ...}</code>) can be pasted or uploaded here to restore folders + cards intact.
       </div>
+
+      <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--surface3);">
+        <b>Content rules (what to put in each field)</b>
+        <ul style="margin:4px 0 0 18px;padding:0;">
+          <li><code>front</code> — one term, concept, or question. No multi-part questions. Keep under ~80 chars.</li>
+          <li><code>back</code> — atomic answer. One idea per card. Lead with a one-sentence definition; add at most 2 short bullets for nuance. Aim for &lt; 60 words per entry.</li>
+          <li><code>example</code> — concrete usage, not more explanation. One sentence each.</li>
+          <li><code>note</code> — anything tangential: caveats, related terms, mnemonics, links.</li>
+          <li>Markdown: use <code>**bold**</code> for the key term, <code>-</code> bullets for multi-point definitions, backticks for identifiers, fenced blocks for code.</li>
+          <li>Split, don't stuff. If a topic has 5 sub-ideas, make 5 cards. The duplicate-cleanup tool can merge later.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--surface3);">
+        <b>LLM prompt template</b> <span style="color:var(--text2);">— paste alongside the schema above when asking ChatGPT/Claude to generate cards.</span>
+        <pre id="llmPromptBlock" style="margin-top:6px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;white-space:pre-wrap;line-height:1.5;">You are generating WordWise flashcards for the topic: &lt;TOPIC&gt;.
+
+Output a single valid JSON array of card objects matching the schema above. Hard rules:
+
+1. Output JSON only. No prose before or after. No markdown code fences around the JSON.
+2. Generate at most 15 cards per response. If the topic needs more, end your output and wait for me to say "continue".
+3. One idea per card. Atomic. If you would write "and" or "also" in the back, split into two cards.
+4. front: a single term, concept, or question. Under 80 chars.
+5. back: lead with a one-sentence definition. Optional 1–2 short bullets for nuance. Under 60 words total.
+6. example: at least one concrete usage example per card when applicable, as a separate field — not inside back.
+7. note: caveats, gotchas, related-term cross-references, or memory aids. Optional.
+8. tags: 1–3 lowercase tags. Reuse tags across cards in the same topic.
+9. folder: use slash-nested paths like "Topic/Subtopic". Same value for every card in one batch.
+10. Use markdown inside back/example/note: **bold** for key terms, `code` for identifiers, fenced blocks for code samples.
+11. Do not invent FSRS fields (repetition/interval/efactor/nextReview). Omit them.
+12. If you are unsure about a fact, omit the card rather than guess.
+
+Confirm you understand by replying only with the JSON array for the first batch.</pre>
+        <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="copyLLMPrompt(this)" title="Copy just the LLM prompt">📋 Copy LLM Prompt</button>
+      </div>
     </div>
     <textarea class="json-area" id="importArea" placeholder='[
   {

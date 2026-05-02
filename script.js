@@ -1403,6 +1403,16 @@ function showResults() {
 }
 
 // IMPORT/EXPORT
+function copyLLMPrompt(btn) {
+  const el = document.getElementById('llmPromptBlock');
+  if (!el) return;
+  navigator.clipboard.writeText(el.innerText.trim()).then(() => {
+    if (!btn) return;
+    const original = btn.innerHTML;
+    btn.innerHTML = '✓ Copied';
+    setTimeout(() => { btn.innerHTML = original; }, 1500);
+  }).catch(() => alert('Copy failed.'));
+}
 function copyImportInstructions(btn) {
   const el = document.getElementById('importInstructions');
   if (!el) return;
