@@ -1388,6 +1388,17 @@ function showResults() {
 }
 
 // IMPORT/EXPORT
+function copyImportInstructions(btn) {
+  const el = document.getElementById('importInstructions');
+  if (!el) return;
+  const text = el.innerText.replace(/\n{3,}/g, '\n\n').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    if (!btn) return;
+    const original = btn.innerHTML;
+    btn.innerHTML = '✓ Copied';
+    setTimeout(() => { btn.innerHTML = original; }, 1500);
+  }).catch(() => alert('Copy failed.'));
+}
 function copyImportExample(btn) {
   const example = document.getElementById('importArea')?.getAttribute('placeholder') || '';
   navigator.clipboard.writeText(example).then(() => {

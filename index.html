@@ -185,8 +185,11 @@
     </div>
     <textarea class="json-area" id="exportArea" readonly></textarea>
 
-    <h3 style="margin-top:30px;margin-bottom:6px;">Import Cards</h3>
-    <div style="color:var(--text2);font-size:13px;margin-bottom:12px;line-height:1.6;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:30px;margin-bottom:6px;flex-wrap:wrap;">
+      <h3 style="margin:0;">Import Cards</h3>
+      <button class="btn btn-ghost btn-sm" onclick="copyImportInstructions(this)" title="Copy these instructions as plain text">📋 Copy Instructions</button>
+    </div>
+    <div id="importInstructions" style="color:var(--text2);font-size:13px;margin-bottom:12px;line-height:1.6;">
       Paste a JSON array of cards, or upload a <code>.json</code> / <code>.md</code> file. Markdown <code>code blocks</code> render with syntax highlighting on the back.
 
       <div style="margin-top:10px;"><b>Required fields</b></div>
