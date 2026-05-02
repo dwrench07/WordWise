@@ -345,11 +345,17 @@ function calculateFSRS(card, quality) {
   card.repetition = card.fsrs.reps || 0;
 }
 
+function isDue(c) {
+  return c.repetition > 0 && Date.now() >= c.nextReview;
+}
 function getStatus(c) {
   if (c.repetition === 0 && (!c.fsrs || c.fsrs.state === 0)) return 'new';
-  if (Date.now() >= c.nextReview) return 'due';
-  if (c.fsrs && c.fsrs.stability > 21) return 'mastered';
-  if (c.interval > 21) return 'mastered';
+  const tries = (c.pass || 0) + (c.fail || 0);
+  // Struggling: more failures than passes after a few tries, or FSRS rates it hard
+  if (tries >= 3 && (c.fail || 0) > (c.pass || 0)) return 'struggling';
+  if (c.fsrs && c.fsrs.difficulty >= 7) return 'struggling';
+  // Mastered: long retention interval
+  if ((c.fsrs && c.fsrs.stability > 21) || c.interval > 21) return 'mastered';
   return 'learning';
 }
 function getAllTags() { const s = new Set(); cards.forEach(c => (c.tags || []).forEach(t => s.add(t))); return [...s].sort(); }
@@ -1086,7 +1092,7 @@ function showQuizSetup() {
   
   const likedCount = pool.filter(c => c.liked).length;
   const revisitCount = pool.filter(c => c.revisit).length;
-  const dueCount = pool.filter(c => getStatus(c) === 'due').length;
+  const dueCount = pool.filter(c => isDue(c)).length;
   
   const countOptions = [5, 10, 15, 20, 30, 50].filter(n => n <= fc);
   if (!countOptions.includes(fc) && fc > 0) countOptions.push(fc);
@@ -1143,7 +1149,7 @@ function startQuiz(mode) {
   quizMode = mode; quizIdx = 0; quizCorrect = 0;
   isAutoPlaying = false; stopAutoPlayTimer();
   const count = parseInt(document.getElementById('quizCountSelect')?.value || quizCardCount) || 20;
-  if (mode === 'due') { quizCards = shuffle(pool.filter(c => getStatus(c) === 'due')); if (quizCards.length < 2) quizCards = shuffle(pool); }
+  if (mode === 'due') { quizCards = shuffle(pool.filter(c => isDue(c))); if (quizCards.length < 2) quizCards = shuffle(pool); }
   else if (mode === 'liked') { quizCards = shuffle(pool.filter(c => c.liked)); if (quizCards.length < 2) { alert('Need at least 2 liked cards.'); return; } }
   else if (mode === 'revisit') { quizCards = shuffle(pool.filter(c => c.revisit)); if (quizCards.length < 2) { alert('Need at least 2 marked cards for revisit.'); return; } }
   else { quizCards = shuffle(pool); }
@@ -2148,7 +2154,7 @@ function startProductivityChecker() {
     const now = new Date();
     
     // 1. Check for Due Cards (once every 4 hours if not Study Session)
-    const dueCount = cards.filter(c => getStatus(c) === 'due').length;
+    const dueCount = cards.filter(c => isDue(c)).length;
     if (dueCount > 5) {
       const lastCheck = localStorage.getItem('last_due_notif') || '0';
       if (Date.now() - parseInt(lastCheck) > 4 * 60 * 60 * 1000) { // 4 hours
