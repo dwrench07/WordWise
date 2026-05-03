@@ -127,6 +127,14 @@ function stripMarkdown(text) {
   return text.replace(/[#_*~`>]/g, '').replace(/\[(.*?)\]\(.*?\)/g, '$1');
 }
 
+// Strong dedup key: strips HTML, markdown, and punctuation so visually-identical
+// meanings/examples collapse even if their raw source differs.
+function dedupKey(s) {
+  if (!s) return '';
+  const noHtml = String(s).replace(/<[^>]+>/g, ' ');
+  return normalizeText(stripMarkdown(noHtml));
+}
+
 function save(immediate = false) {
   if (saveTimer) clearTimeout(saveTimer);
   const performSave = async () => {
@@ -765,9 +773,9 @@ function saveCard() {
   if (pending) addModalTag(pending); if (!front || back.length === 0) return;
 
   const mSet = new Set();
-  back = back.filter(m => { const n = normalizeText(m); if (mSet.has(n)) return false; mSet.add(n); return true; });
+  back = back.filter(m => { const n = dedupKey(m); if (mSet.has(n)) return false; mSet.add(n); return true; });
   const eSet = new Set();
-  example = example.filter(e => { const n = normalizeText(e); if (eSet.has(n)) return false; eSet.add(n); return true; });
+  example = example.filter(e => { const n = dedupKey(e); if (eSet.has(n)) return false; eSet.add(n); return true; });
 
   if (!editingId) {
     const isDuplicate = cards.some(c => normalizeText(c.front) === normalizeText(front));
@@ -831,12 +839,22 @@ function runCleanupDuplicates(isGlobal) {
   cards.forEach(c => {
     const mSet = new Set();
     const oldBackLen = (c.back || []).length;
-    c.back = (c.back || []).filter(m => { const n = normalizeText(m); if (mSet.has(n)) return false; mSet.add(n); return true; });
+    c.back = (c.back || []).filter(m => {
+      if (!String(m || '').trim()) return false;
+      const n = dedupKey(m);
+      if (mSet.has(n)) return false;
+      mSet.add(n); return true;
+    });
     if (c.back.length !== oldBackLen) internalCount += (oldBackLen - c.back.length);
 
     const oldExLen = (c.example || []).length;
     const eSet = new Set();
-    c.example = (c.example || []).filter(e => { const n = normalizeText(e); if (eSet.has(n)) return false; eSet.add(n); return true; });
+    c.example = (c.example || []).filter(e => {
+      if (!String(e || '').trim()) return false;
+      const n = dedupKey(e);
+      if (eSet.has(n)) return false;
+      eSet.add(n); return true;
+    });
     if (c.example.length !== oldExLen) internalCount += (oldExLen - c.example.length);
   });
 
@@ -864,22 +882,24 @@ function runCleanupDuplicates(isGlobal) {
       losers.forEach(c => { if (c.id) removedCardIds.push(c.id); });
       
       const tags = new Set(winner.tags || []);
-      const meanings = new Set((winner.back || []).map(m => normalizeText(m)));
-      const examples = new Set((winner.example || []).map(e => normalizeText(e)));
+      const meanings = new Set((winner.back || []).map(m => dedupKey(m)));
+      const examples = new Set((winner.example || []).map(e => dedupKey(e)));
       let combinedNote = winner.note || "";
 
       losers.forEach(c => {
         (c.tags || []).forEach(t => tags.add(t));
         (c.back || []).forEach(m => {
-          if (!meanings.has(normalizeText(m))) {
+          const k = dedupKey(m);
+          if (!meanings.has(k)) {
             winner.back.push(m);
-            meanings.add(normalizeText(m));
+            meanings.add(k);
           }
         });
         (c.example || []).forEach(e => {
-          if (!examples.has(normalizeText(e))) {
+          const k = dedupKey(e);
+          if (!examples.has(k)) {
             winner.example.push(e);
-            examples.add(normalizeText(e));
+            examples.add(k);
           }
         });
         if (c.note && !combinedNote.includes(c.note)) combinedNote += (combinedNote ? "\n" : "") + c.note;
