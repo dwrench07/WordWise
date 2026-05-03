@@ -1341,6 +1341,16 @@ function checkType() {
 function gradeQuiz(quality) { // quality 0-5
   const real = cards.find(c => c.id === quizCards[quizIdx].id);
 
+  // Capture any pending note text before the textarea is removed from the DOM.
+  // onblur/oninput can race with grading (especially on keyboard grade or quick
+  // taps), so we read the current value directly to guarantee it persists.
+  const noteTa = document.querySelector('.quiz-note-section .quiz-note-input');
+  if (noteTa && real) {
+    real.note = noteTa.value;
+    const qCard = quizCards.find(c => c.id === real.id);
+    if (qCard) qCard.note = noteTa.value;
+  }
+
   if (currentCardStartTime > 0) {
     const elapsedSecs = Math.floor((Date.now() - currentCardStartTime) / 1000);
     totalStudySeconds += Math.min(elapsedSecs, 60); // Cap at 60s max per card
