@@ -50,13 +50,16 @@ const api = {
 
   cards: {
     getAll: () => apiFetch('/cards'),
+    getDeleted: () => apiFetch('/cards/deleted'),
     bulk:   (cards) => apiFetch('/cards/bulk', { method: 'POST', body: JSON.stringify(cards) }),
     update: (localId, data) => apiFetch(`/cards/${localId}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (localId) => apiFetch(`/cards/${localId}`, { method: 'DELETE' }),
+    deleteAll: () => apiFetch('/cards', { method: 'DELETE' }),
   },
 
   folders: {
     getAll: () => apiFetch('/folders'),
+    getDeleted: () => apiFetch('/folders/deleted'),
     bulk:   (folders) => apiFetch('/folders/bulk', { method: 'POST', body: JSON.stringify(folders) }),
     update: (localId, data) => apiFetch(`/folders/${localId}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (localId) => apiFetch(`/folders/${localId}`, { method: 'DELETE' }),

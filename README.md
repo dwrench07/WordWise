@@ -1,6 +1,6 @@
 # WordWise — Flashcard Engine
 
-WordWise is a modern, lightweight, and powerful flashcard application designed to help you master new vocabulary and concepts efficiently. Built as a single-file HTML application, it's easy to use, highly portable, and incredibly fast.
+WordWise is a modern, lightweight flashcard application designed to help you master new vocabulary and concepts efficiently. It's an installable **Progressive Web App (PWA)** with FSRS spaced repetition that works offline, backed by an **optional cloud-sync service** (Node/Express + MongoDB) so your decks follow you across devices.
 
 ![WordWise Logo](https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/school/default/48px.svg) <!-- Using a generic educational icon as placeholder -->
 
@@ -19,17 +19,46 @@ WordWise is a modern, lightweight, and powerful flashcard application designed t
 
 ## 🚀 Getting Started
 
-To run WordWise:
+### Local-only (no account)
 
 1. Download or clone this repository.
-2. Open `index.html` in any modern web browser.
-3. Start adding cards or load the **Sample Deck** from the Import/Export tab to see it in action!
+2. Serve the folder over HTTP (needed for the service worker / PWA), e.g.
+   `npx serve .` or `python3 -m http.server`, then open the printed URL.
+   On `localhost` the app runs without requiring login and stores data in your
+   browser via `localforage`.
+3. Start adding cards, or load the **Sample Deck** from the **Sync** tab.
+
+> Opening `index.html` directly from the filesystem also works for the core UI,
+> but the service worker and offline caching only activate over HTTP(S).
+
+### With cloud sync (optional backend)
+
+The backend lives in `server/` (Express + Mongoose) and is also exposed as a
+Vercel serverless function via `api/index.js`.
+
+1. `cd server && npm install`
+2. Create `server/.env` with:
+   ```
+   MONGODB_URI=<your MongoDB connection string>   # required
+   JWT_SECRET=<a long random secret>              # required
+   JWT_EXPIRES_IN=7d                              # optional (default 7d)
+   CLIENT_ORIGIN=https://your-frontend-origin     # optional (default *)
+   PORT=5000                                       # optional (local only)
+   ```
+   The server refuses to start if `MONGODB_URI` or `JWT_SECRET` is missing.
+3. `npm run dev` (or `npm start`). When the frontend is served from a non-local
+   host it shows a login/register screen and syncs cards, folders, and stats to
+   MongoDB over a JWT-authenticated REST API.
 
 ## 🛠 Technology Stack
 
-- **HTML5**: Semantic structure.
-- **CSS3**: Modern layout in `styles.css`.
-- **JavaScript**: Core logic and interactivity in `script.js`.
+- **Frontend**: HTML5, CSS3 (`styles.css`), vanilla JavaScript (`script.js`),
+  installable PWA (`manifest.json`, `sw.js`).
+- **Spaced repetition**: FSRS engine (`fsrs.js`).
+- **Offline storage**: `localforage` (IndexedDB) for local persistence.
+- **Markdown**: `marked` + `DOMPurify` (sanitized) with `highlight.js`.
+- **Backend (optional)**: Node.js, Express, Mongoose/MongoDB, JWT auth
+  (`jsonwebtoken`), `bcryptjs`, deployable on Vercel.
 - **Google Fonts**: [Outfit](https://fonts.google.com/specimen/Outfit) and [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono).
 
 ## 📊 Statistics

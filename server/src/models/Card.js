@@ -29,6 +29,11 @@ const cardSchema = new mongoose.Schema(
     liked: { type: Boolean, default: false },
     revisit: { type: Boolean, default: false },
 
+    // Soft-delete tombstone. A deleted card stays as a tombstone (deleted:true)
+    // so the deletion propagates to other devices and a stale client that still
+    // holds the card can't resurrect it on its next bulk upsert.
+    deleted: { type: Boolean, default: false },
+
     // SRS fields
     fsrs: { type: fsrsStateSchema, default: () => ({}) },
     repetition: { type: Number, default: 0 },

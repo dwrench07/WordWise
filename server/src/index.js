@@ -3,6 +3,18 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 
+// Fail fast on misconfiguration rather than signing unverifiable tokens or
+// serving opaque 500s. JWT_SECRET is required; without it auth is insecure
+// and jwt.verify() can throw on every request.
+const REQUIRED_ENV = ['JWT_SECRET', 'MONGODB_URI'];
+const missingEnv = REQUIRED_ENV.filter((k) => !process.env[k]);
+if (missingEnv.length) {
+  throw new Error(
+    `Missing required environment variable(s): ${missingEnv.join(', ')}. ` +
+    `Set them in server/.env (or your deployment environment) before starting.`
+  );
+}
+
 // Initialize database connection
 connectDB().catch(err => console.error('Initial DB connection failed:', err));
 

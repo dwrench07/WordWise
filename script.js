@@ -42,8 +42,28 @@ function tagColor(name) {
   };
 }
 function tagHTML(n, s) { const c = tagColor(n); return `<span class="tag" style="background:${c.bg};color:${c.fg};${s ? 'font-size:9px;padding:1px 6px;' : ''}">${esc(n)}</span>`; }
-function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+// Escapes the five HTML-significant characters, including BOTH quote styles, so
+// the result is safe in element content AND inside quoted HTML attributes.
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 function toArr(v) { if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean); if (typeof v === 'string' && v.trim()) return [v.trim()]; return []; }
+
+// Day buckets (streaks, quests, heatmap, word-of-the-day) must use the user's
+// LOCAL calendar day. toISOString() returns UTC, which rolls the "day" over at
+// UTC-midnight — e.g. late afternoon for users in the Americas — breaking
+// streaks and mis-bucketing activity. These helpers keep everything local.
+function localDateStr(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 function normalizeText(s) {
   if (!s) return "";
@@ -73,7 +93,7 @@ const FUN_FACTS = [
 ];
 function renderDailyInsight() {
   const el = document.getElementById('insightBanner'); if (!el) return;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateStr();
   let seed = 0; for (let i = 0; i < today.length; i++)seed = today.charCodeAt(i) + ((seed << 5) - seed);
 
   let html = '';
@@ -164,8 +184,11 @@ function save(immediate = false) {
       return;
     }
     try {
-      const cardPayload = cards.map(c => ({ ...c, localId: c.id }));
-      const folderPayload = folders.map(f => ({ ...f, localId: f.id }));
+      // Strip server-managed fields so we never try to $set Mongo's immutable
+      // _id (or stale timestamps) back on upsert.
+      const strip = ({ _id, __v, createdAt, updatedAt, ...rest }) => rest;
+      const cardPayload = cards.map(c => ({ ...strip(c), localId: c.id }));
+      const folderPayload = folders.map(f => ({ ...strip(f), localId: f.id }));
       await Promise.all([
         api.cards.bulk(cardPayload),
         api.folders.bulk(folderPayload),
@@ -244,19 +267,34 @@ async function load() {
   if (isLoggedIn()) {
     try {
       console.log("Background syncing with cloud...");
-      const [serverCards, serverFolders, stats] = await Promise.all([
+      const [serverCards, serverFolders, stats, delCards, delFolders] = await Promise.all([
         api.cards.getAll(),
         api.folders.getAll(),
         api.user.getStats(),
+        // Older servers won't have these endpoints — degrade gracefully.
+        api.cards.getDeleted().catch(() => ({ deletedIds: [] })),
+        api.folders.getDeleted().catch(() => ({ deletedIds: [] })),
       ]);
 
       if (serverCards && serverCards.length > 0) {
         cards = serverCards;
         normalizeCards(cards);
       }
-      
+
       if (serverFolders) {
         folders = serverFolders.map(f => ({ ...f, id: f.localId || f.id }));
+      }
+
+      // Apply server tombstones so deletions made on another device propagate
+      // here instead of being re-uploaded, and so an emptied account clears a
+      // stale local cache (the "length > 0" guard above never replaces it).
+      const delCardSet = new Set((delCards && delCards.deletedIds) || []);
+      if (delCardSet.size) cards = cards.filter(c => !delCardSet.has(c.id));
+      const delFolderSet = new Set((delFolders && delFolders.deletedIds) || []);
+      if (delFolderSet.size) {
+        folders = folders.filter(f => !delFolderSet.has(f.id));
+        // Orphan any card that pointed at a now-deleted folder.
+        cards.forEach(c => { if (c.folderId && delFolderSet.has(c.folderId)) c.folderId = null; });
       }
 
       if (stats) {
@@ -374,7 +412,7 @@ function allExampleText(c) { return (c.example || []).join(' '); }
 // WORD OF THE DAY
 function getWotd() {
   if (cards.length === 0) return null;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateStr();
   let seed = 0; for (let i = 0; i < today.length; i++) seed = today.charCodeAt(i) + ((seed << 5) - seed);
   return cards[Math.abs(seed) % cards.length];
 }
@@ -470,12 +508,27 @@ function renderTagFilter() {
   if (tags.length === 0) { bar.innerHTML = ''; return; }
   bar.innerHTML = `<span class="tag-label">Tags:</span>` +
     `<span class="tag-mode-toggle" onclick="toggleTagMatchMode()" title="Click to toggle ANY/ALL mode">${tagMatchMode === 'OR' ? 'Match ANY' : 'Match ALL'}</span>` +
-    tags.map(t => { const c = tagColor(t); return `<span class="tag-filter-pill ${activeTags.has(t) ? 'active' : ''}" style="background:${c.bg};color:${c.fg};" onclick="toggleTagFilter('${esc(t).replace(/'/g, "\\'")}')">${esc(t)}</span>`; }).join('') +
+    tags.map(t => { const c = tagColor(t); return `<span class="tag-filter-pill ${activeTags.has(t) ? 'active' : ''}" style="background:${c.bg};color:${c.fg};" data-tag-action="toggleTagFilter" data-tag="${esc(t)}">${esc(t)}</span>`; }).join('') +
     (activeTags.size > 0 ? `<span class="tag-filter-pill" style="background:var(--surface2);color:var(--text2);opacity:1;font-size:10px;" onclick="clearTagFilters()">✕ Clear</span>` : '');
 }
 function toggleTagFilter(t) { if (activeTags.has(t)) activeTags.delete(t); else activeTags.add(t); renderTagFilter(); renderCards(); }
 function clearTagFilters() { activeTags.clear(); renderTagFilter(); renderCards(); }
 function toggleTagMatchMode() { tagMatchMode = tagMatchMode === 'OR' ? 'AND' : 'OR'; renderTagFilter(); renderCards(); showQuizSetup(); }
+
+// Delegated handler for tag chips. Tags are free text, so they are passed via
+// data-* attributes (HTML-escaped) and read back through dataset here, instead
+// of being concatenated into inline onclick="" strings — which is not safe
+// against values containing quotes/backslashes.
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-tag-action]');
+  if (!el) return;
+  const tag = el.dataset.tag;
+  switch (el.dataset.tagAction) {
+    case 'toggleTagFilter': toggleTagFilter(tag); break;
+    case 'addModalTag': addModalTag(tag); break;
+    case 'toggleQuizTag': toggleQuizTag(tag); break;
+  }
+});
 
 function toggleCard(id) { toggleCardInPlace(id); }
 
@@ -530,7 +583,7 @@ function renderCardHTML(c) {
   const revisitBtn = `<button class="card-revisit-btn ${c.revisit ? 'revisit' : ''}" onclick="event.stopPropagation();toggleRevisit('${c.id}');patchRevisit('${c.id}');updateStats();" title="${c.revisit ? 'Remove from Revisit' : 'Mark for Revisit'}">${c.revisit ? '★' : '☆'}</button>`;
   const likeBtn = `<button class="card-like-btn ${c.liked ? 'liked' : ''}" onclick="event.stopPropagation();toggleLike('${c.id}');patchCard('${c.id}');renderWotd();updateStats();" title="${c.liked ? 'Unlike' : 'Like'}">${c.liked ? '❤' : '♡'}</button>`;
   return `<div class="card-item ${isExp ? 'expanded' : ''}" data-id="${c.id}">
-    <div class="card-header" onclick="toggleCardInPlace('${c.id}')">
+    <div class="card-header" draggable="true" ondragstart="cardDragStart(event, '${c.id}')" onclick="toggleCardInPlace('${c.id}')">
       <div class="card-expand-icon">▶</div>
       <div class="card-summary">
         <div class="card-word"><span class="card-word-text">${esc(c.front)}</span>${deckHtml}${mc}</div>
@@ -669,7 +722,7 @@ function renderModalTags() {
 function renderTagSuggestions() {
   const existing = getAllTags().filter(t => !modalTags.includes(t)); const el = document.getElementById('tagSuggestions');
   if (existing.length === 0) { el.innerHTML = ''; return; }
-  el.innerHTML = existing.slice(0, 12).map(t => { const c = tagColor(t); return `<span class="tag" style="background:${c.bg};color:${c.fg};cursor:pointer;font-size:11px;padding:3px 8px;" onclick="addModalTag('${esc(t).replace(/'/g, "\\'")}')">${esc(t)}</span>`; }).join('');
+  el.innerHTML = existing.slice(0, 12).map(t => { const c = tagColor(t); return `<span class="tag" style="background:${c.bg};color:${c.fg};cursor:pointer;font-size:11px;padding:3px 8px;" data-tag-action="addModalTag" data-tag="${esc(t)}">${esc(t)}</span>`; }).join('');
 }
 document.getElementById('mTagInput').addEventListener('keydown', function (e) {
   if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addModalTag(this.value); this.value = ''; }
@@ -790,7 +843,31 @@ function saveCard() {
   }
   save(true); closeModal(); renderAll();
 }
-function deleteCard(id) { if (!confirm('Delete this card?')) return; cards = cards.filter(c => c.id !== id); expandedCards.delete(id); save(true); renderAll(); }
+function deleteCard(id) {
+  if (!confirm('Delete this card?')) return;
+  cards = cards.filter(c => c.id !== id);
+  expandedCards.delete(id);
+  save(true);
+  // The bulk sync only upserts, so without an explicit server delete the card
+  // would reappear on the next cloud load. Mirror the cleanup-duplicates path.
+  if (isLoggedIn() && cloudSyncComplete) {
+    api.cards.delete(id).catch(e => console.warn('Failed to delete card on server:', id, e.message));
+  }
+  renderAll();
+}
+
+function deleteAllCards() {
+  if (!confirm('Delete ALL cards? This cannot be undone.')) return;
+  cards = [];
+  totalQuizzes = 0;
+  save(true);
+  // Without an explicit server wipe the bulk upsert leaves every card in place,
+  // so they'd all reappear on the next cloud load.
+  if (isLoggedIn() && cloudSyncComplete) {
+    api.cards.deleteAll().catch(e => console.warn('Failed to delete all cards on server:', e.message));
+  }
+  renderAll();
+}
 
 function editCardNote(id) {
   const c = cards.find(x => x.id === id); if (!c) return;
@@ -1121,7 +1198,7 @@ function filterQuizTags(query) {
   if (grid) {
     grid.innerHTML = filtered.map(t => {
       const c = tagColor(t);
-      return `<span class="quiz-tag-chip ${quizSelectedTags.has(t) ? 'selected' : ''}" style="background:${c.bg};color:${c.fg};" onclick="toggleQuizTag('${esc(t).replace(/'/g, "\\'")}')">${esc(t)}</span>`;
+      return `<span class="quiz-tag-chip ${quizSelectedTags.has(t) ? 'selected' : ''}" style="background:${c.bg};color:${c.fg};" data-tag-action="toggleQuizTag" data-tag="${esc(t)}">${esc(t)}</span>`;
     }).join('');
   }
 }
@@ -1180,7 +1257,7 @@ function showQuizSetup() {
           <span class="tag-mode-toggle" onclick="toggleTagMatchMode()" title="Click to toggle ANY/ALL mode">${tagMatchMode === 'OR' ? 'Match ANY' : 'Match ALL'}</span>
         </div>
       </div>
-      <div class="quiz-tag-grid" id="quizTagGrid">${allTags.map(t => { const c = tagColor(t); return `<span class="quiz-tag-chip ${quizSelectedTags.has(t) ? 'selected' : ''}" style="background:${c.bg};color:${c.fg};" onclick="toggleQuizTag('${esc(t).replace(/'/g, "\\'")}')">${esc(t)}</span>`; }).join('')}</div>
+      <div class="quiz-tag-grid" id="quizTagGrid">${allTags.map(t => { const c = tagColor(t); return `<span class="quiz-tag-chip ${quizSelectedTags.has(t) ? 'selected' : ''}" style="background:${c.bg};color:${c.fg};" data-tag-action="toggleQuizTag" data-tag="${esc(t)}">${esc(t)}</span>`; }).join('')}</div>
       <div class="quiz-tag-count">${fc} card${fc !== 1 ? 's' : ''} ${quizSelectedTags.size > 0 ? 'matched' : 'available'}${likedCount > 0 ? ` · ${likedCount} liked` : ''} · ${dueCount} due</div>
       ${quizSelectedTags.size > 0 ? `<span style="font-size:11px;color:var(--accent);cursor:pointer;margin-top:4px;display:inline-block;" onclick="quizSelectedTags.clear();showQuizSetup();">Clear all tags</span>` : ''}</div>` : ``}
     <div class="quiz-count-row">
@@ -1313,9 +1390,23 @@ function stopAutoPlayTimer() {
 }
 
 function getMCOptions(card) {
-  const pool = getQuizFilteredCards().length >= 4 ? getQuizFilteredCards() : cards;
-  const others = pool.filter(c => c.id !== card.id).map(c => firstBack(c));
-  return shuffle([firstBack(card), ...shuffle(others).slice(0, 3)]);
+  const correct = firstBack(card);
+  const filtered = getQuizFilteredCards();
+  const pool = filtered.length >= 4 ? filtered : cards;
+  // Build up to 3 distinct distractors that don't duplicate the correct answer
+  // (or each other), so an option can never be both "a distractor" and correct.
+  const seen = new Set([dedupKey(correct)]);
+  const distractors = [];
+  for (const c of shuffle(pool)) {
+    if (c.id === card.id) continue;
+    const d = firstBack(c);
+    const k = dedupKey(d);
+    if (!d || seen.has(k)) continue;
+    seen.add(k);
+    distractors.push(d);
+    if (distractors.length === 3) break;
+  }
+  return shuffle([correct, ...distractors]);
 }
 function revealQuizExtras() {
   const ans = document.getElementById('quizAnswer'); if (ans) ans.classList.add('show');
@@ -1353,8 +1444,21 @@ function updateQuizNote(id, val, immediate = false) {
 function checkMC(btn, ok) { document.querySelectorAll('.mc-btn').forEach(b => { b.disabled = true; b.style.pointerEvents = 'none'; }); btn.classList.add(ok ? 'correct' : 'wrong'); revealQuizExtras(); gradeQuiz(ok ? 5 : 0); }
 function checkType() {
   const input = document.getElementById('typeInput'); if (!input) return;
-  const val = input.value.trim().toLowerCase(); const card = quizCards[quizIdx];
-  const ok = val && card.back.some(b => b.toLowerCase().includes(val));
+  const card = quizCards[quizIdx];
+  const nv = normalizeText(input.value);
+  // Require a meaningful match — exact match on the word or a meaning, a
+  // whole-word hit, or (only for longer inputs) a substring of a meaning — so a
+  // single stray letter no longer scores as correct.
+  const ok = nv.length >= 2 && (
+    normalizeText(card.front) === nv ||
+    (card.back || []).some(b => {
+      const nb = normalizeText(b);
+      if (!nb) return false;
+      if (nb === nv) return true;
+      if (nb.split(' ').includes(nv)) return true;
+      return nv.length >= 4 && nb.includes(nv);
+    })
+  );
   revealQuizExtras(); input.disabled = true; input.style.borderColor = ok ? 'var(--green)' : 'var(--red)';
   setTimeout(() => gradeQuiz(ok ? 5 : 0), 1200);
 }
@@ -1505,7 +1609,7 @@ function downloadJSON() {
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `wordwise_deck_${new Date().toISOString().slice(0, 10)}.json`;
+  a.href = url; a.download = `wordwise_deck_${localDateStr()}.json`;
   a.click(); URL.revokeObjectURL(url);
 }
 function importCards() {
@@ -1747,13 +1851,13 @@ function grantXP(amount) {
   save();
 }
 function recordHeatmapActivity() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateStr();
   if (!studyHistory[today]) studyHistory[today] = 0;
   studyHistory[today]++;
 
   if (lastStudyDate !== today) {
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().slice(0, 10);
+    const yesterdayStr = localDateStr(yesterday);
     if (lastStudyDate === yesterdayStr) {
       userStreak++;
       if (userStreak > 0 && userStreak % 7 === 0) {
@@ -1808,7 +1912,7 @@ function updateGamificationUI() {
   if (sc) sc.textContent = userStreak;
   if (fc) fc.textContent = userFreezes;
   if (sf) {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localDateStr();
     if (lastStudyDate === today && userStreak > 0) sf.classList.add('active');
     else sf.classList.remove('active');
   }
@@ -1825,7 +1929,7 @@ function renderHeatmap() {
   const days = [];
   for (let i = 59; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
-    days.push(d.toISOString().slice(0, 10));
+    days.push(localDateStr(d));
   }
   let html = `<div class="heatmap-wrapper"><div class="heatmap-header">Study Activity</div><div class="heatmap-grid" style="position:relative;">`;
 
@@ -1874,7 +1978,7 @@ function showToast(message, typeClass = '') {
 }
 
 function generateDailyQuests() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateStr();
   if (questDate === today && dailyQuests && dailyQuests.length > 0) return;
 
   questDate = today;
@@ -2102,7 +2206,11 @@ function deleteFolderPrompt(id) {
     cards.filter(c => c.folderId === id).forEach(c => c.folderId = f.parentId);
     folders = folders.filter(x => x.id !== id);
     selectedFolders.delete(id);
-    save(true); renderAll();
+    save(true);
+    if (isLoggedIn() && cloudSyncComplete) {
+      api.folders.delete(id).catch(e => console.warn('Failed to delete folder on server:', id, e.message));
+    }
+    renderAll();
   }
 }
 
@@ -2122,7 +2230,11 @@ function mergeFolders(sourceId, targetId) {
   folders.filter(f => f.parentId === sourceId).forEach(f => f.parentId = targetId);
   folders = folders.filter(f => f.id !== sourceId);
   selectedFolders.delete(sourceId);
-  save(true); renderAll();
+  save(true);
+  if (isLoggedIn() && cloudSyncComplete) {
+    api.folders.delete(sourceId).catch(e => console.warn('Failed to delete folder on server:', sourceId, e.message));
+  }
+  renderAll();
 }
 
 function toggleFolderSort() {
@@ -2225,11 +2337,14 @@ function sendNotification(title, options) {
 }
 
 // Background checker for productivity
+let productivityCheckerId = null;
 function startProductivityChecker() {
-  setInterval(() => {
+  // Guard against stacking timers when initApp() runs again after a re-login.
+  if (productivityCheckerId) clearInterval(productivityCheckerId);
+  productivityCheckerId = setInterval(() => {
     if (!notificationsEnabled) return;
     
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localDateStr();
     const now = new Date();
     
     // 1. Check for Due Cards (once every 4 hours if not Study Session)
