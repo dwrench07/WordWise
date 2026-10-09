@@ -5,6 +5,19 @@ const { protect } = require('../middleware/auth');
 const router = express.Router();
 router.use(protect);
 
+// Whitelist of client-writable fields. Prevents mass-assignment of server-owned
+// fields (userId, _id, timestamps) from the request body.
+const CARD_FIELDS = [
+  'localId', 'front', 'back', 'example', 'note', 'deck', 'folderId', 'tags',
+  'liked', 'revisit', 'fsrs', 'repetition', 'interval', 'efactor',
+  'nextReview', 'pass', 'fail', 'created',
+];
+const pickCard = (body = {}) => {
+  const out = {};
+  for (const k of CARD_FIELDS) if (body[k] !== undefined) out[k] = body[k];
+  return out;
+};
+
 // GET /api/cards — all cards for the logged-in user
 router.get('/', async (req, res) => {
   const cards = await Card.find({ userId: req.userId }).lean();
@@ -13,7 +26,7 @@ router.get('/', async (req, res) => {
 
 // POST /api/cards — create a single card
 router.post('/', async (req, res) => {
-  const card = await Card.create({ ...req.body, userId: req.userId });
+  const card = await Card.create({ ...pickCard(req.body), userId: req.userId });
   res.status(201).json(card);
 });
 
@@ -23,13 +36,16 @@ router.post('/bulk', async (req, res) => {
     return res.status(400).json({ message: 'Expected an array of cards' });
   }
 
-  const ops = cards.map((card) => ({
-    updateOne: {
-      filter: { userId: req.userId, localId: card.localId || card.id },
-      update: { $set: { ...card, userId: req.userId, localId: card.localId || card.id } },
-      upsert: true,
-    },
-  }));
+  const ops = cards.map((card) => {
+    const localId = card.localId || card.id;
+    return {
+      updateOne: {
+        filter: { userId: req.userId, localId },
+        update: { $set: { ...pickCard(card), userId: req.userId, localId } },
+        upsert: true,
+      },
+    };
+  });
 
   // Sync state: Delete cards that were removed on the client.
   // Opt-in only via ?prune=true, AND require that the payload isn't suspiciously
@@ -55,9 +71,11 @@ router.post('/bulk', async (req, res) => {
 
 // PUT /api/cards/:localId — update a card by its client-side id
 router.put('/:localId', async (req, res) => {
+  const update = pickCard(req.body);
+  delete update.localId; // never reassign the key we matched on
   const card = await Card.findOneAndUpdate(
     { userId: req.userId, localId: req.params.localId },
-    { $set: req.body },
+    { $set: update },
     { new: true }
   );
   if (!card) return res.status(404).json({ message: 'Card not found' });
