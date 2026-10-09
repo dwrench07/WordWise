@@ -45,6 +45,20 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
+// ── Notification click: focus an open tab or open the app ───────────────────
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const target = (e.notification.data && e.notification.data.url) || '/';
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if ('focus' in w) { w.focus(); return; }
+      }
+      if (clients.openWindow) return clients.openWindow(target);
+    })
+  );
+});
+
 // ── Fetch ────────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', (e) => {
   const req = e.request;

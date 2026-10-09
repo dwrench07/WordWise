@@ -1887,6 +1887,8 @@ function recordHeatmapActivity() {
   }
   updateGamificationUI();
   save();
+  // Study just changed due times and the streak — refresh scheduled reminders.
+  rescheduleReminders();
 }
 function updateGamificationUI() {
   const level = Math.floor(Math.sqrt(userXP / 50)) + 1;
@@ -2273,19 +2275,24 @@ function toggleFolderSelection(id, e) {
 
 /* --- NOTIFICATIONS & PRODUCTIVITY --- */
 async function toggleNotifications() {
+  if (typeof Notification === 'undefined') {
+    alert('This browser does not support notifications.');
+    return;
+  }
   if (!notificationsEnabled) {
     if (Notification.permission === 'default') {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
         notificationsEnabled = true;
         showToast("Notifications enabled!", "toast-quest");
-        sendNotification("WordWise Reminders Active", { body: "We'll notify you when cards are ready for review." });
+        announceRemindersActive();
       } else {
         showToast("Notification permission denied", "toast-crit");
       }
     } else if (Notification.permission === 'granted') {
       notificationsEnabled = true;
       showToast("Notifications enabled!", "toast-quest");
+      announceRemindersActive();
     } else {
       alert("Notifications are blocked by your browser. Please enable them in site settings.");
     }
@@ -2295,6 +2302,18 @@ async function toggleNotifications() {
   }
   save(true);
   updateNotifUI();
+  // Schedule future reminders on enable, or clear them on disable.
+  rescheduleReminders();
+}
+
+// Confirmation notification whose wording matches what this browser can
+// actually do. force:true so it shows even though the page is visible when the
+// user just clicked "Enable".
+function announceRemindersActive() {
+  const body = triggersSupported()
+    ? "We'll remind you when cards are due and to protect your streak — even when WordWise is closed."
+    : "We'll remind you while WordWise is open in your browser.";
+  sendNotification("WordWise reminders active", { body, force: true });
 }
 
 function updateNotifUI() {
@@ -2311,7 +2330,7 @@ function updateNotifUI() {
   }
 }
 
-function sendNotification(title, options) {
+function sendNotification(title, options = {}) {
   if (!notificationsEnabled || Notification.permission !== 'granted') return;
   
   // Only send if the page is not visible, or if it's an important system event
@@ -2343,7 +2362,11 @@ function startProductivityChecker() {
   if (productivityCheckerId) clearInterval(productivityCheckerId);
   productivityCheckerId = setInterval(() => {
     if (!notificationsEnabled) return;
-    
+    // Where the Notification Triggers API is available, scheduled triggers
+    // handle reminders (even when closed), so skip the in-page path to avoid
+    // double-notifying. This interval is the fallback for browsers without it.
+    if (triggersSupported()) return;
+
     const today = localDateStr();
     const now = new Date();
     
@@ -2373,6 +2396,99 @@ function startProductivityChecker() {
       }
     }
   }, 60000); // Check every minute
+}
+
+/* --- SCHEDULED LOCAL REMINDERS (Notification Triggers API) ---
+   Fires reminders even when the app is closed, with no server/push/cron —
+   the browser's service worker shows them at the scheduled time. Chromium
+   (desktop + Android) only; iOS Safari / Firefox have no Triggers, so there we
+   fall back to the in-page checker above (which only runs while a tab is open). */
+function triggersSupported() {
+  return typeof Notification !== 'undefined' && 'showTrigger' in Notification.prototype;
+}
+
+// Epoch ms for a given local hour, `dayOffset` days from today.
+function localHourTs(hour, dayOffset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  d.setHours(hour, 0, 0, 0);
+  return d.getTime();
+}
+
+// Service-worker readiness with a timeout, so a failed/never-activating
+// registration can't leave scheduling hanging forever.
+function swReady(timeoutMs = 3000) {
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('sw ready timeout')), timeoutMs)),
+  ]);
+}
+
+const REMINDER_TAG_PREFIX = 'ww-reminder-';
+const STREAK_REMINDER_DAYS = 7; // rolling window so lapsed users keep getting nudged
+
+async function clearReminderTriggers(reg) {
+  try {
+    const pending = await reg.getNotifications({ includeTriggered: true });
+    pending.forEach(n => { if (n.tag && n.tag.startsWith(REMINDER_TAG_PREFIX)) n.close(); });
+  } catch { /* getNotifications unsupported or restricted */ }
+}
+
+async function scheduleReminderTriggers() {
+  if (!triggersSupported() || !('serviceWorker' in navigator)) return;
+  let reg;
+  try { reg = await swReady(); } catch { return; }
+
+  // Clear the previous set FIRST, unconditionally — so disabling (even after the
+  // user revoked permission at the browser level) actually cancels pending ones.
+  await clearReminderTriggers(reg);
+  if (!notificationsEnabled || Notification.permission !== 'granted') return;
+
+  const now = Date.now();
+  const common = { icon: '/icons/icon-192.svg', badge: '/icons/icon-192.svg', data: { url: '/' } };
+  const show = (tag, title, body, ts) =>
+    reg.showNotification(title, { ...common, tag, body, showTrigger: new TimestampTrigger(ts) })
+      .catch(e => console.warn('Reminder trigger failed:', tag, e));
+
+  // Triggers are one-shot and only re-arm when the app is opened, so lay down a
+  // rolling multi-day window up front — a lapsed user keeps getting nudged for
+  // several days without the app ever running. Bodies are generic because a
+  // trigger's text is fixed at schedule time (the SW can't recompute at fire).
+
+  // 1. Due nudge at the next card's review time (soonest future due).
+  const futureDue = cards.filter(c => c.repetition > 0 && c.nextReview > now).map(c => c.nextReview);
+  if (futureDue.length) {
+    await show(REMINDER_TAG_PREFIX + 'due', 'Cards ready to review 📚',
+      'Some of your WordWise cards are due. Keep the momentum going!', Math.min(...futureDue));
+  }
+
+  // 2. Catch-up nudge when cards are ALREADY due now (or never-studied new cards
+  //    exist) — otherwise that backlog gets no reminder at all. Next 9am local.
+  const readyNow = cards.some(c => isDue(c) || getStatus(c) === 'new');
+  if (readyNow) {
+    const nineAm = localHourTs(9) > now ? localHourTs(9) : localHourTs(9, 1);
+    await show(REMINDER_TAG_PREFIX + 'duenow', 'Time to study 📚',
+      'You have WordWise cards waiting. A few minutes keeps them fresh!', nineAm);
+  }
+
+  // 3. Daily streak nudge at 8pm local across the next week. Skip today's if it's
+  //    already past or the user has studied today (studying re-runs this and
+  //    clears it); future days are assumed not-yet-studied.
+  const studiedToday = lastStudyDate === localDateStr();
+  for (let i = 0; i < STREAK_REMINDER_DAYS; i++) {
+    const ts = localHourTs(20, i);
+    if (ts <= now) continue;
+    if (i === 0 && studiedToday) continue;
+    await show(REMINDER_TAG_PREFIX + 'streak-' + i, 'Protect your streak! 🔥',
+      'Study today to keep your WordWise streak going.', ts);
+  }
+}
+
+let reminderTimer = null;
+function rescheduleReminders() {
+  // Debounced: due times / streak change in bursts (grading a whole quiz).
+  clearTimeout(reminderTimer);
+  reminderTimer = setTimeout(() => { scheduleReminderTriggers().catch(() => {}); }, 2000);
 }
 
 function renderAll() { renderFolders(); renderWotd(); renderDailyInsight(); renderCards(); renderTagFilter(); updateStats(); renderDeckOverview(); renderDeckFilterOptions(); }
@@ -2577,6 +2693,7 @@ async function initApp() {
   await load();
   migrateDecksToFolders();
   startProductivityChecker();
+  rescheduleReminders(); // (re)schedule closed-app reminders where supported
   handleIncomingShare();
 }
 
