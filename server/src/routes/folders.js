@@ -13,10 +13,16 @@ const pickFolder = (body = {}) => {
   return out;
 };
 
-// GET /api/folders
+// GET /api/folders — live (non-tombstoned) folders
 router.get('/', async (req, res) => {
-  const folders = await Folder.find({ userId: req.userId }).lean();
+  const folders = await Folder.find({ userId: req.userId, deleted: { $ne: true } }).lean();
   res.json(folders);
+});
+
+// GET /api/folders/deleted — localIds of tombstoned folders
+router.get('/deleted', async (req, res) => {
+  const ids = await Folder.find({ userId: req.userId, deleted: true }).distinct('localId');
+  res.json({ deletedIds: ids });
 });
 
 // POST /api/folders
@@ -45,21 +51,9 @@ router.post('/bulk', async (req, res) => {
 
   const result = ops.length ? await Folder.bulkWrite(ops) : { upsertedCount: 0, modifiedCount: 0 };
 
-  // Sync state: delete folders removed on the client — but refuse a destructive
-  // prune from a stale/partial payload, mirroring the cards route. Only prune
-  // when the payload is non-empty and wouldn't wipe more than max(5, 10%).
-  const currentIds = folders.map(f => f.localId || f.id);
-  if (currentIds.length > 0) {
-    const serverCount = await Folder.countDocuments({ userId: req.userId });
-    const wouldDelete = serverCount - currentIds.length;
-    const safeThreshold = Math.max(5, Math.ceil(serverCount * 0.1));
-    if (wouldDelete > safeThreshold) {
-      console.warn(`Refusing folder prune for user ${req.userId}: would delete ${wouldDelete} (server=${serverCount}, payload=${currentIds.length})`);
-    } else {
-      await Folder.deleteMany({ userId: req.userId, localId: { $nin: currentIds } });
-    }
-  }
-
+  // No prune here: folder deletions are handled by explicit soft-delete
+  // (DELETE /:localId) + tombstone reconciliation on the client, same as cards.
+  // Prune-on-bulk let a stale client re-create folders deleted elsewhere.
   res.json({ upserted: result.upsertedCount, modified: result.modifiedCount });
 });
 
@@ -76,9 +70,12 @@ router.put('/:localId', async (req, res) => {
   res.json(folder);
 });
 
-// DELETE /api/folders/:localId
+// DELETE /api/folders/:localId — soft delete (tombstone)
 router.delete('/:localId', async (req, res) => {
-  await Folder.findOneAndDelete({ userId: req.userId, localId: req.params.localId });
+  await Folder.updateOne(
+    { userId: req.userId, localId: req.params.localId },
+    { $set: { deleted: true } }
+  );
   res.json({ message: 'Folder deleted' });
 });
 

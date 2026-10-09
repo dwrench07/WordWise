@@ -18,10 +18,17 @@ const pickCard = (body = {}) => {
   return out;
 };
 
-// GET /api/cards — all cards for the logged-in user
+// GET /api/cards — live (non-tombstoned) cards for the logged-in user
 router.get('/', async (req, res) => {
-  const cards = await Card.find({ userId: req.userId }).lean();
+  const cards = await Card.find({ userId: req.userId, deleted: { $ne: true } }).lean();
   res.json(cards);
+});
+
+// GET /api/cards/deleted — localIds of tombstoned cards, so other devices can
+// drop their stale local copies instead of re-uploading them.
+router.get('/deleted', async (req, res) => {
+  const ids = await Card.find({ userId: req.userId, deleted: true }).distinct('localId');
+  res.json({ deletedIds: ids });
 });
 
 // POST /api/cards — create a single card
@@ -82,16 +89,23 @@ router.put('/:localId', async (req, res) => {
   res.json(card);
 });
 
-// DELETE /api/cards/:localId
+// DELETE /api/cards/:localId — soft delete (tombstone)
 router.delete('/:localId', async (req, res) => {
-  await Card.findOneAndDelete({ userId: req.userId, localId: req.params.localId });
+  await Card.updateOne(
+    { userId: req.userId, localId: req.params.localId },
+    { $set: { deleted: true } }
+  );
   res.json({ message: 'Card deleted' });
 });
 
-// DELETE /api/cards — delete all cards for user (used for re-sync)
+// DELETE /api/cards — soft-delete all cards for the user (tombstoned so the
+// deletion propagates to other devices rather than silently resurrecting).
 router.delete('/', async (req, res) => {
-  const result = await Card.deleteMany({ userId: req.userId });
-  res.json({ deleted: result.deletedCount });
+  const result = await Card.updateMany(
+    { userId: req.userId, deleted: { $ne: true } },
+    { $set: { deleted: true } }
+  );
+  res.json({ deleted: result.modifiedCount });
 });
 
 module.exports = router;

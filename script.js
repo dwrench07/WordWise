@@ -267,19 +267,34 @@ async function load() {
   if (isLoggedIn()) {
     try {
       console.log("Background syncing with cloud...");
-      const [serverCards, serverFolders, stats] = await Promise.all([
+      const [serverCards, serverFolders, stats, delCards, delFolders] = await Promise.all([
         api.cards.getAll(),
         api.folders.getAll(),
         api.user.getStats(),
+        // Older servers won't have these endpoints — degrade gracefully.
+        api.cards.getDeleted().catch(() => ({ deletedIds: [] })),
+        api.folders.getDeleted().catch(() => ({ deletedIds: [] })),
       ]);
 
       if (serverCards && serverCards.length > 0) {
         cards = serverCards;
         normalizeCards(cards);
       }
-      
+
       if (serverFolders) {
         folders = serverFolders.map(f => ({ ...f, id: f.localId || f.id }));
+      }
+
+      // Apply server tombstones so deletions made on another device propagate
+      // here instead of being re-uploaded, and so an emptied account clears a
+      // stale local cache (the "length > 0" guard above never replaces it).
+      const delCardSet = new Set((delCards && delCards.deletedIds) || []);
+      if (delCardSet.size) cards = cards.filter(c => !delCardSet.has(c.id));
+      const delFolderSet = new Set((delFolders && delFolders.deletedIds) || []);
+      if (delFolderSet.size) {
+        folders = folders.filter(f => !delFolderSet.has(f.id));
+        // Orphan any card that pointed at a now-deleted folder.
+        cards.forEach(c => { if (c.folderId && delFolderSet.has(c.folderId)) c.folderId = null; });
       }
 
       if (stats) {
@@ -837,6 +852,19 @@ function deleteCard(id) {
   // would reappear on the next cloud load. Mirror the cleanup-duplicates path.
   if (isLoggedIn() && cloudSyncComplete) {
     api.cards.delete(id).catch(e => console.warn('Failed to delete card on server:', id, e.message));
+  }
+  renderAll();
+}
+
+function deleteAllCards() {
+  if (!confirm('Delete ALL cards? This cannot be undone.')) return;
+  cards = [];
+  totalQuizzes = 0;
+  save(true);
+  // Without an explicit server wipe the bulk upsert leaves every card in place,
+  // so they'd all reappear on the next cloud load.
+  if (isLoggedIn() && cloudSyncComplete) {
+    api.cards.deleteAll().catch(e => console.warn('Failed to delete all cards on server:', e.message));
   }
   renderAll();
 }
@@ -2178,7 +2206,11 @@ function deleteFolderPrompt(id) {
     cards.filter(c => c.folderId === id).forEach(c => c.folderId = f.parentId);
     folders = folders.filter(x => x.id !== id);
     selectedFolders.delete(id);
-    save(true); renderAll();
+    save(true);
+    if (isLoggedIn() && cloudSyncComplete) {
+      api.folders.delete(id).catch(e => console.warn('Failed to delete folder on server:', id, e.message));
+    }
+    renderAll();
   }
 }
 
@@ -2198,7 +2230,11 @@ function mergeFolders(sourceId, targetId) {
   folders.filter(f => f.parentId === sourceId).forEach(f => f.parentId = targetId);
   folders = folders.filter(f => f.id !== sourceId);
   selectedFolders.delete(sourceId);
-  save(true); renderAll();
+  save(true);
+  if (isLoggedIn() && cloudSyncComplete) {
+    api.folders.delete(sourceId).catch(e => console.warn('Failed to delete folder on server:', sourceId, e.message));
+  }
+  renderAll();
 }
 
 function toggleFolderSort() {

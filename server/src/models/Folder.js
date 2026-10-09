@@ -12,6 +12,9 @@ const folderSchema = new mongoose.Schema(
     icon: { type: String, default: null },
     expanded: { type: Boolean, default: true },
     created: { type: Number, default: () => Date.now() },
+    // Soft-delete tombstone — see Card.js. Propagates folder deletions across
+    // devices instead of relying on prune, which a stale client can undo.
+    deleted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
