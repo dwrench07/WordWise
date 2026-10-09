@@ -1887,6 +1887,8 @@ function recordHeatmapActivity() {
   }
   updateGamificationUI();
   save();
+  // Study just changed due times and the streak — refresh scheduled reminders.
+  rescheduleReminders();
 }
 function updateGamificationUI() {
   const level = Math.floor(Math.sqrt(userXP / 50)) + 1;
@@ -2279,13 +2281,14 @@ async function toggleNotifications() {
       if (permission === 'granted') {
         notificationsEnabled = true;
         showToast("Notifications enabled!", "toast-quest");
-        sendNotification("WordWise Reminders Active", { body: "We'll notify you when cards are ready for review." });
+        announceRemindersActive();
       } else {
         showToast("Notification permission denied", "toast-crit");
       }
     } else if (Notification.permission === 'granted') {
       notificationsEnabled = true;
       showToast("Notifications enabled!", "toast-quest");
+      announceRemindersActive();
     } else {
       alert("Notifications are blocked by your browser. Please enable them in site settings.");
     }
@@ -2295,6 +2298,18 @@ async function toggleNotifications() {
   }
   save(true);
   updateNotifUI();
+  // Schedule future reminders on enable, or clear them on disable.
+  rescheduleReminders();
+}
+
+// Confirmation notification whose wording matches what this browser can
+// actually do. force:true so it shows even though the page is visible when the
+// user just clicked "Enable".
+function announceRemindersActive() {
+  const body = triggersSupported()
+    ? "We'll remind you when cards are due and to protect your streak — even when WordWise is closed."
+    : "We'll remind you while WordWise is open in your browser.";
+  sendNotification("WordWise reminders active", { body, force: true });
 }
 
 function updateNotifUI() {
@@ -2311,7 +2326,7 @@ function updateNotifUI() {
   }
 }
 
-function sendNotification(title, options) {
+function sendNotification(title, options = {}) {
   if (!notificationsEnabled || Notification.permission !== 'granted') return;
   
   // Only send if the page is not visible, or if it's an important system event
@@ -2343,7 +2358,11 @@ function startProductivityChecker() {
   if (productivityCheckerId) clearInterval(productivityCheckerId);
   productivityCheckerId = setInterval(() => {
     if (!notificationsEnabled) return;
-    
+    // Where the Notification Triggers API is available, scheduled triggers
+    // handle reminders (even when closed), so skip the in-page path to avoid
+    // double-notifying. This interval is the fallback for browsers without it.
+    if (triggersSupported()) return;
+
     const today = localDateStr();
     const now = new Date();
     
@@ -2373,6 +2392,77 @@ function startProductivityChecker() {
       }
     }
   }, 60000); // Check every minute
+}
+
+/* --- SCHEDULED LOCAL REMINDERS (Notification Triggers API) ---
+   Fires reminders even when the app is closed, with no server/push/cron —
+   the browser's service worker shows them at the scheduled time. Chromium
+   (desktop + Android) only; iOS Safari / Firefox have no Triggers, so there we
+   fall back to the in-page checker above (which only runs while a tab is open). */
+function triggersSupported() {
+  return typeof Notification !== 'undefined' && 'showTrigger' in Notification.prototype;
+}
+
+// Next 8pm local — today if the user hasn't studied yet and it's still before
+// 8pm, otherwise tomorrow. Recomputed on every reschedule, so studying today
+// pushes it to tomorrow.
+function nextStreakReminderTs() {
+  const now = new Date();
+  const at20 = (d) => { const x = new Date(d); x.setHours(20, 0, 0, 0); return x.getTime(); };
+  if (lastStudyDate !== localDateStr() && now.getTime() < at20(now)) return at20(now);
+  const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+  return at20(tomorrow);
+}
+
+async function clearReminderTriggers(reg) {
+  try {
+    const pending = await reg.getNotifications({ includeTriggered: true });
+    pending.forEach(n => { if (n.tag === 'due-reminder' || n.tag === 'streak-reminder') n.close(); });
+  } catch { /* getNotifications unsupported or restricted */ }
+}
+
+async function scheduleReminderTriggers() {
+  if (!triggersSupported() || !('serviceWorker' in navigator)) return;
+  if (Notification.permission !== 'granted') return;
+  let reg;
+  try { reg = await navigator.serviceWorker.ready; } catch { return; }
+
+  // Always clear the previously-scheduled set first so we never stack duplicates.
+  await clearReminderTriggers(reg);
+  if (!notificationsEnabled) return; // disabled → just clear
+
+  const now = Date.now();
+  const common = { icon: '/icons/icon-192.svg', badge: '/icons/icon-192.svg', data: { url: '/' } };
+
+  // Due reminder — fire when the next reviewed card becomes due. Body is generic
+  // because a TimestampTrigger's text is fixed at schedule time (the SW can't
+  // recompute a live count when it fires).
+  const futureDue = cards.filter(c => (c.repetition > 0) && c.nextReview > now).map(c => c.nextReview);
+  if (futureDue.length) {
+    try {
+      await reg.showNotification('Cards ready to review 📚', {
+        ...common, tag: 'due-reminder',
+        body: 'Some of your WordWise cards are due. Keep the momentum going!',
+        showTrigger: new TimestampTrigger(Math.min(...futureDue)),
+      });
+    } catch (e) { console.warn('Due reminder trigger failed:', e); }
+  }
+
+  // Streak reminder — 8pm local nudge if today still needs a study session.
+  try {
+    await reg.showNotification('Protect your streak! 🔥', {
+      ...common, tag: 'streak-reminder',
+      body: `Study today to keep your ${userStreak}-day streak alive.`,
+      showTrigger: new TimestampTrigger(nextStreakReminderTs()),
+    });
+  } catch (e) { console.warn('Streak reminder trigger failed:', e); }
+}
+
+let reminderTimer = null;
+function rescheduleReminders() {
+  // Debounced: due times / streak change in bursts (grading a whole quiz).
+  clearTimeout(reminderTimer);
+  reminderTimer = setTimeout(() => { scheduleReminderTriggers().catch(() => {}); }, 2000);
 }
 
 function renderAll() { renderFolders(); renderWotd(); renderDailyInsight(); renderCards(); renderTagFilter(); updateStats(); renderDeckOverview(); renderDeckFilterOptions(); }
@@ -2577,6 +2667,7 @@ async function initApp() {
   await load();
   migrateDecksToFolders();
   startProductivityChecker();
+  rescheduleReminders(); // (re)schedule closed-app reminders where supported
   handleIncomingShare();
 }
 
