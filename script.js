@@ -2275,6 +2275,10 @@ function toggleFolderSelection(id, e) {
 
 /* --- NOTIFICATIONS & PRODUCTIVITY --- */
 async function toggleNotifications() {
+  if (typeof Notification === 'undefined') {
+    alert('This browser does not support notifications.');
+    return;
+  }
   if (!notificationsEnabled) {
     if (Notification.permission === 'default') {
       const permission = await Notification.requestPermission();
@@ -2403,59 +2407,81 @@ function triggersSupported() {
   return typeof Notification !== 'undefined' && 'showTrigger' in Notification.prototype;
 }
 
-// Next 8pm local — today if the user hasn't studied yet and it's still before
-// 8pm, otherwise tomorrow. Recomputed on every reschedule, so studying today
-// pushes it to tomorrow.
-function nextStreakReminderTs() {
-  const now = new Date();
-  const at20 = (d) => { const x = new Date(d); x.setHours(20, 0, 0, 0); return x.getTime(); };
-  if (lastStudyDate !== localDateStr() && now.getTime() < at20(now)) return at20(now);
-  const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
-  return at20(tomorrow);
+// Epoch ms for a given local hour, `dayOffset` days from today.
+function localHourTs(hour, dayOffset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  d.setHours(hour, 0, 0, 0);
+  return d.getTime();
 }
+
+// Service-worker readiness with a timeout, so a failed/never-activating
+// registration can't leave scheduling hanging forever.
+function swReady(timeoutMs = 3000) {
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('sw ready timeout')), timeoutMs)),
+  ]);
+}
+
+const REMINDER_TAG_PREFIX = 'ww-reminder-';
+const STREAK_REMINDER_DAYS = 7; // rolling window so lapsed users keep getting nudged
 
 async function clearReminderTriggers(reg) {
   try {
     const pending = await reg.getNotifications({ includeTriggered: true });
-    pending.forEach(n => { if (n.tag === 'due-reminder' || n.tag === 'streak-reminder') n.close(); });
+    pending.forEach(n => { if (n.tag && n.tag.startsWith(REMINDER_TAG_PREFIX)) n.close(); });
   } catch { /* getNotifications unsupported or restricted */ }
 }
 
 async function scheduleReminderTriggers() {
   if (!triggersSupported() || !('serviceWorker' in navigator)) return;
-  if (Notification.permission !== 'granted') return;
   let reg;
-  try { reg = await navigator.serviceWorker.ready; } catch { return; }
+  try { reg = await swReady(); } catch { return; }
 
-  // Always clear the previously-scheduled set first so we never stack duplicates.
+  // Clear the previous set FIRST, unconditionally — so disabling (even after the
+  // user revoked permission at the browser level) actually cancels pending ones.
   await clearReminderTriggers(reg);
-  if (!notificationsEnabled) return; // disabled → just clear
+  if (!notificationsEnabled || Notification.permission !== 'granted') return;
 
   const now = Date.now();
   const common = { icon: '/icons/icon-192.svg', badge: '/icons/icon-192.svg', data: { url: '/' } };
+  const show = (tag, title, body, ts) =>
+    reg.showNotification(title, { ...common, tag, body, showTrigger: new TimestampTrigger(ts) })
+      .catch(e => console.warn('Reminder trigger failed:', tag, e));
 
-  // Due reminder — fire when the next reviewed card becomes due. Body is generic
-  // because a TimestampTrigger's text is fixed at schedule time (the SW can't
-  // recompute a live count when it fires).
-  const futureDue = cards.filter(c => (c.repetition > 0) && c.nextReview > now).map(c => c.nextReview);
+  // Triggers are one-shot and only re-arm when the app is opened, so lay down a
+  // rolling multi-day window up front — a lapsed user keeps getting nudged for
+  // several days without the app ever running. Bodies are generic because a
+  // trigger's text is fixed at schedule time (the SW can't recompute at fire).
+
+  // 1. Due nudge at the next card's review time (soonest future due).
+  const futureDue = cards.filter(c => c.repetition > 0 && c.nextReview > now).map(c => c.nextReview);
   if (futureDue.length) {
-    try {
-      await reg.showNotification('Cards ready to review 📚', {
-        ...common, tag: 'due-reminder',
-        body: 'Some of your WordWise cards are due. Keep the momentum going!',
-        showTrigger: new TimestampTrigger(Math.min(...futureDue)),
-      });
-    } catch (e) { console.warn('Due reminder trigger failed:', e); }
+    await show(REMINDER_TAG_PREFIX + 'due', 'Cards ready to review 📚',
+      'Some of your WordWise cards are due. Keep the momentum going!', Math.min(...futureDue));
   }
 
-  // Streak reminder — 8pm local nudge if today still needs a study session.
-  try {
-    await reg.showNotification('Protect your streak! 🔥', {
-      ...common, tag: 'streak-reminder',
-      body: `Study today to keep your ${userStreak}-day streak alive.`,
-      showTrigger: new TimestampTrigger(nextStreakReminderTs()),
-    });
-  } catch (e) { console.warn('Streak reminder trigger failed:', e); }
+  // 2. Catch-up nudge when cards are ALREADY due now (or never-studied new cards
+  //    exist) — otherwise that backlog gets no reminder at all. Next 9am local.
+  const readyNow = cards.some(c => isDue(c) || getStatus(c) === 'new');
+  if (readyNow) {
+    const nineAm = localHourTs(9) > now ? localHourTs(9) : localHourTs(9, 1);
+    await show(REMINDER_TAG_PREFIX + 'duenow', 'Time to study 📚',
+      'You have WordWise cards waiting. A few minutes keeps them fresh!', nineAm);
+  }
+
+  // 3. Daily streak nudge at 8pm local across the next week. Skip today's if it's
+  //    already past or the user has studied today (studying re-runs this and
+  //    clears it); future days are assumed not-yet-studied.
+  const studiedToday = lastStudyDate === localDateStr();
+  for (let i = 0; i < STREAK_REMINDER_DAYS; i++) {
+    const ts = localHourTs(20, i);
+    if (ts <= now) continue;
+    if (i === 0 && studiedToday) continue;
+    await show(REMINDER_TAG_PREFIX + 'streak-' + i, 'Protect your streak! 🔥',
+      'Study today to keep your WordWise streak going.', ts);
+  }
 }
 
 let reminderTimer = null;
